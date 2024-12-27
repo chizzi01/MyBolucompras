@@ -1,0 +1,155 @@
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="./img/icon.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <title>Mybolucompras - problemas</title>
+</head>
+
+<body class="backPreguntas">
+    <header>
+        <nav class="navbar">
+            <div class="logo-container">
+                <img class="logonav" src="img/icon-bgremove.png" alt="Mizzio coding" />
+            </div>
+            <div>
+
+                <div class="navbar-links">
+                    <ul class="nav-items">
+                        <li><a href="index.html"><i class="fa-solid fa-house"></i> INICIO</a></li>
+                        <span></span>
+                        <li><a href="ms-calculator://"><i class="fa-solid fa-calculator"></i> CALCULADORA</a></li>
+                        <span></span>
+                        <li><a href="problemas.html"><i class="fa-solid fa-triangle-exclamation"></i> PROBLEMAS?</a></li>
+                        <span></span>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="faq-section">
+        <h2>Preguntas Frecuentes</h2>
+        <div class="faq-item">
+            <h3>¿Qué es un gasto repetitivo?</h3>
+            <p>Un gasto repetitivo es un costo que se incurre en intervalos regulares como gastos semanales de un monto
+                fijo o suscripciones mensuales.</p>
+            </p>
+        </div>
+        <div class="faq-item">
+            <h3>¿Puedo editar un gasto ya finalizado?</h3>
+            <p>No, una vez que un gasto ha sido finalizado no se puede editar. Si necesitas hacer cambios, puedes
+                eliminar el gasto y crear uno nuevo.</p>
+        </div>
+        <div class="faq-item">
+            <h3>¿Puedo generar una planilla de excel a partir de mis gastos?</h3>
+            <p>Sí, puedes exportar tus gastos a una planilla de excel. Para hacerlo, ve hacia abajo de la tabla de
+                gastos y clickea en "Exportar a excel".</p>
+        </div>
+        <div class="faq-item">
+            <h3>¿Cómo puedo eliminar un gasto?</h3>
+            <p>Para eliminar un gasto, toca en el boton eliminar en la linea del gasto correspondiente</p>
+        </div>
+        <div class="faq-item">
+            <h3>¿Cómo puedo editar un gasto?</h3>
+            <p>Para editar un gasto, toca en el boton editar en la linea del gasto correspondiente</p>
+        </div>
+        <div class="faq-item">
+            <h3>¿Cómo puedo agregar un gasto?</h3>
+            <p>Para agregar un gasto, clickea en el botón superior izquierdo "+" y elige el tipo de gasto</p>
+        </div>
+
+    </div>
+    <div class="footer-align">
+        <footer id="contacto">
+            <div id="footerSiro">
+                <div class="contentFooterSiro">
+                    <ul class="list-textSiro" style="padding: 0flLljl;">
+                        <li>Powered by:</li>
+                        <a href="http://mizzio.com.ar/" target="_blank" rel="Mizzio"><img class="Mizzio"
+                                src=".//img/MIZZIOcoding_transparenteBlanco-cropped.svg" alt="MIZZIO"></a>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+<script src="index.js"></script>
+<script>
+    // let enviarProblema = document.getElementById("enviarProblema");
+    // enviarProblema.addEventListener("click", function () {
+
+    // });
+
+    let formProblemas = document.getElementById("formProblemas");
+    formProblemas.addEventListener("submit", function (e) {
+        e.preventDefault();
+    });
+
+    let html2 = document.querySelector(".formularioAlign");
+
+    if (localStorage.getItem("problemaEnviado") == "true") {
+        let enviarProblema = document.getElementById("enviarProblema");
+        enviarProblema.disabled = true;
+        enviarProblema.style.backgroundColor = "grey";
+        enviarProblema.style.cursor = "not-allowed";
+        enviarProblema.value = "Enviado";
+    }
+
+    //cambiar el item de localstorage a false para que se pueda volver a enviar el formulario de problemas despues de 24hs de haberlo enviado por primera vez (para evitar spam)
+    let fechaActual = new Date().getUTCDate();
+    let fechaGuardada = localStorage.getItem("fechaProblemaEnviado");
+    let diferenciaDias = fechaActual - fechaGuardada;
+
+    if (diferenciaDias >= 1 || diferenciaDias < 0) {
+        localStorage.setItem("problemaEnviado", "false");
+    }
+
+
+    function sendMail() {
+        let nombre = document.getElementById("name").value;
+        let email = document.getElementById("email").value;
+        let mensaje = document.getElementById("message").value;
+        var transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        var mailOptions = {
+            from: email,
+            to: "bolucompras.soporte@gmail.com",
+            subject: 'Problemas con la app',
+            html: '<h1>Problemas con MyBolucompras</h1><h3>Nombre: </h3>' + nombre + '<h3>Email: </h3>' + email + '<h3>Mensaje: </h3>' + mensaje
+        };
+
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+                let modalEnviado = document.getElementById("modalEnviado");
+                modalEnviado.classList.remove("hide");
+                html2.style.filter = "blur(5px)";
+                let problemaEnviado = localStorage.setItem("problemaEnviado", "true");
+                let fechaProblemaEnviado = localStorage.setItem("fechaProblemaEnviado", fechaActual);
+                setTimeout(function () {
+                    window.location.href = "index.html";
+                }, 3000);
+
+            }
+        });
+    }
+
+</script>
+
+</html>
