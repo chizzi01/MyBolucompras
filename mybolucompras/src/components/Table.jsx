@@ -88,19 +88,12 @@ function Table({ data, mydata, openModal, total }) {
 
     const calcularCuotasRestantes = (fecha, cuotas) => {
         const fechaActual = new Date();
-        const fechaCompra = new Date(fecha);
-        const mesActual = fechaActual.getMonth();
-        const mesCompra = fechaCompra.getMonth();
-        const anioActual = fechaActual.getFullYear();
-        const anioCompra = fechaCompra.getFullYear();
-        const cuotasRestantes = (anioActual - anioCompra) * 12 + (mesActual - mesCompra) + 1;
-        const cuotasRestantesFinales = parseInt(cuotas, 10) - cuotasRestantes;
+        const [dia, mes, anio] = fecha.split('/');
+        const fechaCompra = new Date(`${anio}-${mes}-${dia}`);
+        const diferenciaMeses = (fechaActual.getFullYear() - fechaCompra.getFullYear()) * 12 + (fechaActual.getMonth() - fechaCompra.getMonth());
+        const cuotasRestantes = parseInt(cuotas, 10) - diferenciaMeses;
 
-        if (cuotasRestantesFinales < 0) {
-            return 0;
-        } else {
-            return cuotasRestantesFinales;
-        }
+        return cuotasRestantes < 0 ? 0 : cuotasRestantes;
     };
 
     const calcularCuotasRestantesCredito = (fecha, cuotas, fechaVencimiento) => {
@@ -115,30 +108,10 @@ function Table({ data, mydata, openModal, total }) {
             return 'N/A';
         }
 
-        const mesActual = fechaActual.getMonth();
-        const mesCompra = fechaCompra.getMonth();
-        const anioActual = fechaActual.getFullYear();
-        const anioCompra = fechaCompra.getFullYear();
-        const diaActual = fechaActual.getDate();
-        const diaCompra = fechaCompra.getDate();
-        const diferenciaAnios = anioActual - anioCompra;
-        const diferenciaMeses = mesActual - mesCompra;
-        const diferenciaDias = diaActual - diaCompra;
-        let diferenciaTotal = diferenciaAnios * 12 + diferenciaMeses;
+        const diferenciaMeses = (fechaActual.getFullYear() - fechaCompra.getFullYear()) * 12 + (fechaActual.getMonth() - fechaCompra.getMonth());
+        const cuotasRestantes = parseInt(cuotas, 10) - diferenciaMeses;
 
-        if (diferenciaDias < 0) {
-            diferenciaTotal -= 1;
-        }
-
-        if (fechaActual > fechaVenc) {
-            diferenciaTotal += 1;
-        }
-
-        if (diferenciaTotal >= parseInt(cuotas, 10)) {
-            return 0;
-        } else {
-            return parseInt(cuotas, 10) - diferenciaTotal;
-        }
+        return cuotasRestantes < 0 ? 0 : cuotasRestantes;
     };
 
     const calcularCuotas = (item) => {
@@ -443,7 +416,7 @@ function Table({ data, mydata, openModal, total }) {
                                     <td>{isNaN(calcularCuotas(item)) ? 'N/A' : calcularCuotas(item)}</td>
                                     <td>{item.banco}</td>
                                     <td>{item.cantidad}</td>
-                                    <td>${item.precio && typeof item.precio === 'string' ? parseFloat(item.precio.replace('$', '')).toFixed(2) : 'N/A'}</td>
+                                    <td>${item.precio && typeof item.precio === 'string' ? parseFloat(item.precio.replace('$', '') / item.cuotas).toFixed(2) : 'N/A'}</td>
                                     <td>
                                         <div className='buttonsActionsAlign'>
                                             {calcularCuotas(item) >= 1 ?

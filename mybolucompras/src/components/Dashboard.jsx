@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement, ArcElement } from 'chart.js';
 import '../App.css';
+import Timeline from './Timeline';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement, ArcElement);
 
@@ -10,16 +11,77 @@ const Dashboard = ({ data }) => {
     const gastosMensuales = useMemo(() => {
         const gastos = {};
         if (Array.isArray(data)) {
-            data.forEach(item => {
-                const mes = new Date(item.fecha.split('/').reverse().join('-')).toLocaleString('es-ES', { month: 'long' });
-                if (!gastos[mes]) {
-                    gastos[mes] = 0;
+            // Ordena los datos por fecha
+            const sortedData = [...data].sort((a, b) => {
+                const fechaA = new Date(a.fecha.split('/').reverse().join('-'));
+                const fechaB = new Date(b.fecha.split('/').reverse().join('-'));
+                return fechaA - fechaB;
+            });
+
+            sortedData.forEach(item => {
+                const fecha = new Date(item.fecha.split('/').reverse().join('-'));
+                const mes = fecha.toLocaleString('es-ES', { month: 'long' });
+                const año = fecha.getFullYear();
+                const mesAño = `${mes} ${año}`;
+                if (!gastos[mesAño]) {
+                    gastos[mesAño] = 0;
                 }
-                gastos[mes] += parseFloat(item.precio.replace('$', ''));
+                gastos[mesAño] += parseFloat(item.precio.replace('$', ''));
             });
         }
         return gastos;
     }, [data]);
+
+    const pagosFuturos = useMemo(() => {
+        const pagos = {};
+        const fechaActual = new Date();
+
+        // Inicializamos los meses futuros en el objeto
+        for (let i = 0; i < 6; i++) {
+            const mesFuturo = new Date(fechaActual.getFullYear(), fechaActual.getMonth() + i, 1);
+            const mesAñoFuturo = `${mesFuturo.toLocaleString('es-ES', { month: 'long' })} ${mesFuturo.getFullYear()}`;
+            pagos[mesAñoFuturo] = 0;
+        }
+
+        if (Array.isArray(data)) {
+            data.forEach(item => {
+                const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
+                const cuotas = parseInt(item.cuotas, 10);
+                const precioTotal = parseFloat(item.precio.replace('$', '').replace(',', '.'));
+                const precioPorCuota = precioTotal / cuotas;
+
+                for (let i = 0; i < cuotas; i++) {
+                    // Determinar el mes correspondiente para esta cuota
+                    const mesPago = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth() + i, 1);
+                    const mesAñoPago = `${mesPago.toLocaleString('es-ES', { month: 'long' })} ${mesPago.getFullYear()}`;
+
+                    // Solo sumar cuotas dentro del rango de los próximos 4 meses
+                    if (pagos[mesAñoPago] !== undefined) {
+                        pagos[mesAñoPago] += precioPorCuota;
+                    }
+                }
+            });
+        }
+
+        console.log('Pagos futuros calculados:', pagos);
+        return pagos;
+    }, [data]);
+
+
+
+    const lineData = {
+        labels: Object.keys(pagosFuturos),
+        datasets: [
+            {
+                label: 'Pagos Futuros',
+                data: Object.values(pagosFuturos),
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                fill: true,
+            },
+        ],
+    };
+
 
     const distribucionGastos = useMemo(() => {
         const distribucion = {};
@@ -33,6 +95,8 @@ const Dashboard = ({ data }) => {
         }
         return distribucion;
     }, [data]);
+
+
 
     const gastosPorTipo = useMemo(() => {
         const tipos = { credito: 0, debito: 0 };
@@ -189,8 +253,6 @@ const Dashboard = ({ data }) => {
         ],
     };
 
-
-
     return (
         <div className="dashboard">
             <div className="chart-container">
@@ -214,6 +276,9 @@ const Dashboard = ({ data }) => {
                 </div>
                 <div className="pie">
                     <Doughnut data={gastosHormigaData} options={{ responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Gastos hormiga' } } }} />
+                </div>
+                <div className="timeline">
+                    <Timeline pagosFuturos={pagosFuturos} />
                 </div>
             </div>
         </div>

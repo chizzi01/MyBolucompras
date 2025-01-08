@@ -175,6 +175,75 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
     </>
   );
 
+  const renderRepetitivoFields = () => (
+    <>
+      <TextField
+        label="Rep. en el mes"
+        type="number"
+        variant="outlined"
+        value={formData.cantidad}
+        onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
+        min="0"
+        required
+        fullWidth={false}
+        margin="normal"
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'white',
+            '& fieldset': {
+              borderColor: '#777777',
+              color: '#777777',
+            },
+            '&:hover fieldset': {
+              borderColor: '#777777',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#777777',
+            },
+          },
+          '& .MuiInputLabel-root': {
+            color: 'black',
+          },
+          '& .MuiInputLabel-root.Mui-focused': {
+            color: 'black',
+          },
+        }}
+      />
+      <TextField
+        label="Periodo en meses"
+        type="number"
+        variant="outlined"
+        value={formData.cuotas}
+        onChange={(e) => setFormData({ ...formData, cuotas: e.target.value })}
+        min="0"
+        required
+        fullWidth={false}
+        margin="normal"
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: 'white',
+            '& fieldset': {
+              borderColor: '#777777',
+              color: '#777777',
+            },
+            '&:hover fieldset': {
+              borderColor: '#777777',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#777777',
+            },
+          },
+          '& .MuiInputLabel-root': {
+            color: 'black',
+          },
+          '& .MuiInputLabel-root.Mui-focused': {
+            color: 'black',
+          },
+        }}
+      />
+    </>
+  );
+
   return (
     <div className="modal-overlay">
       <div
@@ -288,7 +357,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                     )}
                   </>
                 )}
-                {modalType === 'repetitivo' && (
+                {(modalType === 'repetitivo' || formData.isFijo) && (
                   <>
                     <TextField
                       label="Rep. en el mes"
@@ -492,7 +561,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
           )}
           {modalType === 'eliminar' && (
             <>
-              <p>¿Estás seguro de que deseas eliminar este registro?</p>
+              <p>¿ Estás seguro de que deseas eliminar: <span style={{ color: 'red' }}>{formData.objeto}</span> ?</p>
               <div className="button-group">
                 <Button variant="contained" color="primary" onClick={() => setModalVisible(false)}>Cancelar</Button>
                 <Button variant="contained" color="error" onClick={handleDelete}>Eliminar</Button>

@@ -11,7 +11,7 @@ function Header() {
     <header>
       <nav className="navbar">
         <div className="logo-container">
-          <img className="logonav" src="./img/icon-bgremove.png" alt="Mizzio coding" />
+        <img className="logonav" src="./img/icon-bgremove.png" alt="Logo" />
         </div>
         <div>
           <div className="navbar-links">

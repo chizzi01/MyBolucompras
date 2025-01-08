@@ -22,7 +22,11 @@ function createWindow() {
     mainWindow.show();
   });
 
-  mainWindow.loadURL('http://localhost:5173');
+  if (app.isPackaged) {
+    mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+  } else {
+    mainWindow.loadURL('http://localhost:5173');
+  }
   mainWindow.maximize();
 }
 
@@ -38,7 +42,7 @@ function createSplashWindow() {
     }
   });
 
-  splashWindow.loadFile(path.join(__dirname, './public/splash.html'));
+  splashWindow.loadFile(path.join(__dirname, 'public', 'splash.html'));
 }
 
 app.whenReady().then(() => {

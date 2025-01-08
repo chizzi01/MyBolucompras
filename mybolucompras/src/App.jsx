@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Table from './components/Table';
 import Modal from './components/Modal';
@@ -44,18 +44,17 @@ function App() {
 
 
   const agregarDatosObjeto = (id, objeto, fecha, medio, cuotas, tipo, banco, cantidad, precio) => {
-    const precioPorCuota = Number(precio) / Number(cuotas);
     const NuevoObjeto = {
       id: id,
       isFijo: false,
       objeto: objeto.charAt(0).toUpperCase() + objeto.slice(1),
       fecha: fecha.split("-").reverse().join("/"),
       medio: medio,
-      cuotas: Number(cuotas),
+      cuotas: tipo === 'debito' ? 1 : Number(cuotas),
       tipo: tipo,
       banco: banco,
       cantidad: Number(cantidad),
-      precio: isNaN(precioPorCuota) || !isFinite(precioPorCuota) ? "$ 0" : `$ ${precioPorCuota.toFixed(2)}`
+      precio: isNaN(Number(precio)) || !isFinite(Number(precio)) ? "$ 0" : `$ ${Number(precio).toFixed(2)}`
     };
 
     const updatedData = [...data, NuevoObjeto];
@@ -110,6 +109,7 @@ function App() {
       agregarDatosObjeto(id, formData.objeto, formData.fecha, formData.medio, formData.cuotas, formData.tipo, formData.banco, formData.cantidad, formData.precio);
     }
     setModalVisible(false);
+    setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '' });
   };
 
   const handleDelete = () => {
@@ -120,11 +120,19 @@ function App() {
   };
 
   const handleEdit = () => {
-    const updatedData = data.map(item => item.id === formData.id ? formData : item);
+    const updatedData = data.map(item =>
+      item.id === formData.id
+        ? {
+          ...formData, fecha: formData.fecha.split('-').reverse().join('/'),
+          precio: item.isFijo ? `$ ${parseFloat(formData.precio).toFixed(2) * item.cantidad}` : `$ ${parseFloat(formData.precio).toFixed(2)}`
+        }
+        : item
+    );
     setData(updatedData);
     saveData(updatedData);
     setModalVisible(false);
   };
+
 
   const handleChangeVencimiento = (event) => {
     const { value } = event.target;
@@ -148,12 +156,14 @@ function App() {
   };
 
   const openModal = useCallback((type, item = {}) => {
+    setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '' });
     setModalType(type);
     if (type === 'eliminar' || type === 'editar') {
       const formattedItem = {
         ...item,
         fecha: item.fecha.split('/').reverse().join('-'), // Formatea la fecha a yyyy-mm-dd
-        precio: item.precio.replace('$', '').trim() * item.cuotas // Elimina el símbolo de dólar y los espacios en blanco
+        precio: item.isFijo ? (parseFloat(item.precio.replace('$', '').trim())).toFixed(2) / item.cantidad : item.precio.replace('$', '').trim(), // Elimina el símbolo de dólar y los espacios en blanco
+        cuotas: item.tipo === 'debito' ? 1 : Number(item.cuotas)
       };
       setFormData(formattedItem);
     }
@@ -211,26 +221,26 @@ function App() {
         <Routes>
           <Route path="/preguntas" element={<Preguntas />} />
           <Route path="/" element={
-             <>
-            <Table data={data} mydata={mydata} openModal={openModal} total={totalGastado()} />
-            <Footer totalGastado={totalGastado()} bancoUsado={bancoMasUsado()} tarjetaUsada={tarjetaMasUsada()} />
-            {modalVisible && (
-              <Modal
-                formData={formData}
-                mydata={mydata}
-                data={data}
-                setMyData={setMyData}
-                setFormData={setFormData}
-                handleSubmit={handleSubmit}
-                handleDelete={handleDelete}
-                setModalVisible={setModalVisible}
-                handleEdit={handleEdit}
-                handleCloseModal={handleCloseModal}
-                handleChangeVencimiento={handleChangeVencimiento}
-                handleAgregarFondos={handleAgregarFondos}
-                modalType={modalType}
-              />
-            )}
+            <>
+              <Table data={data} mydata={mydata} openModal={openModal} total={totalGastado()} />
+              <Footer totalGastado={totalGastado()} bancoUsado={bancoMasUsado()} tarjetaUsada={tarjetaMasUsada()} />
+              {modalVisible && (
+                <Modal
+                  formData={formData}
+                  mydata={mydata}
+                  data={data}
+                  setMyData={setMyData}
+                  setFormData={setFormData}
+                  handleSubmit={handleSubmit}
+                  handleDelete={handleDelete}
+                  setModalVisible={setModalVisible}
+                  handleEdit={handleEdit}
+                  handleCloseModal={handleCloseModal}
+                  handleChangeVencimiento={handleChangeVencimiento}
+                  handleAgregarFondos={handleAgregarFondos}
+                  modalType={modalType}
+                />
+              )}
             </>
           } />
         </Routes>
