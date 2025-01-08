@@ -137,37 +137,44 @@ function App() {
     const cierreDate = new Date(value);
     let vencimientoDate = new Date(cierreDate);
     vencimientoDate.setDate(vencimientoDate.getDate() + 10);
-
+  
     // Ajustar vencimientoDate si cae en fin de semana
-    while (vencimientoDate.getDay() === 0 || vencimientoDate.getDay() === 6) {
+    while (vencimientoDate.getDay() === 0 || vencimientoDate.getDay() === 5) {
       vencimientoDate.setDate(vencimientoDate.getDate() + 1);
     }
-
+  
     const vencimientoFormatted = vencimientoDate.toISOString().split('T')[0];
-
+  
     // Capturamos explícitamente el valor actual de cierre antes de actualizarlo
-    const cierreAnterior = mydata.cierre || ""; // Si no hay cierre previo, usamos un valor vacío
-
+    const cierreAnterior = new Date(cierreDate);
+    cierreAnterior.setMonth(cierreAnterior.getMonth() - 1);
+  
+    // Ajustar cierreAnterior si cae en fin de semana
+    while (cierreAnterior.getDay() === 0 || cierreAnterior.getDay() === 5) {
+      cierreAnterior.setDate(cierreAnterior.getDate() - 1);
+    }
+  
+    const cierreAnteriorFormatted = cierreAnterior.toISOString().split('T')[0];
+  
     // Actualizamos el estado con los valores correctos
     const updatedMyData = {
       ...mydata,
-      cierreAnterior: cierreAnterior, // Guardamos el valor anterior capturado
+      cierreAnterior: cierreAnteriorFormatted, // Guardamos el valor anterior capturado
       vencimientoAnterior: mydata.vencimiento || vencimientoFormatted,
       cierre: value, // Nuevo valor de cierre
       vencimiento: vencimientoFormatted, // Nuevo valor de vencimiento
     };
-
+  
     setMyData(updatedMyData);
     saveMyData(updatedMyData);
-
+  
     console.log('Cierre actual:', updatedMyData.cierre);
     console.log('Cierre anterior:', updatedMyData.cierreAnterior);
     console.log('Vencimiento actual:', updatedMyData.vencimiento);
     console.log('Vencimiento anterior:', updatedMyData.vencimientoAnterior);
-
+  
     setModalVisible(false); // Cerrar el modal
   };
-
 
 
 

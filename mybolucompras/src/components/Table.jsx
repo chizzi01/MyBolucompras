@@ -33,7 +33,7 @@ export const calcularCuotasRestantesCredito = (fecha, cuotas, fechaVencimiento, 
     // Convertir las otras fechas (vencimiento, cierre, cierre anterior) en objetos Date
     const fechaVenc = new Date(fechaVencimiento);
     const fechaCierreDate = new Date(fechaCierre);
-    const fechaCierreAnteriorDate = new Date(fechaCierreAnterior);
+    const fechaCierreAnteriorDate = fechaCierreAnterior ? new Date(fechaCierreAnterior) : null;
 
     // Verificar que todas las fechas se han parseado correctamente
     if (isNaN(fechaCompra) || isNaN(fechaVenc) || isNaN(fechaCierreDate) || isNaN(fechaCierreAnteriorDate)) {
