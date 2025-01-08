@@ -2,11 +2,15 @@ import React from 'react';
 import '../App.css';
 
 function Footer({ totalGastado, tarjetaUsada, bancoUsado }) {
+  const formatNumber = (number) => {
+    return number.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
   return (
     <div className="footer-align">
       <div className="data-container">
         <div className="totales">
-          <h2 id="totalGastado">Total gastado: <span style={{color: '#6EFF6E' }}>${parseFloat(totalGastado).toFixed(2)}</span></h2>
+          <h2 id="totalGastado">Total gastado: <span style={{color: '#6EFF6E' }}>${formatNumber(Number(totalGastado))}</span></h2>
           <h2 id="tarjetaUsada">Medio o tarjeta más usado/a: <span style={{color: '#7BB9FF' }}>{tarjetaUsada}</span></h2>
           <h2 id="bancoUsado">Banco más usado: <span style={{color: '#FFB63F' }}>{bancoUsado}</span></h2>
         </div>
