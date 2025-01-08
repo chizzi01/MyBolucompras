@@ -21,6 +21,40 @@ import { VscArrowDown } from "react-icons/vsc";
 import { MdFilterListAlt } from "react-icons/md";
 import { FiSearch } from "react-icons/fi";
 import { FaChartPie } from "react-icons/fa";
+import { MdLock } from 'react-icons/md';
+import { CgLogIn } from 'react-icons/cg';
+
+
+export const calcularCuotasRestantesCredito = (fecha, cuotas, fechaVencimiento, fechaCierre, fechaVencimientoAnterior, fechaCierreAnterior) => {
+    // Convertir la fecha de compra (DD/MM/YYYY) en un objeto Date
+    const [dia, mes, anio] = fecha.split('/');
+    const fechaCompra = new Date(`${anio}-${mes}-${dia}`);
+
+    // Convertir las otras fechas (vencimiento, cierre, cierre anterior) en objetos Date
+    const fechaVenc = new Date(fechaVencimiento);
+    const fechaCierreDate = new Date(fechaCierre);
+    const fechaCierreAnteriorDate = new Date(fechaCierreAnterior);
+
+    // Verificar que todas las fechas se han parseado correctamente
+    if (isNaN(fechaCompra) || isNaN(fechaVenc) || isNaN(fechaCierreDate) || isNaN(fechaCierreAnteriorDate)) {
+        console.error('Fecha inválida:', { fechaCompra, fechaVenc, fechaCierreDate, fechaCierreAnteriorDate });
+        return 'N/A';
+    }
+
+    let cuotasRestantes;
+
+    // Si la fecha de compra está entre el cierre anterior y el cierre actual, asignamos 0 cuotas momentáneamente
+    if (fechaCompra > fechaCierreAnteriorDate && fechaCompra <= fechaCierreDate) {
+        cuotasRestantes = 0;  // Se asignan 0 cuotas momentáneamente, ya que se pagará en el próximo ciclo
+    } else {
+        // Si la compra se realizó fuera de ese rango, calculamos las cuotas restantes
+        const diferenciaMeses = (fechaVenc.getFullYear() - fechaCompra.getFullYear()) * 12 + (fechaVenc.getMonth() - fechaCompra.getMonth());
+        cuotasRestantes = parseInt(cuotas, 10) - diferenciaMeses;
+    }
+
+    // Asegurarse de que no haya cuotas negativas
+    return cuotasRestantes < 0 ? 0 : cuotasRestantes;
+};
 
 function Table({ data, mydata, openModal, total }) {
     // Asegúrate de que data sea un array
@@ -111,28 +145,12 @@ function Table({ data, mydata, openModal, total }) {
         return cuotasRestantes < 0 ? 0 : cuotasRestantes;
     };
 
-    const calcularCuotasRestantesCredito = (fecha, cuotas, fechaVencimiento) => {
-        const fechaActual = new Date();
-        const [dia, mes, anio] = fecha.split('/');
-        const fechaCompra = new Date(`${anio}-${mes}-${dia}`);
-        const fechaVenc = new Date(fechaVencimiento);
 
-        // Verifica que las fechas se hayan parseado correctamente
-        if (isNaN(fechaCompra) || isNaN(fechaVenc)) {
-            console.error('Fecha inválida:', { fechaCompra, fechaVenc });
-            return 'N/A';
-        }
-
-        const diferenciaMeses = (fechaActual.getFullYear() - fechaCompra.getFullYear()) * 12 + (fechaActual.getMonth() - fechaCompra.getMonth());
-        const cuotasRestantes = parseInt(cuotas, 10) - diferenciaMeses;
-
-        return cuotasRestantes < 0 ? 0 : cuotasRestantes;
-    };
 
     const calcularCuotas = (item) => {
         return item.tipo === 'debito'
             ? calcularCuotasRestantes(item.fecha, item.cuotas)
-            : calcularCuotasRestantesCredito(item.fecha, item.cuotas, mydata.vencimiento);
+            : calcularCuotasRestantesCredito(item.fecha, item.cuotas, mydata.vencimiento, mydata.cierre, mydata.vencimientoAnterior, mydata.cierreAnterior);
     };
 
     const filteredData = sortedData.filter(item => {
@@ -204,6 +222,12 @@ function Table({ data, mydata, openModal, total }) {
         });
         return Array.from(medios);
     }, [data]);
+    const isAfterCierre = (fechaCompra, fechaCierreDate, fechaCierreAnterior, medio, tipo) => {
+        // Verificar si la fecha de compra es posterior al cierre anterior y antes del cierre actual
+        return (fechaCompra > fechaCierreAnterior && fechaCompra <= fechaCierreDate) && medio !== 'Efectivo' && tipo === 'credito';
+    };
+
+
 
     return (
         <section id="gastos">
@@ -237,7 +261,7 @@ function Table({ data, mydata, openModal, total }) {
                             <button id="vencimientoTarjeta-btn" onClick={() => openModal('vencimiento')}>
                                 <FaMoneyCheckDollar size={30} />
                             </button>
-                            <div className="button-text">Vencimiento</div>
+                            <div className="button-text">Cierre</div>
                         </div>
                     </div>
                 </div>
@@ -470,35 +494,64 @@ function Table({ data, mydata, openModal, total }) {
                                 <th>Acciones</th>
                             </tr>
                         </thead>
+
                         <tbody>
-                            {filteredData.map((item, index) => (
-                                <tr key={index}>
-                                    <td style={{ display: "flex", gap: '5px', justifyContent: 'center', alignItems: 'center', height: '40px' }}>
-                                        {item.objeto}
-                                        {item.isFijo && <PiRepeatBold size={15} color='#ff9a15' />}
-                                        {item.tipo === 'credito' && <FaCreditCard size={15} color='#3181ff' />}
-                                        {item.tipo === 'debito' && item.isFijo == false && <FaMoneyBill1Wave size={15} color='#11af00' />}
-                                    </td>
-                                    <td>{item.fecha}</td>
-                                    <td>{item.medio}</td>
-                                    <td>{isNaN(calcularCuotas(item)) ? 'N/A' : calcularCuotas(item)}</td>
-                                    <td>{item.banco}</td>
-                                    <td>{item.cantidad}</td>
-                                    <td>${item.precio && typeof item.precio === 'string' ? parseFloat(item.precio.replace('$', '') / item.cuotas).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</td>
-                                    <td>
-                                        <div className='buttonsActionsAlign'>
-                                            {calcularCuotas(item) >= 1 ?
-                                                <button className="edit-btn" id={item.id} onClick={() => openModal('editar', item)}>
-                                                    <FaEdit size={15} />
+                            {filteredData.map((item, index) => {
+                                const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
+                                const fechaCierreDate = new Date(mydata.cierre);
+                                const fechaCierreAnteriorDate = new Date(mydata.cierreAnterior);
+                                const medio = item.medio;
+                                const tipo = item.tipo;
+                                const showModal = isAfterCierre(fechaCompra, fechaCierreDate, fechaCierreAnteriorDate, medio, tipo);
+
+                                return (
+                                    <tr key={index} style={{ position: 'relative' }}>
+                                        <td style={{ display: "flex", gap: '5px', justifyContent: 'center', alignItems: 'center', height: '40px' }}>
+                                            {item.objeto}
+                                            {item.isFijo && <PiRepeatBold size={15} color='#ff9a15' />}
+                                            {item.tipo === 'credito' && <FaCreditCard size={15} color='#3181ff' />}
+                                            {item.tipo === 'debito' && item.isFijo == false && <FaMoneyBill1Wave size={15} color='#11af00' />}
+                                        </td>
+                                        <td>{item.fecha}</td>
+                                        <td>{item.medio}</td>
+                                        <td>{isNaN(calcularCuotas(item)) ? 'N/A' : calcularCuotas(item)}</td>
+                                        <td>{item.banco}</td>
+                                        <td>{item.cantidad}</td>
+                                        <td>${item.precio && typeof item.precio === 'string' ? parseFloat(item.precio.replace('$', '') / item.cuotas).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</td>
+                                        <td>
+                                            <div className='buttonsActionsAlign'>
+                                                {calcularCuotas(item) >= 1 ?
+                                                    <button className="edit-btn" id={item.id} onClick={() => openModal('editar', item)}>
+                                                        <FaEdit size={15} />
+                                                    </button>
+                                                    : null}
+                                                <button className="delete-btn" id={item.id} onClick={() => openModal('eliminar', item)}>
+                                                    <FaTrash size={15} />
                                                 </button>
-                                                : null}
-                                            <button className="delete-btn" id={item.id} onClick={() => openModal('eliminar', item)}>
-                                                <FaTrash size={15} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                            </div>
+                                        </td>
+                                        {showModal && (
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                width: '100%',
+                                                height: '100%',
+                                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                zIndex: 1,
+                                                backdropFilter: 'blur(1px)',
+                                                border: '1px solid #8C52FF',
+                                            }}>
+                                                <MdLock size={20} color='#8C52FF' />
+                                                <span>Entra para el próximo mes 🎉</span>
+                                            </div>
+                                        )}
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

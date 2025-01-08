@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
-import Table from './components/Table';
+import Table, { calcularCuotasRestantesCredito } from './components/Table';
 import Modal from './components/Modal';
 import Header from './components/Navbar';
 import Footer from './components/Footer';
@@ -31,7 +31,7 @@ function App() {
         const myResponse = await window.electron.readData('misdatos');
         setData(response);
         setMyData(myResponse);
-        if (!myResponse.vencimiento || new Date(myResponse.vencimiento) < new Date()) {
+        if (!myResponse.cierre || new Date(myResponse.cierre) < new Date()) {
           openModal('vencimiento');
         }
       } catch (error) {
@@ -132,15 +132,45 @@ function App() {
     saveData(updatedData);
     setModalVisible(false);
   };
+  const handleChangeCierre = (event) => {
+    const { value } = event.target; // Nuevo valor de cierre
+    const cierreDate = new Date(value);
+    let vencimientoDate = new Date(cierreDate);
+    vencimientoDate.setDate(vencimientoDate.getDate() + 10);
 
+    // Ajustar vencimientoDate si cae en fin de semana
+    while (vencimientoDate.getDay() === 0 || vencimientoDate.getDay() === 6) {
+      vencimientoDate.setDate(vencimientoDate.getDate() + 1);
+    }
 
-  const handleChangeVencimiento = (event) => {
-    const { value } = event.target;
-    const updatedMyData = { ...mydata, vencimiento: value };
+    const vencimientoFormatted = vencimientoDate.toISOString().split('T')[0];
+
+    // Capturamos explícitamente el valor actual de cierre antes de actualizarlo
+    const cierreAnterior = mydata.cierre || ""; // Si no hay cierre previo, usamos un valor vacío
+
+    // Actualizamos el estado con los valores correctos
+    const updatedMyData = {
+      ...mydata,
+      cierreAnterior: cierreAnterior, // Guardamos el valor anterior capturado
+      vencimientoAnterior: mydata.vencimiento || vencimientoFormatted,
+      cierre: value, // Nuevo valor de cierre
+      vencimiento: vencimientoFormatted, // Nuevo valor de vencimiento
+    };
+
     setMyData(updatedMyData);
     saveMyData(updatedMyData);
-    setModalVisible(false);
+
+    console.log('Cierre actual:', updatedMyData.cierre);
+    console.log('Cierre anterior:', updatedMyData.cierreAnterior);
+    console.log('Vencimiento actual:', updatedMyData.vencimiento);
+    console.log('Vencimiento anterior:', updatedMyData.vencimientoAnterior);
+
+    setModalVisible(false); // Cerrar el modal
   };
+
+
+
+
 
   const handleAgregarFondos = (event) => {
     const { value } = event.target;
@@ -177,15 +207,26 @@ function App() {
 
   const totalGastado = () => {
     let total = 0;
+
     data.forEach((item) => {
+
+      let precioMensual = 0;
       if (item.precio && typeof item.precio === 'string') {
-        const precioMensual = parseFloat(item.precio.replace('$', '').trim()) / item.cuotas;
-        total += precioMensual;
+        precioMensual = parseFloat(item.precio.replace('$', '').trim()) / item.cuotas;
+      }
+
+      if (item.cuotas > 0) {
+        const cuotasRestantes = calcularCuotasRestantesCredito(item.fecha, item.cuotas, mydata.vencimiento, mydata.cierre, mydata.vencimientoAnterior, mydata.cierreAnterior);
+
+        if (cuotasRestantes > 0 || item.isFijo || item.medio === 'Efectivo') {
+          total += precioMensual;
+        }
       }
     });
-
     return total.toFixed(2);
   };
+
+
 
   const bancoMasUsado = () => {
     const bancos = {};
@@ -237,7 +278,7 @@ function App() {
                   setModalVisible={setModalVisible}
                   handleEdit={handleEdit}
                   handleCloseModal={handleCloseModal}
-                  handleChangeVencimiento={handleChangeVencimiento}
+                  handleChangeCierre={handleChangeCierre}
                   handleAgregarFondos={handleAgregarFondos}
                   modalType={modalType}
                 />

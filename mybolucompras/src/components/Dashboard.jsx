@@ -3,10 +3,11 @@ import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement, ArcElement } from 'chart.js';
 import '../App.css';
 import Timeline from './Timeline';
+import { calcularCuotasRestantesCredito } from './Table';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement, ArcElement);
 
-const Dashboard = ({ data }) => {
+const Dashboard = ({ data, mydata }) => {
     // Prepara los datos para los gráficos
     const gastosMensuales = useMemo(() => {
         const gastos = {};
@@ -50,14 +51,38 @@ const Dashboard = ({ data }) => {
                 const precioTotal = parseFloat(item.precio.replace('$', '').replace(',', '.'));
                 const precioPorCuota = precioTotal / cuotas;
 
-                for (let i = 0; i < cuotas; i++) {
-                    // Determinar el mes correspondiente para esta cuota
-                    const mesPago = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth() + i, 1);
-                    const mesAñoPago = `${mesPago.toLocaleString('es-ES', { month: 'long' })} ${mesPago.getFullYear()}`;
+                // Incluir gastos repetitivos
+                if (item.isFijo) {
+                    for (let i = 0; i < 6; i++) {
+                        const mesFuturo = new Date(fechaActual.getFullYear(), fechaActual.getMonth() + i, 1);
+                        const mesAñoFuturo = `${mesFuturo.toLocaleString('es-ES', { month: 'long' })} ${mesFuturo.getFullYear()}`;
+                        pagos[mesAñoFuturo] += precioTotal;
+                    }
+                }
 
-                    // Solo sumar cuotas dentro del rango de los próximos 4 meses
-                    if (pagos[mesAñoPago] !== undefined) {
-                        pagos[mesAñoPago] += precioPorCuota;
+                // Incluir gastos en efectivo
+                if (item.medio === 'Efectivo') {
+                    const mesAñoCompra = `${fechaCompra.toLocaleString('es-ES', { month: 'long' })} ${fechaCompra.getFullYear()}`;
+                    if (pagos[mesAñoCompra] !== undefined) {
+                        pagos[mesAñoCompra] += precioTotal;
+                    }
+                }
+
+                // Verificar las cuotas restantes para las compras a crédito
+                if (item.cuotas > 0) {
+                    const cuotasRestantes = calcularCuotasRestantesCredito(item.fecha, item.cuotas, mydata.vencimiento, mydata.cierre, mydata.vencimientoAnterior, mydata.cierreAnterior);
+
+                    if (cuotasRestantes > 0) {
+                        for (let i = 0; i < cuotas; i++) {
+                            // Determinar el mes correspondiente para esta cuota
+                            const mesPago = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth() + i, 1);
+                            const mesAñoPago = `${mesPago.toLocaleString('es-ES', { month: 'long' })} ${mesPago.getFullYear()}`;
+
+                            // Solo sumar cuotas dentro del rango de los próximos 6 meses
+                            if (pagos[mesAñoPago] !== undefined) {
+                                pagos[mesAñoPago] += precioPorCuota;
+                            }
+                        }
                     }
                 }
             });
@@ -232,8 +257,8 @@ const Dashboard = ({ data }) => {
             {
                 label: 'Cantidad de Gastos por Tipo',
                 data: [cantidadGastosPorTipo.credito, cantidadGastosPorTipo.debito],
-                backgroundColor: ['rgba(75, 192, 192, 0.6)',
-                    'rgba(255, 99, 132, 0.6)'],
+                backgroundColor: [  'rgba(255, 99, 132, 0.6)' ,'rgba(75, 192, 192, 0.6)'
+                  ],
 
             },
         ],

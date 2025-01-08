@@ -5,9 +5,10 @@ import "../App.css";
 import Dashboard from './Dashboard';
 import { IoSaveOutline } from "react-icons/io5";
 
-function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, handleDelete, handleEdit, setModalVisible, handleCloseModal, handleChangeVencimiento, handleAgregarFondos, modalType }) {
+function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, handleDelete, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, modalType }) {
   const [showSumInput, setShowSumInput] = useState(false);
   const [additionalFunds, setAdditionalFunds] = useState('');
+  const [ tempCierre, setTempCierre ] = useState(mydata.cierre || '');
   const handleSumFunds = () => {
     const newFunds = parseFloat(mydata.fondos) + parseFloat(additionalFunds);
     setMyData({ ...mydata, fondos: newFunds });
@@ -288,7 +289,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
             {modalType === 'nuevo' && 'Agregar Nuevo'}
             {modalType === 'repetitivo' && 'Agregar Repetitivo'}
             {modalType === 'fondos' && 'Agregar Fondos'}
-            {modalType === 'vencimiento' && 'Vencimiento de Tarjeta'}
+            {modalType === 'vencimiento' && 'Cierre de Tarjeta'}
             {modalType === 'eliminar' && 'Confirmar Eliminación'}
             {modalType === 'editar' && 'Editar Registro'}
           </h2>
@@ -568,16 +569,16 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
             )}
             {modalType === 'vencimiento' && (
               <div className="modal-align">
-                {!mydata.vencimiento || mydata.vencimiento === '' || mydata.vencimiento < new Date().toISOString().split('T')[0] ?
-                  <p style={{ color: "#ffbf00" }}>¡Atención! Es necesario agregar la fecha de vencimiento de tu tarjeta</p>
+                {!mydata.cierre || mydata.cierre === '' || mydata.cierre < new Date().toISOString().split('T')[0] ?
+                  <p style={{ color: "#ffbf00" }}>¡Atención! Es necesario agregar la fecha de cierre de tu tarjeta</p>
                   : null
                 }
                 <TextField
-                  label="Fecha de vencimiento"
+                  label="Fecha de cierre"
                   type="date"
                   variant="outlined"
-                  value={mydata.vencimiento}
-                  onChange={(e) => setMyData({ ...mydata, vencimiento: e.target.value })}
+                  value={tempCierre || mydata.cierre} // Usar el estado temporal o el valor actual de cierre
+                  onChange={(e) => setTempCierre(e.target.value)} // Actualizar solo el estado temporal
                   required
                   fullWidth
                   margin="normal"
@@ -615,7 +616,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                 variant="contained"
                 color="primary"
                 onClick={
-                  modalType === 'nuevo' || modalType === 'repetitivo' ? handleSubmit : modalType === 'editar' ? handleEdit : modalType === 'fondos' ? () => handleAgregarFondos({ target: { value: mydata.fondos } }) : () => handleChangeVencimiento({ target: { value: mydata.vencimiento } })}
+                  modalType === 'nuevo' || modalType === 'repetitivo' ? handleSubmit : modalType === 'editar' ? handleEdit : modalType === 'fondos' ? () => handleAgregarFondos({ target: { value: mydata.fondos } }) : () => handleChangeCierre({ target: { value: tempCierre  } })}
                 fullWidth
                 startIcon={<IoSaveOutline />}
               >
