@@ -407,7 +407,7 @@ function Table({ data, mydata, openModal, total }) {
                 </div>
 
                 <div className="fondosAlign">
-                    <h2 id="fondos"><FaWallet size={20} /> Fondos: <span style={{ color: "#FFB63F" }}>${parseFloat((mydata.fondos || 0) - total).toFixed(2)}</span></h2>
+                    <h2 id="fondos"><FaWallet size={20} /> Fondos: <span style={{ color: "#FFB63F" }}>${parseFloat((mydata.fondos || 0) - total).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></h2>
                 </div>
                 <div className="reportesAlign">
                     <button id="report-btn" onClick={() => openModal('reporte')}>
@@ -484,7 +484,7 @@ function Table({ data, mydata, openModal, total }) {
                                     <td>{isNaN(calcularCuotas(item)) ? 'N/A' : calcularCuotas(item)}</td>
                                     <td>{item.banco}</td>
                                     <td>{item.cantidad}</td>
-                                    <td>${item.precio && typeof item.precio === 'string' ? parseFloat(item.precio.replace('$', '') / item.cuotas).toFixed(2) : 'N/A'}</td>
+                                    <td>${item.precio && typeof item.precio === 'string' ? parseFloat(item.precio.replace('$', '') / item.cuotas).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</td>
                                     <td>
                                         <div className='buttonsActionsAlign'>
                                             {calcularCuotas(item) >= 1 ?
