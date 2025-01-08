@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import '../App.css';
 import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdornment } from '@mui/material';
 import Papa from 'papaparse';
@@ -31,10 +31,25 @@ function Table({ data, mydata, openModal, total }) {
     const [filterObject, setFilterObject] = useState('');
     const [filterType, setFilterType] = useState('');
     const [filterBank, setFilterBank] = useState('');
+    const [filterMedio, setFilterMedio] = useState('');
+    const [filterCount, setFilterCount] = useState(0);
 
     const handleFilterClick = () => {
         setShowFilter(!showFilter);
     };
+
+    const countFilters = () => {
+        let count = 0;
+        if (filterObject) count++;
+        if (filterType) count++;
+        if (filterBank) count++;
+        if (filterMedio) count++;
+        setFilterCount(count);
+    };
+
+    useEffect(() => {
+        countFilters();
+    }, [filterObject, filterType, filterBank, filterMedio]);
 
     const mesActual = new Date().toLocaleString('es-ES', { month: 'long' });
 
@@ -125,6 +140,7 @@ function Table({ data, mydata, openModal, total }) {
             (filterObject === '' || item.objeto.toLowerCase().includes(filterObject.toLowerCase())) &&
             (filterType === '' || item.tipo === filterType) &&
             (filterBank === '' || item.banco === filterBank) &&
+            (filterMedio === '' || item.medio === filterMedio) &&
             (isSwitchOn || calcularCuotas(item) >= 1)
         );
     });
@@ -169,6 +185,26 @@ function Table({ data, mydata, openModal, total }) {
         URL.revokeObjectURL(url); // Liberar memoria
     };
 
+    const uniqueBanks = useMemo(() => {
+        const banks = new Set();
+        data.forEach(item => {
+            if (item.banco) {
+                banks.add(item.banco);
+            }
+        });
+        return Array.from(banks);
+    }, [data]);
+
+    const mediosDePago = useMemo(() => {
+        const medios = new Set();
+        data.forEach(item => {
+            if (item.medio) {
+                medios.add(item.medio);
+            }
+        });
+        return Array.from(medios);
+    }, [data]);
+
     return (
         <section id="gastos">
             <div className="componentContainer">
@@ -207,7 +243,10 @@ function Table({ data, mydata, openModal, total }) {
                 </div>
 
                 <div className='dropdownFilter'>
-                    <button className="dropbtnFilter" onClick={handleFilterClick}><MdFilterListAlt size={25} /></button>
+                    <button className="dropbtnFilter" onClick={handleFilterClick}>
+                        <MdFilterListAlt size={25} />
+                        {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
+                    </button>
                     {showFilter && (
                         <div className="filter-container">
                             <div className="verticalBtn-text">
@@ -316,23 +355,52 @@ function Table({ data, mydata, openModal, total }) {
                                         label="Banco"
                                     >
                                         <MenuItem value=""><em>None</em></MenuItem>
-                                        <MenuItem value="Santander">Santander</MenuItem>
-                                        <MenuItem value="Nacion">Nacion</MenuItem>
-                                        <MenuItem value="Galicia">Galicia</MenuItem>
-                                        <MenuItem value="BBVA">BBVA</MenuItem>
-                                        <MenuItem value="HSBC">HSBC</MenuItem>
-                                        <MenuItem value="Credicoop">Credicoop</MenuItem>
-                                        <MenuItem value="Patagonia">Patagonia</MenuItem>
-                                        <MenuItem value="Supervielle">Supervielle</MenuItem>
-                                        <MenuItem value="Hipotecario">Hipotecario</MenuItem>
-                                        <MenuItem value="Citibank">Citibank</MenuItem>
-                                        <MenuItem value="Itaú">Itaú</MenuItem>
-                                        <MenuItem value="ICBC">ICBC</MenuItem>
-                                        <MenuItem value="Banco Provincia">Banco Provincia</MenuItem>
-                                        <MenuItem value="Banco Ciudad">Banco Ciudad</MenuItem>
-                                        <MenuItem value="Ninguno">Ninguno</MenuItem>
+                                        {uniqueBanks.map((bank, index) => (
+                                            <MenuItem key={index} value={bank}>{bank}</MenuItem>
+                                        ))}
+
                                     </Select>
                                 </FormControl>
+                            </div>
+                            <div className="verticalBtn-text">
+                                <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '100px' }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            fontSize: '12px',
+                                            '& fieldset': {
+                                                borderColor: 'white',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: 'white',
+                                                color: 'white',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: 'white',
+                                                color: 'white',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: 'white',
+                                        },
+                                        '& .MuiInputLabel-root.Mui-focused': {
+                                            color: 'white',
+                                        },
+                                    }}
+                                >
+                                    <InputLabel>Medio</InputLabel>
+                                    <Select
+                                        value={filterMedio}
+                                        onChange={(e) => setFilterMedio(e.target.value)}
+                                        label="Medio"
+                                    >
+                                        <MenuItem value=""><em>None</em></MenuItem>
+                                        {mediosDePago.map((medio, index) => (
+                                            <MenuItem key={index} value={medio}>{medio}</MenuItem>
+                                        ))}
+
+                                    </Select>
+                                </FormControl>
+
                             </div>
                         </div>
                     )}

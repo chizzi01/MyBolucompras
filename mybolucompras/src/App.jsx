@@ -179,11 +179,12 @@ function App() {
     let total = 0;
     data.forEach((item) => {
       if (item.precio && typeof item.precio === 'string') {
-        total += parseFloat(item.precio.replace('$', ''));
+        const precioMensual = parseFloat(item.precio.replace('$', '').trim()) / item.cuotas;
+        total += precioMensual;
       }
     });
 
-    return total;
+    return total.toFixed(2);
   };
 
   const bancoMasUsado = () => {

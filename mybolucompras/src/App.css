@@ -1583,10 +1583,7 @@ input:checked+.slider:before {
 }
 
 .dropbtnFilter {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #999999;
+  background-color: #5ca8ff;
   color: white;
   border: none;
   cursor: pointer;
@@ -1597,7 +1594,28 @@ input:checked+.slider:before {
   margin-right: 20px;
   width: 50px;
   height: 50px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+.filterCount {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  background-color: rgb(163, 93, 255);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  width: 20px;  
+  height: 20px;
+  padding: 2px;
+  text-align: center;
+}
+
+.dropbtnFilter:hover {
+  transform: scale(1.1);
 }
 
 .dropdown:hover .dropbtn {

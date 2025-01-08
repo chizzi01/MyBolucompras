@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { IoArrowBackCircle } from "react-icons/io5";
 import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdornment } from '@mui/material';
 import "../App.css";
 import Dashboard from './Dashboard';
+import { IoSaveOutline } from "react-icons/io5";
 
 function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, handleDelete, handleEdit, setModalVisible, handleCloseModal, handleChangeVencimiento, handleAgregarFondos, modalType }) {
+  const [showSumInput, setShowSumInput] = useState(false);
+  const [additionalFunds, setAdditionalFunds] = useState('');
+  const handleSumFunds = () => {
+    const newFunds = parseFloat(mydata.fondos) + parseFloat(additionalFunds);
+    setMyData({ ...mydata, fondos: newFunds });
+    setAdditionalFunds('');
+    setShowSumInput(false);
+  };
   const renderCommonFields = () => (
     <>
       <TextField
@@ -250,7 +259,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
         id="modal-agregar"
         className="modal-content"
         style={{
-          height: modalType === 'vencimiento' ? '300px' : modalType === 'fondos' ? '220px' : modalType === 'eliminar' ? '300px' : modalType === 'reporte' ? '90%' : '500px',
+          height: modalType === 'vencimiento' ? '300px' : modalType === 'fondos' ? '250px' : modalType === 'eliminar' ? '300px' : modalType === 'reporte' ? '90%' : '500px',
           width: modalType === 'vencimiento' ? '500px' : modalType === 'reporte' ? '90%' : '400px',
           backgroundColor:
             modalType === 'nuevo'
@@ -328,7 +337,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                         variant="outlined"
                         value={formData.cuotas}
                         onChange={(e) => setFormData({ ...formData, cuotas: e.target.value })}
-                        min="0"
+                        min="1"
                         required
                         fullWidth={false}
                         margin="normal"
@@ -365,7 +374,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                       variant="outlined"
                       value={formData.cantidad}
                       onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
-                      min="0"
+                      min="1"
                       required
                       fullWidth={false}
                       margin="normal"
@@ -397,7 +406,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                       variant="outlined"
                       value={formData.cuotas}
                       onChange={(e) => setFormData({ ...formData, cuotas: e.target.value })}
-                      min="0"
+                      min="1"
                       required
                       fullWidth={false}
                       margin="normal"
@@ -432,7 +441,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                   variant="outlined"
                   value={formData.precio}
                   onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
-                  min="0"
+                  min="1"
                   required
                   fullWidth={false}
                   margin="normal"
@@ -466,7 +475,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
             {modalType === 'fondos' && (
               <>
                 <TextField
-                  label="Fondos"
+                  label="Fondos actuales"
                   type="number"
                   step="0.01"
                   variant="outlined"
@@ -487,21 +496,75 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                         color: '#777777',
                       },
                       '&:hover fieldset': {
-                        borderColor: '#777777',
+                        borderColor: '#555555',
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#777777',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'black',
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: 'black',
                     },
                   }}
                 />
+                {!showSumInput && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setShowSumInput(!showSumInput)}
+                    fullWidth
+                    margin="normal"
+                  >
+                    Sumar fondos
+                  </Button>
+                )}
+                {showSumInput && (
+                  <>
+                    <TextField
+                      label="Agregar Fondos"
+                      type="number"
+                      step="0.01"
+                      variant="outlined"
+                      value={additionalFunds}
+                      onChange={(e) => setAdditionalFunds(e.target.value)}
+                      min="1"
+                      required
+                      fullWidth
+                      margin="normal"
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          backgroundColor: 'white',
+                          '& fieldset': {
+                            borderColor: '#777777',
+                            color: '#777777',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#555555',
+                          },
+                        },
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={() => setShowSumInput(false)}
+                      fullWidth
+                      margin="normal"
+                      sx={{
+                        backgroundColor: 'grey',
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={handleSumFunds}
+                      fullWidth
+                      margin="normal"
+                    >
+                      Confirmar Suma
+                    </Button>
+                  </>
+                )}
               </>
+
             )}
             {modalType === 'vencimiento' && (
               <div className="modal-align">
@@ -546,7 +609,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
               </div>
             )}
           </form>
-          {modalType !== 'eliminar' && modalType !== 'reporte' && (
+          {modalType !== 'eliminar' && modalType !== 'reporte' && !showSumInput && (
             <div className="alignBottom">
               <Button
                 variant="contained"
@@ -554,6 +617,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                 onClick={
                   modalType === 'nuevo' || modalType === 'repetitivo' ? handleSubmit : modalType === 'editar' ? handleEdit : modalType === 'fondos' ? () => handleAgregarFondos({ target: { value: mydata.fondos } }) : () => handleChangeVencimiento({ target: { value: mydata.vencimiento } })}
                 fullWidth
+                startIcon={<IoSaveOutline />}
               >
                 Guardar
               </Button>

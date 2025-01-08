@@ -62,25 +62,9 @@ const Dashboard = ({ data }) => {
                 }
             });
         }
-
-        console.log('Pagos futuros calculados:', pagos);
         return pagos;
     }, [data]);
 
-
-
-    const lineData = {
-        labels: Object.keys(pagosFuturos),
-        datasets: [
-            {
-                label: 'Pagos Futuros',
-                data: Object.values(pagosFuturos),
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                fill: true,
-            },
-        ],
-    };
 
 
     const distribucionGastos = useMemo(() => {
@@ -90,7 +74,7 @@ const Dashboard = ({ data }) => {
                 if (!distribucion[item.objeto]) {
                     distribucion[item.objeto] = 0;
                 }
-                distribucion[item.objeto] += parseFloat(item.precio.replace('$', ''));
+                distribucion[item.objeto] += parseFloat(item.precio.replace('$', '') / item.cuotas).toFixed(2);
             });
         }
         return distribucion;
@@ -164,7 +148,11 @@ const Dashboard = ({ data }) => {
                 }
             });
         }
-        return gastos;
+        if (Object.keys(gastos).length === 0) {
+            return { 'Sin gastos hormiga': 0 };
+        } else {
+            return gastos;
+        }
     }, [data]);
 
     const barData = {
@@ -174,6 +162,8 @@ const Dashboard = ({ data }) => {
                 label: 'Gastos Mensuales',
                 data: Object.values(gastosMensuales),
                 backgroundColor: 'rgba(75, 192, 192, 0.6)',
+
+
             },
         ],
     };
@@ -226,7 +216,12 @@ const Dashboard = ({ data }) => {
             {
                 label: 'Gastos por Medio de Pago',
                 data: Object.values(gastosPorMedio),
-                backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                backgroundColor: ['rgba(255, 159, 64, 0.6)',
+
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                ],
             },
         ],
     };
@@ -237,7 +232,9 @@ const Dashboard = ({ data }) => {
             {
                 label: 'Cantidad de Gastos por Tipo',
                 data: [cantidadGastosPorTipo.credito, cantidadGastosPorTipo.debito],
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                backgroundColor: ['rgba(75, 192, 192, 0.6)',
+                    'rgba(255, 99, 132, 0.6)'],
+
             },
         ],
     };
