@@ -13,8 +13,6 @@ import { FaCalendarAlt } from "react-icons/fa";
 import { FaSwatchbook } from "react-icons/fa";
 import { FaWallet } from "react-icons/fa";
 import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
-import { FaCreditCard } from "react-icons/fa6";
-import { FaMoneyBill1Wave } from "react-icons/fa6";
 import { VscArrowSwap } from "react-icons/vsc";
 import { VscArrowUp } from "react-icons/vsc";
 import { VscArrowDown } from "react-icons/vsc";
@@ -23,6 +21,10 @@ import { FiSearch } from "react-icons/fi";
 import { FaChartPie } from "react-icons/fa";
 import { MdLock } from 'react-icons/md';
 import { CgLogIn } from 'react-icons/cg';
+import { FaCreditCard } from "react-icons/fa6";
+import { FaMoneyBill1Wave } from "react-icons/fa6";
+import { FaMoneyBillTransfer } from "react-icons/fa6";
+import { BsCreditCard2Front } from "react-icons/bs";
 
 
 export const calcularCuotasRestantesCredito = (fecha, cuotas, fechaVencimiento, fechaCierre, fechaVencimientoAnterior, fechaCierreAnterior) => {
@@ -510,7 +512,9 @@ function Table({ data, mydata, openModal, total }) {
                                             {item.objeto}
                                             {item.isFijo && <PiRepeatBold size={15} color='#ff9a15' />}
                                             {item.tipo === 'credito' && <FaCreditCard size={15} color='#3181ff' />}
-                                            {item.tipo === 'debito' && item.isFijo == false && <FaMoneyBill1Wave size={15} color='#11af00' />}
+                                            {item.tipo === 'debito' && item.isFijo == false && item.medio == 'Efectivo' && <FaMoneyBill1Wave size={15} color='#11af00' />}
+                                            {item.tipo === 'debito' && item.isFijo == false && item.medio == 'Transferencia' && <FaMoneyBillTransfer size={15} color='#e773d4' />}
+                                            {item.tipo === 'debito' && item.isFijo == false && (item.medio != 'Transferencia' && item.medio != 'Efectivo') && <BsCreditCard2Front size={15} color='#11af00' />}
                                         </td>
                                         <td>{item.fecha}</td>
                                         <td>{item.medio}</td>

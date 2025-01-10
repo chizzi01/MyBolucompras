@@ -51,7 +51,7 @@ function App() {
       fecha: fecha.split("-").reverse().join("/"),
       medio: medio,
       cuotas: tipo === 'debito' ? 1 : Number(cuotas),
-      tipo: tipo,
+      tipo: (medio === 'Efectivo' || medio==='Transferencia') ? 'debito' : tipo,
       banco: banco,
       cantidad: Number(cantidad),
       precio: isNaN(Number(precio)) || !isFinite(Number(precio)) ? "$ 0" : `$ ${Number(precio).toFixed(2)}`

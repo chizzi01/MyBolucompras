@@ -4,11 +4,18 @@ import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdor
 import "../App.css";
 import Dashboard from './Dashboard';
 import { IoSaveOutline } from "react-icons/io5";
+import { FaCreditCard } from "react-icons/fa6";
+import { FaMoneyBill1Wave } from "react-icons/fa6";
+import { FaMoneyBillTransfer } from "react-icons/fa6";
+import { BsCreditCard2Front } from "react-icons/bs";
+import { CiBank } from "react-icons/ci";
+import { SiAmericanexpress, SiMastercard, SiVisa } from "react-icons/si";
+
 
 function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, handleDelete, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, modalType }) {
   const [showSumInput, setShowSumInput] = useState(false);
   const [additionalFunds, setAdditionalFunds] = useState('');
-  const [ tempCierre, setTempCierre ] = useState(mydata.cierre || '');
+  const [tempCierre, setTempCierre] = useState(mydata.cierre || '');
   const handleSumFunds = () => {
     const newFunds = parseFloat(mydata.fondos) + parseFloat(additionalFunds);
     setMyData({ ...mydata, fondos: newFunds });
@@ -27,16 +34,16 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
         margin="normal"
         sx={{
           '& .MuiOutlinedInput-root': {
-            backgroundColor: 'white',
+            backgroundColor: formData.objeto ? '#b0ffc3' : 'white',
             '& fieldset': {
-              borderColor: '#777777',
+              borderColor: formData.objeto ? '#bfffce' : '#777777',
               color: '#777777',
             },
             '&:hover fieldset': {
-              borderColor: '#777777',
+              borderColor: formData.objeto ? '#bfffce' : '#777777',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#777777',
+              borderColor: formData.objeto ? '#bfffce' : '#777777',
             },
           },
           '& .MuiInputLabel-root': {
@@ -61,16 +68,16 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
         }}
         sx={{
           '& .MuiOutlinedInput-root': {
-            backgroundColor: 'white',
+            backgroundColor: formData.fecha ? '#b0ffc3' : 'white',
             '& fieldset': {
-              borderColor: '#777777',
+              borderColor: formData.fecha ? '#bfffce' : '#777777',
               color: '#777777',
             },
             '&:hover fieldset': {
-              borderColor: '#777777',
+              borderColor: formData.fecha ? '#bfffce' : '#777777',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#777777',
+              borderColor: formData.fecha ? '#bfffce' : '#777777',
             },
           },
           '& .MuiInputLabel-root': {
@@ -83,16 +90,16 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
       />
       <FormControl variant="outlined" fullWidth={false} margin="normal" sx={{
         '& .MuiOutlinedInput-root': {
-          backgroundColor: 'white',
+          backgroundColor: formData.medio ? '#b0ffc3' : 'white',
           '& fieldset': {
-            borderColor: '#777777',
+            borderColor: formData.medio ? '#bfffce' : '#777777',
             color: '#777777',
           },
           '&:hover fieldset': {
-            borderColor: '#777777',
+            borderColor: formData.medio ? '#bfffce' : '#777777',
           },
           '&.Mui-focused fieldset': {
-            borderColor: '#777777',
+            borderColor: formData.medio ? '#bfffce' : '#777777',
           },
         },
         '& .MuiInputLabel-root': {
@@ -108,18 +115,19 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
           onChange={(e) => setFormData({ ...formData, medio: e.target.value })}
           label="Medio de pago"
           required
+          startAdornment={formData.medio == 'Visa' ? <SiVisa size={25} style={{ marginRight: '5px' }} color='#575757' /> : formData.medio == 'MasterCard' ? <SiMastercard size={25} style={{ marginRight: '5px' }} color='#575757' /> : formData.medio == 'American Express' ? <SiAmericanexpress size={25} style={{ marginRight: '5px' }} color='#575757' /> : formData.medio == 'Efectivo' ? <FaMoneyBill1Wave size={25} style={{ marginRight: '5px' }} color='#575757' /> : formData.medio == 'Transferencia' ? <FaMoneyBillTransfer size={25} style={{ marginRight: '5px' }} color='#575757' /> : null}
           sx={{
             '& .MuiOutlinedInput-root': {
-              backgroundColor: 'white',
+              backgroundColor: formData.medio ? '#b0ffc3' : 'white',
               '& fieldset': {
-                borderColor: '#777777',
+                borderColor: formData.medio ? '#bfffce' : '#777777',
                 color: '#777777',
               },
               '&:hover fieldset': {
-                borderColor: '#777777',
+                borderColor: formData.medio ? '#bfffce' : '#777777',
               },
               '&.Mui-focused fieldset': {
-                borderColor: '#777777',
+                borderColor: formData.medio ? '#bfffce' : '#777777',
               },
             },
             '& .MuiInputLabel-root': {
@@ -133,22 +141,22 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
           <MenuItem value="Visa">Visa</MenuItem>
           <MenuItem value="MasterCard">MasterCard</MenuItem>
           <MenuItem value="American Express">American Express</MenuItem>
-          <MenuItem value="Mercado Pago">Mercado Pago</MenuItem>
           <MenuItem value="Efectivo">Efectivo</MenuItem>
+          <MenuItem value="Transferencia">Transferencia</MenuItem>
         </Select>
       </FormControl>
       <FormControl variant="outlined" fullWidth={false} margin="normal" sx={{
         '& .MuiOutlinedInput-root': {
-          backgroundColor: 'white',
+          backgroundColor: formData.banco ? '#b0ffc3' : 'white',
           '& fieldset': {
-            borderColor: '#777777',
+            borderColor: formData.banco ? '#bfffce' : '#777777',
             color: '#777777',
           },
           '&:hover fieldset': {
-            borderColor: '#777777',
+            borderColor: formData.banco ? '#bfffce' : '#777777',
           },
           '&.Mui-focused fieldset': {
-            borderColor: '#777777',
+            borderColor: formData.banco ? '#bfffce' : '#777777',
           },
         },
         '& .MuiInputLabel-root': {
@@ -164,12 +172,34 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
           onChange={(e) => setFormData({ ...formData, banco: e.target.value })}
           label="Banco"
           required
+          startAdornment={formData.banco != '' ? <CiBank size={25} style={{ marginRight: '5px' }} color='#575757' /> : null}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: formData.banco ? '#b0ffc3' : 'white',
+              '& fieldset': {
+                borderColor: formData.banco ? '#bfffce' : '#777777',
+                color: '#777777',
+              },
+              '&:hover fieldset': {
+                borderColor: formData.banco ? '#bfffce' : '#777777',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: formData.banco ? '#bfffce' : '#777777',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: 'black',
+            },
+            '& .MuiInputLabel-root.Mui-focused': {
+              color: 'black',
+            },
+          }}
         >
           <MenuItem value="Santander">Santander</MenuItem>
           <MenuItem value="Nacion">Nacion</MenuItem>
           <MenuItem value="Galicia">Galicia</MenuItem>
           <MenuItem value="BBVA">BBVA</MenuItem>
-          <MenuItem value="HSBC">HSBC</MenuItem>
+          <MenuItem value="Galicia Más">Galicia Más</MenuItem>
           <MenuItem value="Credicoop">Credicoop</MenuItem>
           <MenuItem value="Patagonia">Patagonia</MenuItem>
           <MenuItem value="Supervielle">Supervielle</MenuItem>
@@ -182,75 +212,6 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
           <MenuItem value="Ninguno">Ninguno</MenuItem>
         </Select>
       </FormControl>
-    </>
-  );
-
-  const renderRepetitivoFields = () => (
-    <>
-      <TextField
-        label="Rep. en el mes"
-        type="number"
-        variant="outlined"
-        value={formData.cantidad}
-        onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
-        min="0"
-        required
-        fullWidth={false}
-        margin="normal"
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            backgroundColor: 'white',
-            '& fieldset': {
-              borderColor: '#777777',
-              color: '#777777',
-            },
-            '&:hover fieldset': {
-              borderColor: '#777777',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: '#777777',
-            },
-          },
-          '& .MuiInputLabel-root': {
-            color: 'black',
-          },
-          '& .MuiInputLabel-root.Mui-focused': {
-            color: 'black',
-          },
-        }}
-      />
-      <TextField
-        label="Periodo en meses"
-        type="number"
-        variant="outlined"
-        value={formData.cuotas}
-        onChange={(e) => setFormData({ ...formData, cuotas: e.target.value })}
-        min="0"
-        required
-        fullWidth={false}
-        margin="normal"
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            backgroundColor: 'white',
-            '& fieldset': {
-              borderColor: '#777777',
-              color: '#777777',
-            },
-            '&:hover fieldset': {
-              borderColor: '#777777',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: '#777777',
-            },
-          },
-          '& .MuiInputLabel-root': {
-            color: 'black',
-          },
-          '& .MuiInputLabel-root.Mui-focused': {
-            color: 'black',
-          },
-        }}
-      />
     </>
   );
 
@@ -299,38 +260,41 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                 {renderCommonFields()}
                 {(modalType === 'nuevo' || modalType === 'editar') && (
                   <>
-                    <FormControl variant="outlined" fullWidth={false} margin="normal" sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: 'white',
-                        '& fieldset': {
-                          borderColor: '#777777',
-                          color: '#777777',
+                    {formData.medio != 'Efectivo' && formData.medio != 'Transferencia' && (
+                      <FormControl variant="outlined" fullWidth={false} margin="normal" sx={{
+                        '& .MuiOutlinedInput-root': {
+                          backgroundColor: formData.tipo ? '#b0ffc3' : 'white',
+                          '& fieldset': {
+                            borderColor: formData.tipo ? '#bfffce' : '#777777',
+                            color: '#777777',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: formData.tipo ? '#bfffce' : '#777777',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: formData.tipo ? '#bfffce' : '#777777',
+                          },
                         },
-                        '&:hover fieldset': {
-                          borderColor: '#777777',
+                        '& .MuiInputLabel-root': {
+                          color: 'black',
                         },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#777777',
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: 'black',
                         },
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: 'black',
-                      },
-                      '& .MuiInputLabel-root.Mui-focused': {
-                        color: 'black',
-                      },
-                    }}>
-                      <InputLabel>Tipo</InputLabel>
-                      <Select
-                        value={formData.tipo}
-                        onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                        label="Tipo"
-                        required
-                      >
-                        <MenuItem value="debito">Débito</MenuItem>
-                        <MenuItem value="credito">Crédito</MenuItem>
-                      </Select>
-                    </FormControl>
+                      }}>
+                        <InputLabel>Tipo</InputLabel>
+                        <Select
+                          value={formData.tipo}
+                          onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                          label="Tipo"
+                          required
+                          startAdornment={formData.tipo == 'debito' ? <BsCreditCard2Front size={25} style={{ marginRight: '5px' }} color='#575757' /> : formData.tipo == 'credito' ? <FaCreditCard size={25} style={{ marginRight: '5px' }} color='#575757' /> : null}
+                        >
+                          <MenuItem value="debito">Débito</MenuItem>
+                          <MenuItem value="credito">Crédito</MenuItem>
+                        </Select>
+                      </FormControl>
+                    )}
                     {formData.tipo === 'credito' && (
                       <TextField
                         label="Cuotas"
@@ -344,16 +308,16 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                         margin="normal"
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            backgroundColor: 'white',
+                            backgroundColor: formData.cuotas ? '#b0ffc3' : 'white',
                             '& fieldset': {
-                              borderColor: '#777777',
+                              borderColor: formData.cuotas ? '#bfffce' : '#777777',
                               color: '#777777',
                             },
                             '&:hover fieldset': {
-                              borderColor: '#777777',
+                              borderColor: formData.cuotas ? '#bfffce' : '#777777',
                             },
                             '&.Mui-focused fieldset': {
-                              borderColor: '#777777',
+                              borderColor: formData.cuotas ? '#bfffce' : '#777777',
                             },
                           },
                           '& .MuiInputLabel-root': {
@@ -451,16 +415,16 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                   }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
+                      backgroundColor: formData.precio ? '#b0ffc3' : 'white',
                       '& fieldset': {
-                        borderColor: '#777777',
+                        borderColor: formData.precio ? '#bfffce' : '#777777',
                         color: '#777777',
                       },
                       '&:hover fieldset': {
-                        borderColor: '#777777',
+                        borderColor: formData.precio ? '#bfffce' : '#777777',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#777777',
+                        borderColor: formData.precio ? '#bfffce' : '#777777',
                       },
                     },
                     '& .MuiInputLabel-root': {
@@ -616,7 +580,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                 variant="contained"
                 color="primary"
                 onClick={
-                  modalType === 'nuevo' || modalType === 'repetitivo' ? handleSubmit : modalType === 'editar' ? handleEdit : modalType === 'fondos' ? () => handleAgregarFondos({ target: { value: mydata.fondos } }) : () => handleChangeCierre({ target: { value: tempCierre  } })}
+                  modalType === 'nuevo' || modalType === 'repetitivo' ? handleSubmit : modalType === 'editar' ? handleEdit : modalType === 'fondos' ? () => handleAgregarFondos({ target: { value: mydata.fondos } }) : () => handleChangeCierre({ target: { value: tempCierre } })}
                 fullWidth
                 startIcon={<IoSaveOutline />}
               >
