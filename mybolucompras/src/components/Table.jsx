@@ -8,7 +8,7 @@ import { PiRepeatBold } from "react-icons/pi";
 import { GiReceiveMoney } from "react-icons/gi";
 import { FaPiggyBank } from "react-icons/fa";
 import { FaMoneyCheckDollar } from "react-icons/fa6";
-import { IoMdAdd } from "react-icons/io";
+import { IoMdAdd, IoMdTrash } from "react-icons/io";
 import { FaCalendarAlt } from "react-icons/fa";
 import { FaSwatchbook } from "react-icons/fa";
 import { FaWallet } from "react-icons/fa";
@@ -16,7 +16,7 @@ import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { VscArrowSwap } from "react-icons/vsc";
 import { VscArrowUp } from "react-icons/vsc";
 import { VscArrowDown } from "react-icons/vsc";
-import { MdFilterListAlt } from "react-icons/md";
+import { MdClose, MdFilterListAlt } from "react-icons/md";
 import { FiSearch } from "react-icons/fi";
 import { FaChartPie } from "react-icons/fa";
 import { MdLock } from 'react-icons/md';
@@ -95,7 +95,6 @@ function Table({ data, mydata, openModal, total }) {
     const handleSwitchChange = () => {
         setIsSwitchOn(!isSwitchOn);
     };
-
     const handleSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -103,7 +102,9 @@ function Table({ data, mydata, openModal, total }) {
         } else if (sortConfig.key === key && sortConfig.direction === 'descending') {
             direction = 'default';
         }
-        setSortConfig({ key, direction });
+        const newSortConfig = { key, direction };
+        setSortConfig(newSortConfig);
+        localStorage.setItem('sortConfig', JSON.stringify(newSortConfig));
     };
 
     const sortedData = useMemo(() => {
@@ -272,6 +273,8 @@ function Table({ data, mydata, openModal, total }) {
                     <button className="dropbtnFilter" onClick={handleFilterClick}>
                         <MdFilterListAlt size={25} />
                         {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
+                        {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterObject(''); setFilterType(''); setFilterBank(''); setFilterMedio(''); }} />}
+
                     </button>
                     {showFilter && (
                         <div className="filter-container">
@@ -288,10 +291,10 @@ function Table({ data, mydata, openModal, total }) {
                                     }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
+                                            backgroundColor: filterObject ? '#5ca8ffbf' : 'transparent',
                                             fontSize: '12px',
                                             '& fieldset': {
                                                 borderColor: 'white',
-
                                             },
                                             '&:hover fieldset': {
                                                 borderColor: 'white',
@@ -316,6 +319,7 @@ function Table({ data, mydata, openModal, total }) {
                                 <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '100px' }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
+                                            backgroundColor: filterType ? '#5ca8ffbf' : 'transparent',
                                             fontSize: '12px',
                                             '& fieldset': {
                                                 borderColor: 'white',
@@ -353,6 +357,7 @@ function Table({ data, mydata, openModal, total }) {
                                 <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '100px' }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
+                                            backgroundColor: filterBank ? '#5ca8ffbf' : 'transparent',
                                             fontSize: '12px',
                                             '& fieldset': {
                                                 borderColor: 'white',
@@ -392,6 +397,7 @@ function Table({ data, mydata, openModal, total }) {
                                 <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '100px' }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
+                                            backgroundColor: filterMedio ? '#5ca8ffbf' : 'transparent',
                                             fontSize: '12px',
                                             '& fieldset': {
                                                 borderColor: 'white',

@@ -104,6 +104,11 @@ a {
   transition: width 0.2s;
 }
 
+.nav-items a:focus,
+.nav-items a:active {
+  outline: none; /* Elimina el contorno predeterminado */
+}
+
 #gastos {
   padding-top: 80px;
 }
@@ -140,7 +145,8 @@ a {
 }
 
 .logonav {
-  width: 80px;
+  width: 65px;
+  top: 5px;
   position: absolute;
   margin-left: 20px;
   animation: bellmove 1s infinite;
@@ -1604,11 +1610,24 @@ input:checked+.slider:before {
 .filterCount {
   position: absolute;
   top: 30px;
-  left: 30px;
+  left: 34px;
   background-color: rgb(163, 93, 255);
   color: white;
   border-radius: 50%;
   font-size: 12px;
+  width: 20px;  
+  height: 20px;
+  padding: 2px;
+  text-align: center;
+}
+
+.filterClose {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  background-color: #4d4d4d;
+  color: white;
+  border-radius: 50%;
   width: 20px;  
   height: 20px;
   padding: 2px;
