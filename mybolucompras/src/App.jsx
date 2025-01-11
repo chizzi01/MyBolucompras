@@ -6,6 +6,7 @@ import Modal from './components/Modal';
 import Header from './components/Navbar';
 import Footer from './components/Footer';
 import Preguntas from './components/Preguntas';
+import { FaCalculator } from "react-icons/fa6";
 
 function App() {
   const [data, setData] = useState([]);
@@ -166,12 +167,6 @@ function App() {
   
     setMyData(updatedMyData);
     saveMyData(updatedMyData);
-  
-    console.log('Cierre actual:', updatedMyData.cierre);
-    console.log('Cierre anterior:', updatedMyData.cierreAnterior);
-    console.log('Vencimiento actual:', updatedMyData.vencimiento);
-    console.log('Vencimiento anterior:', updatedMyData.vencimientoAnterior);
-  
     setModalVisible(false); // Cerrar el modal
   };
 
@@ -273,6 +268,7 @@ function App() {
               <Table data={data} mydata={mydata} openModal={openModal} total={totalGastado()} />
               <Footer totalGastado={totalGastado()} bancoUsado={bancoMasUsado()} tarjetaUsada={tarjetaMasUsada()} />
               {modalVisible && (
+                <>
                 <Modal
                   formData={formData}
                   mydata={mydata}
@@ -288,6 +284,10 @@ function App() {
                   handleAgregarFondos={handleAgregarFondos}
                   modalType={modalType}
                 />
+                <div className="calculadora-align" onClick={() => window.location.href = 'ms-calculator://'}>
+                    <FaCalculator size={30} />
+                </div>
+                </>
               )}
             </>
           } />

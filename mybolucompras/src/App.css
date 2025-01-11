@@ -1179,6 +1179,32 @@ tr:nth-child(odd) {
   padding-top: 15px;
 }
 
+.calculadora-align {
+  position: fixed;
+  bottom: 50px;
+  right: 50px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  border-radius: 50%;
+  background-color: #882dff;
+  box-shadow: 0 0px 10px 0 rgb(177, 118, 255), 0 0px 0px 0 rgba(0, 0, 0, 0);
+  z-index: 1000; /* Ensure it is above other elements */
+  animation: float 6s ease-in-out infinite;
+  color: #ffffff;
+  cursor: pointer;
+  border:  #f0e4ff solid 3px;
+}
+
+.calculadora-align:hover {
+  background-color: #ffffff;
+  color: #882dff;
+  border: #882dff solid 3px;
+
+}
+
 .eliminarSize {
   font-size: 25px;
   margin-left: 10px;
@@ -2018,6 +2044,20 @@ input:checked+.slider:before {
   to {
     transform: translateX(0);
     opacity: 1;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0);
   }
 }
 
