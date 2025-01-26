@@ -293,6 +293,7 @@ function Table({ data, mydata, openModal, total }) {
                                         '& .MuiOutlinedInput-root': {
                                             backgroundColor: filterObject ? '#5ca8ffbf' : 'transparent',
                                             fontSize: '12px',
+                                            minWidth: '120px',
                                             '& fieldset': {
                                                 borderColor: 'white',
                                             },
@@ -316,13 +317,15 @@ function Table({ data, mydata, openModal, total }) {
                                 />
                             </div>
                             <div className="verticalBtn-text">
-                                <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '100px' }}
+                                <FormControl variant="outlined" fullWidth={false} margin="normal" style={{ minWidth: '90px' }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             backgroundColor: filterType ? '#5ca8ffbf' : 'transparent',
                                             fontSize: '12px',
+                                            maxWidth: '100px',
                                             '& fieldset': {
                                                 borderColor: 'white',
+                                               
                                             },
                                             '&:hover fieldset': {
                                                 borderColor: 'white',
@@ -354,11 +357,12 @@ function Table({ data, mydata, openModal, total }) {
                                 </FormControl>
                             </div>
                             <div className="verticalBtn-text">
-                                <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '100px' }}
+                                <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             backgroundColor: filterBank ? '#5ca8ffbf' : 'transparent',
                                             fontSize: '12px',
+                                            maxWidth: '100px',
                                             '& fieldset': {
                                                 borderColor: 'white',
                                             },
@@ -394,17 +398,19 @@ function Table({ data, mydata, openModal, total }) {
                                 </FormControl>
                             </div>
                             <div className="verticalBtn-text">
-                                <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '100px' }}
+                                <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
                                             backgroundColor: filterMedio ? '#5ca8ffbf' : 'transparent',
                                             fontSize: '12px',
+                                            maxWidth: '100px',
                                             '& fieldset': {
                                                 borderColor: 'white',
                                             },
                                             '&:hover fieldset': {
                                                 borderColor: 'white',
                                                 color: 'white',
+                                                
                                             },
                                             '&.Mui-focused fieldset': {
                                                 borderColor: 'white',
