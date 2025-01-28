@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import '../App.css';
-import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdornment } from '@mui/material';
+import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdornment, Icon } from '@mui/material';
 import Papa from 'papaparse';
-import { FaEdit } from "react-icons/fa";
+import { FaCheck, FaClosedCaptioning, FaEdit } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa";
 import { PiRepeatBold } from "react-icons/pi";
 import { GiReceiveMoney } from "react-icons/gi";
 import { FaPiggyBank } from "react-icons/fa";
-import { FaMoneyCheckDollar } from "react-icons/fa6";
+import { FaMoneyCheckDollar, FaXmark } from "react-icons/fa6";
 import { IoMdAdd, IoMdTrash } from "react-icons/io";
 import { FaCalendarAlt } from "react-icons/fa";
 import { FaSwatchbook } from "react-icons/fa";
@@ -58,20 +58,73 @@ export const calcularCuotasRestantesCredito = (fecha, cuotas, fechaVencimiento, 
     return cuotasRestantes < 0 ? 0 : cuotasRestantes;
 };
 
-function Table({ data, mydata, openModal, total }) {
-    // Asegúrate de que data sea un array
+
+export const calcularCuotasRestantes = (fecha, cuotas) => {
+    const fechaActual = new Date();
+    const [dia, mes, anio] = fecha.split('/');
+    const fechaCompra = new Date(`${anio}-${mes}-${dia}`);
+    const diferenciaMeses = (fechaActual.getFullYear() - fechaCompra.getFullYear()) * 12 + (fechaActual.getMonth() - fechaCompra.getMonth());
+    const cuotasRestantes = parseInt(cuotas, 10) - diferenciaMeses;
+
+    return cuotasRestantes < 0 ? 0 : cuotasRestantes;
+};
+
+
+function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMedios, uniqueEtiquetas, saveItem }) {
     if (!Array.isArray(data)) {
-        return <div>No hay datos</div>; // O muestra un mensaje de error o un componente de carga
+        return <div>No hay datos</div>;
     }
     const [showFilter, setShowFilter] = useState(false);
-    const [filterObject, setFilterObject] = useState('');
-    const [filterType, setFilterType] = useState('');
-    const [filterBank, setFilterBank] = useState('');
-    const [filterMedio, setFilterMedio] = useState('');
     const [filterCount, setFilterCount] = useState(0);
+
+    const {
+        filterObject,
+        setFilterObject,
+        filterType,
+        setFilterType,
+        filterBank,
+        setFilterBank,
+        filterMedio,
+        setFilterMedio,
+        filterEtiqueta,
+        setFilterEtiqueta,
+        isSwitchOn,
+        handleSwitchChange,
+    } = filters;
 
     const handleFilterClick = () => {
         setShowFilter(!showFilter);
+    };
+
+    const [labels, setLabels] = useState({});
+    const [editingItemId, setEditingItemId] = useState(null);
+
+    const handleLabelChange = (id, value) => {
+        setLabels(prevLabels => {
+            const newLabels = { ...prevLabels, [id]: value };
+            console.log('Labels actualizados:', newLabels);
+            return newLabels;
+        });
+        setEditingItemId(id); // Set the editing item ID to trigger useEffect
+    };
+
+    useEffect(() => {
+        if (editingItemId !== null) {
+            const etiquetaSeleccionada = labels[editingItemId];
+            console.log('Etiqueta seleccionada:', etiquetaSeleccionada);
+            const item = data.find(item => item.id === editingItemId);
+            console.log('Item encontrado:', item);
+
+            if (etiquetaSeleccionada !== undefined && item && etiquetaSeleccionada !== item.etiqueta) {
+                console.log('Guardando item:', { id: editingItemId, etiqueta: etiquetaSeleccionada });
+                saveItem({ id: editingItemId, etiqueta: etiquetaSeleccionada });
+            }
+            setEditingItemId(null); // Reset the editing item ID
+        }
+    }, [labels, editingItemId]);
+
+    const handleLabelConfirm = (id) => {
+        setEditingItemId(id); // Trigger the useEffect
     };
 
     const countFilters = () => {
@@ -80,21 +133,22 @@ function Table({ data, mydata, openModal, total }) {
         if (filterType) count++;
         if (filterBank) count++;
         if (filterMedio) count++;
+        if (filterEtiqueta) count++;
         setFilterCount(count);
     };
 
     useEffect(() => {
         countFilters();
-    }, [filterObject, filterType, filterBank, filterMedio]);
+    }, [filterObject, filterType, filterBank, filterMedio, filterEtiqueta]);
 
     const mesActual = new Date().toLocaleString('es-ES', { month: 'long' });
 
-    const [isSwitchOn, setIsSwitchOn] = useState(false);
+    // const [isSwitchOn, setIsSwitchOn] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'default' });
 
-    const handleSwitchChange = () => {
-        setIsSwitchOn(!isSwitchOn);
-    };
+    // const handleSwitchChange = () => {
+    //     setIsSwitchOn(!isSwitchOn);
+    // };
     const handleSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -138,15 +192,15 @@ function Table({ data, mydata, openModal, total }) {
         return sortableData;
     }, [data, sortConfig]);
 
-    const calcularCuotasRestantes = (fecha, cuotas) => {
-        const fechaActual = new Date();
-        const [dia, mes, anio] = fecha.split('/');
-        const fechaCompra = new Date(`${anio}-${mes}-${dia}`);
-        const diferenciaMeses = (fechaActual.getFullYear() - fechaCompra.getFullYear()) * 12 + (fechaActual.getMonth() - fechaCompra.getMonth());
-        const cuotasRestantes = parseInt(cuotas, 10) - diferenciaMeses;
+    // const calcularCuotasRestantes = (fecha, cuotas) => {
+    //     const fechaActual = new Date();
+    //     const [dia, mes, anio] = fecha.split('/');
+    //     const fechaCompra = new Date(`${anio}-${mes}-${dia}`);
+    //     const diferenciaMeses = (fechaActual.getFullYear() - fechaCompra.getFullYear()) * 12 + (fechaActual.getMonth() - fechaCompra.getMonth());
+    //     const cuotasRestantes = parseInt(cuotas, 10) - diferenciaMeses;
 
-        return cuotasRestantes < 0 ? 0 : cuotasRestantes;
-    };
+    //     return cuotasRestantes < 0 ? 0 : cuotasRestantes;
+    // };
 
 
 
@@ -156,15 +210,15 @@ function Table({ data, mydata, openModal, total }) {
             : calcularCuotasRestantesCredito(item.fecha, item.cuotas, mydata.vencimiento, mydata.cierre, mydata.vencimientoAnterior, mydata.cierreAnterior);
     };
 
-    const filteredData = sortedData.filter(item => {
-        return (
-            (filterObject === '' || item.objeto.toLowerCase().includes(filterObject.toLowerCase())) &&
-            (filterType === '' || item.tipo === filterType) &&
-            (filterBank === '' || item.banco === filterBank) &&
-            (filterMedio === '' || item.medio === filterMedio) &&
-            (isSwitchOn || calcularCuotas(item) >= 1)
-        );
-    });
+    // const filteredData = sortedData.filter(item => {
+    //     return (
+    //         (filterObject === '' || item.objeto.toLowerCase().includes(filterObject.toLowerCase())) &&
+    //         (filterType === '' || item.tipo === filterType) &&
+    //         (filterBank === '' || item.banco === filterBank) &&
+    //         (filterMedio === '' || item.medio === filterMedio) &&
+    //         (isSwitchOn || calcularCuotas(item) >= 1)
+    //     );
+    // });
 
     const exportToExcel = () => {
         const table = document.getElementById('tabla');
@@ -206,16 +260,6 @@ function Table({ data, mydata, openModal, total }) {
         URL.revokeObjectURL(url); // Liberar memoria
     };
 
-    const uniqueBanks = useMemo(() => {
-        const banks = new Set();
-        data.forEach(item => {
-            if (item.banco) {
-                banks.add(item.banco);
-            }
-        });
-        return Array.from(banks);
-    }, [data]);
-
     const mediosDePago = useMemo(() => {
         const medios = new Set();
         data.forEach(item => {
@@ -226,8 +270,7 @@ function Table({ data, mydata, openModal, total }) {
         return Array.from(medios);
     }, [data]);
     const isAfterCierre = (fechaCompra, fechaCierreDate, fechaCierreAnterior, medio, tipo) => {
-        // Verificar si la fecha de compra es posterior al cierre anterior y antes del cierre actual
-        return (fechaCompra > fechaCierreAnterior && fechaCompra <= fechaCierreDate) && medio !== 'Efectivo' && tipo === 'credito';
+        return (fechaCompra > fechaCierreAnterior && (fechaCompra <= fechaCierreDate || fechaCompra > fechaCierreDate) ) && medio !== 'Efectivo'  && medio !== 'Transferencia' && tipo === 'credito';
     };
 
 
@@ -273,12 +316,12 @@ function Table({ data, mydata, openModal, total }) {
                     <button className="dropbtnFilter" onClick={handleFilterClick}>
                         <MdFilterListAlt size={25} />
                         {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
-                        {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterObject(''); setFilterType(''); setFilterBank(''); setFilterMedio(''); }} />}
+                        {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterObject(''); setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); }} />}
 
                     </button>
                     {showFilter && (
                         <div className="filter-container">
-                            <div className="verticalBtn-text">
+                            <div className="verticalBtn-textFilters">
                                 <TextField
                                     label="Objeto"
                                     variant="outlined"
@@ -293,7 +336,7 @@ function Table({ data, mydata, openModal, total }) {
                                         '& .MuiOutlinedInput-root': {
                                             backgroundColor: filterObject ? '#5ca8ffbf' : 'transparent',
                                             fontSize: '12px',
-                                            minWidth: '120px',
+                                            width: '100%',
                                             '& fieldset': {
                                                 borderColor: 'white',
                                             },
@@ -313,132 +356,248 @@ function Table({ data, mydata, openModal, total }) {
                                         '& .MuiInputLabel-root.Mui-focused': {
                                             color: 'white',
                                         },
+
+                                        '& .MuiInputBase-input': {
+                                            fontSize: '12px', // Ajusta el tamaño de la fuente
+                                            padding: '10px', // Ajusta el padding
+                                        },
+
                                     }}
                                 />
                             </div>
-                            <div className="verticalBtn-text">
-                                <FormControl variant="outlined" fullWidth={false} margin="normal" style={{ minWidth: '90px' }}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            backgroundColor: filterType ? '#5ca8ffbf' : 'transparent',
-                                            fontSize: '12px',
-                                            maxWidth: '100px',
-                                            '& fieldset': {
-                                                borderColor: 'white',
-                                               
-                                            },
-                                            '&:hover fieldset': {
-                                                borderColor: 'white',
-                                                color: 'white',
-                                            },
-                                            '&.Mui-focused fieldset': {
-                                                borderColor: 'white',
-                                                color: 'white',
-                                            },
-                                        },
-                                        '& .MuiInputLabel-root': {
-                                            color: 'white',
-                                        },
-                                        '& .MuiInputLabel-root.Mui-focused': {
-                                            color: 'white',
-                                        },
-                                    }}
-                                >
-                                    <InputLabel>Tipo</InputLabel>
-                                    <Select
-                                        value={filterType}
-                                        onChange={(e) => setFilterType(e.target.value)}
-                                        label="Tipo"
-                                    >
-                                        <MenuItem value=""><em>None</em></MenuItem>
-                                        <MenuItem value="debito">Débito</MenuItem>
-                                        <MenuItem value="credito">Crédito</MenuItem>
-                                    </Select>
-                                </FormControl>
-                            </div>
-                            <div className="verticalBtn-text">
-                                <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            backgroundColor: filterBank ? '#5ca8ffbf' : 'transparent',
-                                            fontSize: '12px',
-                                            maxWidth: '100px',
-                                            '& fieldset': {
-                                                borderColor: 'white',
-                                            },
-                                            '&:hover fieldset': {
-                                                borderColor: 'white',
-                                                color: 'white',
-                                            },
-                                            '&.Mui-focused fieldset': {
-                                                borderColor: 'white',
-                                                color: 'white',
-                                            },
-                                        },
-                                        '& .MuiInputLabel-root': {
-                                            color: 'white',
-                                        },
-                                        '& .MuiInputLabel-root.Mui-focused': {
-                                            color: 'white',
-                                        },
-                                    }}
-                                >
-                                    <InputLabel>Banco</InputLabel>
-                                    <Select
-                                        value={filterBank}
-                                        onChange={(e) => setFilterBank(e.target.value)}
-                                        label="Banco"
-                                    >
-                                        <MenuItem value=""><em>None</em></MenuItem>
-                                        {uniqueBanks.map((bank, index) => (
-                                            <MenuItem key={index} value={bank}>{bank}</MenuItem>
-                                        ))}
+                            <div className='selectFilters-container'>
+                                <div className="verticalBtn-textFilters">
+                                    <FormControl variant="outlined" fullWidth={false} margin="normal" style={{ minWidth: '90px' }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                backgroundColor: filterType ? '#5ca8ffbf' : 'transparent',
+                                                fontSize: '12px',
+                                                maxWidth: '100px',
+                                                '& fieldset': {
+                                                    borderColor: 'white',
 
-                                    </Select>
-                                </FormControl>
-                            </div>
-                            <div className="verticalBtn-text">
-                                <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            backgroundColor: filterMedio ? '#5ca8ffbf' : 'transparent',
-                                            fontSize: '12px',
-                                            maxWidth: '100px',
-                                            '& fieldset': {
-                                                borderColor: 'white',
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: 'white',
+                                                    color: 'white',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: 'white',
+                                                    color: 'white',
+                                                },
                                             },
-                                            '&:hover fieldset': {
-                                                borderColor: 'white',
-                                                color: 'white',
-                                                
-                                            },
-                                            '&.Mui-focused fieldset': {
-                                                borderColor: 'white',
+                                            '& .MuiInputLabel-root': {
                                                 color: 'white',
                                             },
-                                        },
-                                        '& .MuiInputLabel-root': {
-                                            color: 'white',
-                                        },
-                                        '& .MuiInputLabel-root.Mui-focused': {
-                                            color: 'white',
-                                        },
-                                    }}
-                                >
-                                    <InputLabel>Medio</InputLabel>
-                                    <Select
-                                        value={filterMedio}
-                                        onChange={(e) => setFilterMedio(e.target.value)}
-                                        label="Medio"
+                                            '& .MuiInputLabel-root.Mui-focused': {
+                                                color: 'white',
+                                            },
+                                        }}
                                     >
-                                        <MenuItem value=""><em>None</em></MenuItem>
-                                        {mediosDePago.map((medio, index) => (
-                                            <MenuItem key={index} value={medio}>{medio}</MenuItem>
-                                        ))}
+                                        <InputLabel
+                                            sx={{
+                                                '&.MuiInputLabel-root': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                    top: '-5px', // Ajusta la posición de la etiqueta
+                                                },
+                                                '&.MuiInputLabel-root.Mui-focused': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                },
+                                            }}
+                                        >Tipo</InputLabel>
+                                        <Select
+                                            value={filterType}
+                                            onChange={(e) => setFilterType(e.target.value)}
+                                            label="Tipo"
+                                            sx={{
+                                                '& .MuiSelect-select': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                    padding: '10px', // Ajusta el padding
+                                                    maxWidth: '100px', // Ajusta el ancho máximo
+                                                },
+                                            }}
+                                        >
+                                            <MenuItem value=""><em>None</em></MenuItem>
+                                            <MenuItem value="debito">Débito</MenuItem>
+                                            <MenuItem value="credito">Crédito</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </div>
+                                <div className="verticalBtn-textFilters">
+                                    <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                backgroundColor: filterBank ? '#5ca8ffbf' : 'transparent',
+                                                fontSize: '12px',
+                                                maxWidth: '100px',
+                                                '& fieldset': {
+                                                    borderColor: 'white',
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: 'white',
+                                                    color: 'white',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: 'white',
+                                                    color: 'white',
+                                                },
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                color: 'white',
+                                            },
+                                            '& .MuiInputLabel-root.Mui-focused': {
+                                                color: 'white',
+                                            },
+                                        }}
+                                    >
+                                        <InputLabel
+                                            sx={{
+                                                '&.MuiInputLabel-root': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                    top: '-5px', // Ajusta la posición de la etiqueta
+                                                },
+                                                '&.MuiInputLabel-root.Mui-focused': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                },
+                                            }}
+                                        >Banco</InputLabel>
+                                        <Select
+                                            value={filterBank}
+                                            onChange={(e) => setFilterBank(e.target.value)}
+                                            label="Banco"
+                                            sx={{
+                                                '& .MuiSelect-select': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                    padding: '10px', // Ajusta el padding
+                                                    maxWidth: '100px', // Ajusta el ancho máximo
+                                                },
+                                            }}
+                                        >
+                                            <MenuItem value=""><em>None</em></MenuItem>
+                                            {uniqueBanks.map((bank, index) => (
+                                                <MenuItem key={index} value={bank}>{bank}</MenuItem>
+                                            ))}
 
-                                    </Select>
-                                </FormControl>
+                                        </Select>
+                                    </FormControl>
+                                </div>
+                                <div className="verticalBtn-textFilters">
+                                    <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                backgroundColor: filterMedio ? '#5ca8ffbf' : 'transparent',
+                                                fontSize: '12px',
+                                                maxWidth: '100px',
+                                                '& fieldset': {
+                                                    borderColor: 'white',
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: 'white',
+                                                    color: 'white',
 
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: 'white',
+                                                    color: 'white',
+                                                },
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                color: 'white',
+                                            },
+                                            '& .MuiInputLabel-root.Mui-focused': {
+                                                color: 'white',
+                                            },
+                                        }}
+                                    >
+                                        <InputLabel
+                                            sx={{
+                                                '&.MuiInputLabel-root': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                    top: '-5px', // Ajusta la posición de la etiqueta
+                                                },
+                                                '&.MuiInputLabel-root.Mui-focused': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                },
+                                            }}
+                                        >Medio</InputLabel>
+                                        <Select
+                                            value={filterMedio}
+                                            onChange={(e) => setFilterMedio(e.target.value)}
+                                            label="Medio"
+                                            sx={{
+                                                '& .MuiSelect-select': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                    padding: '10px', // Ajusta el padding
+                                                    maxWidth: '100px', // Ajusta el ancho máximo
+                                                },
+                                            }}
+                                        >
+                                            <MenuItem value=""><em>None</em></MenuItem>
+                                            {uniqueMedios.map((medio, index) => (
+                                                <MenuItem key={index} value={medio}>{medio}</MenuItem>
+                                            ))}
+
+                                        </Select>
+                                    </FormControl>
+                                </div>
+                                <div className="verticalBtn-textFilters">
+                                    <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                backgroundColor: filterEtiqueta ? '#5ca8ffbf' : 'transparent',
+                                                fontSize: '12px',
+                                                maxWidth: '100px',
+                                                '& fieldset': {
+                                                    borderColor: 'white',
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: 'white',
+                                                    color: 'white',
+
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: 'white',
+                                                    color: 'white',
+                                                },
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                color: 'white',
+                                            },
+                                            '& .MuiInputLabel-root.Mui-focused': {
+                                                color: 'white',
+                                            },
+                                        }}
+                                    >
+                                        <InputLabel
+                                            sx={{
+                                                '&.MuiInputLabel-root': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                    top: '-5px', // Ajusta la posición de la etiqueta
+                                                },
+                                                '&.MuiInputLabel-root.Mui-focused': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                },
+                                            }}
+                                        >Etiqueta</InputLabel>
+                                        <Select
+                                            value={filterEtiqueta}
+                                            onChange={(e) => setFilterEtiqueta(e.target.value)}
+                                            label="Etiqueta"
+                                            sx={{
+                                                '& .MuiSelect-select': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                    padding: '10px', // Ajusta el padding
+                                                    maxWidth: '100px', // Ajusta el ancho máximo
+                                                },
+                                            }}
+                                        >
+                                            <MenuItem value=""><em>None</em></MenuItem>
+                                            {uniqueEtiquetas.map((etiqueta, index) => (
+                                                <MenuItem key={index} value={etiqueta}>{etiqueta}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -505,12 +664,13 @@ function Table({ data, mydata, openModal, total }) {
                                         Precio {sortConfig.key === 'precio' ? (sortConfig.direction === 'ascending' ? <VscArrowUp /> : sortConfig.direction === 'descending' ? <VscArrowDown /> : <VscArrowSwap />) : <VscArrowSwap />}
                                     </div>
                                 </th>
+                                <th># Etiqueta</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
 
                         <tbody>
-                            {filteredData.map((item, index) => {
+                            {sortedData.map((item, index) => {
                                 const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
                                 const fechaCierreDate = new Date(mydata.cierre);
                                 const fechaCierreAnteriorDate = new Date(mydata.cierreAnterior);
@@ -520,13 +680,15 @@ function Table({ data, mydata, openModal, total }) {
 
                                 return (
                                     <tr key={index} style={{ position: 'relative' }}>
-                                        <td style={{ display: "flex", gap: '5px', justifyContent: 'center', alignItems: 'center', height: '40px' }}>
-                                            {item.objeto}
-                                            {item.isFijo && <PiRepeatBold size={15} color='#ff9a15' />}
-                                            {item.tipo === 'credito' && <FaCreditCard size={15} color='#3181ff' />}
-                                            {item.tipo === 'debito' && item.isFijo == false && item.medio == 'Efectivo' && <FaMoneyBill1Wave size={15} color='#11af00' />}
-                                            {item.tipo === 'debito' && item.isFijo == false && item.medio == 'Transferencia' && <FaMoneyBillTransfer size={15} color='#e773d4' />}
-                                            {item.tipo === 'debito' && item.isFijo == false && (item.medio != 'Transferencia' && item.medio != 'Efectivo') && <BsCreditCard2Front size={15} color='#11af00' />}
+                                        <td>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
+                                                {item.objeto}
+                                                {item.isFijo && <PiRepeatBold size={15} color='#ff9a15' />}
+                                                {item.tipo === 'credito' && <FaCreditCard size={15} color='#3181ff' />}
+                                                {item.tipo === 'debito' && item.isFijo == false && item.medio == 'Efectivo' && <FaMoneyBill1Wave size={15} color='#11af00' />}
+                                                {item.tipo === 'debito' && item.isFijo == false && item.medio == 'Transferencia' && <FaMoneyBillTransfer size={15} color='#e773d4' />}
+                                                {item.tipo === 'debito' && item.isFijo == false && (item.medio != 'Transferencia' && item.medio != 'Efectivo') && <BsCreditCard2Front size={15} color='#11af00' />}
+                                            </div>
                                         </td>
                                         <td>{item.fecha}</td>
                                         <td>{item.medio}</td>
@@ -534,6 +696,61 @@ function Table({ data, mydata, openModal, total }) {
                                         <td>{item.banco}</td>
                                         <td>{item.cantidad}</td>
                                         <td>${item.precio && typeof item.precio === 'string' ? parseFloat(item.precio.replace('$', '') / item.cuotas).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</td>
+                                        <td>
+                                            <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px', maxWidth: '100px', maxHeight: '50px', zIndex:10, backgroundColor: item.etiqueta ? '#bd9bff' : 'transparent' }} >
+                                                <Select
+                                                    value={labels[item.id] || item.etiqueta || ''}
+                                                    onChange={(e) => {
+                                                        handleLabelChange(item.id, e.target.value);
+                                                        handleLabelConfirm(item.id);
+                                                    }}
+                                                    autoWidth
+                                                    displayEmpty
+                                                    style={{
+                                                        fontSize: '12px'
+                                                    }}
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': {
+                                                            fontSize: '12px',
+                                                            maxWidth: '100px',
+                                                            '& fieldset': {
+                                                                borderColor: 'white',
+                                                            },
+                                                            '&:hover fieldset': {
+                                                                borderColor: 'white',
+                                                                color: 'white',
+                                                            },
+                                                            '&.Mui-focused fieldset': {
+                                                                borderColor: 'white',
+                                                                color: 'white',
+                                                            },
+                                                        },
+                                                        '& .MuiFormHelperText-root': {
+                                                            color: '#c30000',
+                                                            fontSize: '10px',
+                                                        },
+                                                        '& .MuiSelect-select': {
+                                                            fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                            padding: '8px', // Ajusta el padding
+                                                            maxWidth: '100px', // Ajusta el ancho máximo
+                                                            maxHeight: '30px',
+                                                        },
+                                                    }}
+                                                >
+                                                    <MenuItem value=""><em>None</em></MenuItem>
+                                                    {[...new Set(data.filter(i => i.etiqueta).map(i => i.etiqueta))].map((etiqueta, index) => (
+                                                        <MenuItem key={index} value={etiqueta}>
+                                                            {etiqueta}
+                                                        </MenuItem>
+                                                    ))}
+                                                    <MenuItem>
+                                                        <Button onClick={() => openModal('crearEtiqueta', item)}>
+                                                            Crear Etiqueta
+                                                        </Button>
+                                                    </MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </td>
                                         <td>
                                             <div className='buttonsActionsAlign'>
                                                 {calcularCuotas(item) >= 1 ?

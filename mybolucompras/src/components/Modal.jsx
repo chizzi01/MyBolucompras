@@ -12,7 +12,7 @@ import { CiBank } from "react-icons/ci";
 import { SiAmericanexpress, SiMastercard, SiVisa } from "react-icons/si";
 
 
-function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, handleDelete, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, modalType }) {
+function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, handleDelete, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
   const [showSumInput, setShowSumInput] = useState(false);
   const [additionalFunds, setAdditionalFunds] = useState('');
   const [tempCierre, setTempCierre] = useState(mydata.cierre || '');
@@ -43,6 +43,8 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
         handleAgregarFondos({ target: { value: mydata.fondos } });
       } else if (modalType === 'vencimiento') {
         handleChangeCierre({ target: { value: tempCierre } });
+      } else if (modalType === 'crearEtiqueta') {
+        handleCreateEtiqueta();
       }
     } else {
       setShowHelperText(true);
@@ -278,7 +280,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
         id="modal-agregar"
         className="modal-content"
         style={{
-          height: modalType === 'vencimiento' ? '300px' : modalType === 'fondos' ? '250px' : modalType === 'eliminar' ? '300px' : modalType === 'reporte' ? '90%' : modalType === 'repetitivo' ? '600px' : '500px',
+          height: modalType === 'vencimiento' ? '300px' : modalType === 'fondos' ? '250px' : modalType === 'eliminar' ? '300px' : modalType === 'reporte' ? '90%' : modalType === 'repetitivo' ? '600px' : modalType === 'crearEtiqueta' ? '200px' : '500px',
           width: modalType === 'vencimiento' ? '500px' : modalType === 'reporte' ? '90%' : '400px',
           backgroundColor:
             modalType === 'nuevo'
@@ -294,7 +296,9 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                       : modalType === 'editar'
                         ? '#3b80ffd5'
                         : modalType === 'reporte'
-                          ? '#9965ffd6' : 'white',
+                          ? '#9965ffd6' :
+                          modalType === 'crearEtiqueta'
+                            ? '#3b80ffd5' : 'white',
         }}
       >
         <div className="eliminar-align">
@@ -310,6 +314,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
             {modalType === 'vencimiento' && 'Cierre de Tarjeta'}
             {modalType === 'eliminar' && 'Confirmar Eliminación'}
             {modalType === 'editar' && 'Editar Registro'}
+            {modalType === 'crearEtiqueta' && 'Crear Etiqueta'}
           </h2>
           <form className='formDatos' onSubmit={(e) => e.preventDefault()}>
             {(modalType === 'nuevo' || modalType === 'repetitivo' || modalType === 'editar') && (
@@ -671,6 +676,43 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                   }}
                 />
               </div>
+            )}
+            {modalType === 'crearEtiqueta' && (
+              <TextField
+                label="Etiqueta"
+                variant="outlined"
+                value={formData.etiqueta}
+                onChange={(e) => setFormData({ ...formData, etiqueta: e.target.value })}
+                required
+                fullWidth={false}
+                margin="normal"
+                helperText={showHelperText && !formData.etiqueta ? "Ingrese el nombre de la etiqueta" : ""}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: formData.etiqueta ? '#b0ffc3' : 'white',
+                    '& fieldset': {
+                      borderColor: formData.etiqueta ? '#bfffce' : '#777777',
+                      color: '#777777',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: formData.etiqueta ? '#bfffce' : '#777777',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: formData.etiqueta ? '#bfffce' : '#777777',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'black',
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: 'black',
+                  },
+                  '& .MuiFormHelperText-root': {
+                    color: '#c30000',
+                    fontSize: '12px',
+                  },
+                }}
+              />
             )}
           </form>
           {modalType !== 'eliminar' && modalType !== 'reporte' && !showSumInput && (

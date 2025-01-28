@@ -572,6 +572,7 @@ button:hover {
 .tabla {
   padding: 20px;
   margin: 20px;
+  margin-bottom: 10px;
   height: 60vh;
   overflow: auto;
   overflow-y: scroll;
@@ -1377,11 +1378,15 @@ input[type="email"] {
 #footerSiro {
   display: block;
   box-sizing: border-box;
-  height: 70px;
+  height: 100%;
   width: 100%;
   background-color: #8C52FF;
   clip-path: ellipse(99% 100% at 52.94% 100%);
   text-align: center;
+}
+
+#contacto {
+  height: 40px;
 }
 
 #footerSiro li {
@@ -1389,7 +1394,7 @@ input[type="email"] {
 }
 
 #footerSiro h1 {
-  padding-top: 60px;
+  padding-top: 20px;
 }
 
 #footerSiro a {
@@ -1417,7 +1422,7 @@ input[type="email"] {
 }
 
 .list-textSiro {
-  padding-top: 10px;
+  padding-top: 5px;
 }
 
 li {
@@ -1492,6 +1497,7 @@ input:checked+.slider:before {
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  margin-top: 20px;
 }
 
 
@@ -1540,17 +1546,25 @@ input:checked+.slider:before {
 
 .filter-container {
   position: absolute;
-  top: -5px;
+  top: -10px;
   left: 80px;
-  padding: 10px;
+  /* padding: 10px; */
   z-index: 10;
   display: flex;
-  flex-direction: row;
+  flex-flow: column wrap;
   justify-content: flex-start;
-  align-items: center;
-  width: 500px;
-  gap: 5px;
+  /* align-items: center; */
+  width: 300px;
   animation: slideInLeft 0.1s linear forwards;
+}
+
+.selectFilters-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  max-width: 400px;
 }
 
 .dropdown-content {
@@ -1693,6 +1707,13 @@ input:checked+.slider:before {
   flex-direction: column;
   justify-content: center;
   color: #ffffff;
+}
+
+.verticalBtn-textFilters {
+  display: flex;
+  justify-content: center;
+  color: #ffffff;
+  max-height: 40px;
 }
 
 .verticalBtnSwitch-text {
@@ -2091,7 +2112,7 @@ input:checked+.slider:before {
 
 @media screen and (max-height: 910px) {
   .componentContainer {
-    height: 120vh;
+    height: 110vh;
   }
 
   #formProblemas {
