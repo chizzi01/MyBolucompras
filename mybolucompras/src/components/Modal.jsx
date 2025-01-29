@@ -10,13 +10,20 @@ import { FaMoneyBillTransfer } from "react-icons/fa6";
 import { BsCreditCard2Front } from "react-icons/bs";
 import { CiBank } from "react-icons/ci";
 import { SiAmericanexpress, SiMastercard, SiVisa } from "react-icons/si";
+import { CirclePicker } from 'react-color';
 
 
-function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, handleDelete, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
+function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, handleDelete, handleDeleteEtiqueta, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
   const [showSumInput, setShowSumInput] = useState(false);
   const [additionalFunds, setAdditionalFunds] = useState('');
   const [tempCierre, setTempCierre] = useState(mydata.cierre || '');
   const [showHelperText, setShowHelperText] = useState(false);
+  const [selectedColor, setSelectedColor] = useState('#fff');
+
+  const handleColorChange = (color) => {
+    setSelectedColor(color.hex);
+    setFormData({ ...formData, color: color.hex });
+  };
 
   const validateForm = () => {
     if (modalType === 'nuevo' || modalType === 'repetitivo' || modalType === 'editar') {
@@ -280,7 +287,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
         id="modal-agregar"
         className="modal-content"
         style={{
-          height: modalType === 'vencimiento' ? '300px' : modalType === 'fondos' ? '250px' : modalType === 'eliminar' ? '300px' : modalType === 'reporte' ? '90%' : modalType === 'repetitivo' ? '600px' : modalType === 'crearEtiqueta' ? '200px' : '500px',
+          height: modalType === 'vencimiento' ? '300px' : modalType === 'fondos' ? '250px' : modalType === 'eliminar' ? '300px' : modalType === 'reporte' ? '90%' : modalType === 'repetitivo' ? '600px' : modalType === 'crearEtiqueta' ? '500px' : '300px',
           width: modalType === 'vencimiento' ? '500px' : modalType === 'reporte' ? '90%' : '400px',
           backgroundColor:
             modalType === 'nuevo'
@@ -298,7 +305,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                         : modalType === 'reporte'
                           ? '#9965ffd6' :
                           modalType === 'crearEtiqueta'
-                            ? '#3b80ffd5' : 'white',
+                            ? '#3b80ffd5' : modalType === 'eliminarEtiqueta' ? '#ff8b8bd7' : '#76ff69ce',
         }}
       >
         <div className="eliminar-align">
@@ -314,7 +321,8 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
             {modalType === 'vencimiento' && 'Cierre de Tarjeta'}
             {modalType === 'eliminar' && 'Confirmar Eliminación'}
             {modalType === 'editar' && 'Editar Registro'}
-            {modalType === 'crearEtiqueta' && 'Crear Etiqueta'}
+            {modalType === 'crearEtiqueta' && 'Crear Grupo'}
+            {modalType === 'eliminarEtiqueta' && 'Eliminar Grupo'}
           </h2>
           <form className='formDatos' onSubmit={(e) => e.preventDefault()}>
             {(modalType === 'nuevo' || modalType === 'repetitivo' || modalType === 'editar') && (
@@ -678,44 +686,52 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
               </div>
             )}
             {modalType === 'crearEtiqueta' && (
-              <TextField
-                label="Etiqueta"
-                variant="outlined"
-                value={formData.etiqueta}
-                onChange={(e) => setFormData({ ...formData, etiqueta: e.target.value })}
-                required
-                fullWidth={false}
-                margin="normal"
-                helperText={showHelperText && !formData.etiqueta ? "Ingrese el nombre de la etiqueta" : ""}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: formData.etiqueta ? '#b0ffc3' : 'white',
-                    '& fieldset': {
-                      borderColor: formData.etiqueta ? '#bfffce' : '#777777',
-                      color: '#777777',
+              <div className='etiqueta-align'>
+                <TextField
+                  label="Etiqueta"
+                  variant="outlined"
+                  value={formData.etiqueta}
+                  onChange={(e) => setFormData({ ...formData, etiqueta: e.target.value })}
+                  required
+                  fullWidth={false}
+                  margin="normal"
+                  helperText={showHelperText && !formData.etiqueta ? "Ingrese el nombre de la etiqueta" : ""}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: formData.etiqueta ? '#b0ffc3' : 'white',
+                      '& fieldset': {
+                        borderColor: formData.etiqueta ? '#bfffce' : '#777777',
+                        color: '#777777',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: formData.etiqueta ? '#bfffce' : '#777777',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: formData.etiqueta ? '#bfffce' : '#777777',
+                      },
                     },
-                    '&:hover fieldset': {
-                      borderColor: formData.etiqueta ? '#bfffce' : '#777777',
+                    '& .MuiInputLabel-root': {
+                      color: 'black',
                     },
-                    '&.Mui-focused fieldset': {
-                      borderColor: formData.etiqueta ? '#bfffce' : '#777777',
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: 'black',
                     },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'black',
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: 'black',
-                  },
-                  '& .MuiFormHelperText-root': {
-                    color: '#c30000',
-                    fontSize: '12px',
-                  },
-                }}
-              />
+                    '& .MuiFormHelperText-root': {
+                      color: '#c30000',
+                      fontSize: '12px',
+                    },
+                  }}
+                />
+                <h3 style={{ color: '#FFFFFF' }}>Color del Grupo</h3>
+                <CirclePicker
+                  color={selectedColor}
+                  onChangeComplete={handleColorChange}
+                  colors={['#FF6900', '#FCB900', '#7BDCB5', '#00D084', '#8ED1FC', '#0693E3', '#ABB8C3', '#EB144C', '#F78DA7', '#9900EF', '#e57373', '#f06292', '#ba68c8', '#7986cb', '#64b5f6', '#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#ff8a65', '#d4e157', '#ffca28', '#ffb74d', '#a1887f', '#90a4ae']}
+                />
+              </div>
             )}
           </form>
-          {modalType !== 'eliminar' && modalType !== 'reporte' && !showSumInput && (
+          {modalType !== 'eliminar' && modalType !== 'reporte' && modalType !== 'eliminarEtiqueta' && !showSumInput && (
             <div className="alignBottom">
               <Button
                 variant="contained"
@@ -734,6 +750,15 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
               <div className="button-group">
                 <Button variant="contained" color="primary" onClick={() => setModalVisible(false)}>Cancelar</Button>
                 <Button variant="contained" color="error" onClick={handleDelete}>Eliminar</Button>
+              </div>
+            </>
+          )}
+          {modalType === 'eliminarEtiqueta' && (
+            <>
+              <p>¿ Estás seguro de que deseas eliminar: <span style={{ color: '#c30000' }}>{formData.etiqueta}</span> ?</p>
+              <div className="button-group">
+                <Button variant="contained" color="primary" onClick={() => setModalVisible(false)}>Cancelar</Button>
+                <Button variant="contained" color="error" onClick={handleDeleteEtiqueta}>Eliminar</Button>
               </div>
             </>
           )}

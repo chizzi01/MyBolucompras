@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import '../App.css';
-import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdornment, Icon } from '@mui/material';
+import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdornment, IconButton, ListItemText } from '@mui/material';
 import Papa from 'papaparse';
 import { FaCheck, FaClosedCaptioning, FaEdit } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa";
@@ -16,15 +16,15 @@ import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { VscArrowSwap } from "react-icons/vsc";
 import { VscArrowUp } from "react-icons/vsc";
 import { VscArrowDown } from "react-icons/vsc";
-import { MdClose, MdFilterListAlt } from "react-icons/md";
+import { MdFilterListAlt } from "react-icons/md";
 import { FiSearch } from "react-icons/fi";
 import { FaChartPie } from "react-icons/fa";
 import { MdLock } from 'react-icons/md';
-import { CgLogIn } from 'react-icons/cg';
 import { FaCreditCard } from "react-icons/fa6";
 import { FaMoneyBill1Wave } from "react-icons/fa6";
 import { FaMoneyBillTransfer } from "react-icons/fa6";
 import { BsCreditCard2Front } from "react-icons/bs";
+import DeleteIcon from '@mui/icons-material/Delete';
 
 
 export const calcularCuotasRestantesCredito = (fecha, cuotas, fechaVencimiento, fechaCierre, fechaVencimientoAnterior, fechaCierreAnterior) => {
@@ -106,6 +106,11 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
             return newLabels;
         });
         setEditingItemId(id); // Set the editing item ID to trigger useEffect
+    };
+
+    const getEtiquetaColor = (etiqueta, etiquetas) => {
+        const etiquetaObj = etiquetas.find(e => e.nombre === etiqueta);
+        return etiquetaObj ? etiquetaObj.color : 'transparent';
     };
 
     useEffect(() => {
@@ -270,7 +275,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
         return Array.from(medios);
     }, [data]);
     const isAfterCierre = (fechaCompra, fechaCierreDate, fechaCierreAnterior, medio, tipo) => {
-        return (fechaCompra > fechaCierreAnterior && (fechaCompra <= fechaCierreDate || fechaCompra > fechaCierreDate) ) && medio !== 'Efectivo'  && medio !== 'Transferencia' && tipo === 'credito';
+        return (fechaCompra > fechaCierreAnterior && (fechaCompra <= fechaCierreDate || fechaCompra > fechaCierreDate)) && medio !== 'Efectivo' && medio !== 'Transferencia' && tipo === 'credito';
     };
 
 
@@ -578,7 +583,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                     fontSize: '12px', // Ajusta el tamaño de la fuente
                                                 },
                                             }}
-                                        >Etiqueta</InputLabel>
+                                        >Grupo</InputLabel>
                                         <Select
                                             value={filterEtiqueta}
                                             onChange={(e) => setFilterEtiqueta(e.target.value)}
@@ -664,7 +669,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                         Precio {sortConfig.key === 'precio' ? (sortConfig.direction === 'ascending' ? <VscArrowUp /> : sortConfig.direction === 'descending' ? <VscArrowDown /> : <VscArrowSwap />) : <VscArrowSwap />}
                                     </div>
                                 </th>
-                                <th># Etiqueta</th>
+                                <th>Grupo</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -697,7 +702,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                         <td>{item.cantidad}</td>
                                         <td>${item.precio && typeof item.precio === 'string' ? parseFloat(item.precio.replace('$', '') / item.cuotas).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</td>
                                         <td>
-                                            <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px', maxWidth: '100px', maxHeight: '50px', zIndex:10, backgroundColor: item.etiqueta ? '#bd9bff' : 'transparent' }} >
+                                            <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px', maxWidth: '100px', maxHeight: '50px', zIndex: 10, backgroundColor: getEtiquetaColor(item.etiqueta, mydata.etiquetas), borderRadius: '5px' }} >
                                                 <Select
                                                     value={labels[item.id] || item.etiqueta || ''}
                                                     onChange={(e) => {
@@ -707,7 +712,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                     autoWidth
                                                     displayEmpty
                                                     style={{
-                                                        fontSize: '12px'
+                                                        fontSize: '12px',
                                                     }}
                                                     sx={{
                                                         '& .MuiOutlinedInput-root': {
@@ -733,19 +738,32 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                             fontSize: '12px', // Ajusta el tamaño de la fuente
                                                             padding: '8px', // Ajusta el padding
                                                             maxWidth: '100px', // Ajusta el ancho máximo
-                                                            maxHeight: '30px',
+                                                            maxHeight: '25px',
+
                                                         },
                                                     }}
                                                 >
                                                     <MenuItem value=""><em>None</em></MenuItem>
-                                                    {[...new Set(data.filter(i => i.etiqueta).map(i => i.etiqueta))].map((etiqueta, index) => (
+                                                    {[...new Set(mydata.etiquetas.map(e => e.nombre))].map((etiqueta, index) => (
                                                         <MenuItem key={index} value={etiqueta}>
-                                                            {etiqueta}
+                                                            <ListItemText primary={etiqueta} sx={{
+                                                                '& .MuiListItemText-primary': {
+                                                                    fontSize: '12px',
+                                                                    padding: '0px',
+                                                                    margin: '0px',
+                                                                },
+                                                            }} />
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() => openModal('eliminarEtiqueta', item, etiqueta)}
+                                                            >
+                                                                <DeleteIcon fontSize="small" />
+                                                            </IconButton>
                                                         </MenuItem>
                                                     ))}
                                                     <MenuItem>
                                                         <Button onClick={() => openModal('crearEtiqueta', item)}>
-                                                            Crear Etiqueta
+                                                            Crear Grupo
                                                         </Button>
                                                     </MenuItem>
                                                 </Select>

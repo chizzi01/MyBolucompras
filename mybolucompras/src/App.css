@@ -75,7 +75,7 @@ a {
   display: flex;
   flex-direction: row;
   justify-content: right;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 
 .navbar a {
@@ -1547,7 +1547,7 @@ input:checked+.slider:before {
 .filter-container {
   position: absolute;
   top: -10px;
-  left: 80px;
+  left: 90px;
   /* padding: 10px; */
   z-index: 10;
   display: flex;
@@ -1916,6 +1916,14 @@ input:checked+.slider:before {
   height: 2px;
   background-color: #ccc;
   z-index: -1;
+}
+
+.etiqueta-align {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
 }
 
 @keyframes fadeIn {

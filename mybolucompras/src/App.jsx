@@ -166,6 +166,28 @@ function App() {
     setModalVisible(false);
   };
 
+  const handleDeleteEtiqueta = () => {
+    console.log('formData:', formData); // Verifica el contenido de formData
+    console.log('etiqueta:', formData.etiqueta); // Verifica el valor de etiqueta
+
+    const updatedData = data.map(item =>
+        item.etiqueta === formData.etiqueta
+            ? { ...item, etiqueta: '' }
+            : item
+    );
+
+    setData(updatedData);
+    saveData(updatedData);
+
+    const updatedMyData = {
+        ...mydata,
+        etiquetas: mydata.etiquetas.filter(etiqueta => etiqueta.nombre !== formData.etiqueta)
+    };
+
+    setMyData(updatedMyData);
+    saveMyData(updatedMyData);
+    setModalVisible(false);
+};
   const handleEdit = () => {
     const updatedData = data.map(item =>
       item.id === formData.id
@@ -189,8 +211,20 @@ function App() {
 
     setData(updatedData);
     saveData(updatedData);
+
+    const updatedMyData = {
+      ...mydata,
+      etiquetas: [
+        ...(Array.isArray(mydata.etiquetas) ? mydata.etiquetas : []),
+        { nombre: formData.etiqueta, color: formData.color || '#000000' } // Asigna un color por defecto si no se proporciona
+      ]
+    };
+
+    setMyData(updatedMyData);
+    saveMyData(updatedMyData);
     setModalVisible(false);
   };
+
   const handleChangeCierre = (event) => {
     const { value } = event.target; // Nuevo valor de cierre
     const cierreDate = new Date(value);
@@ -245,16 +279,16 @@ function App() {
     return Math.floor(Math.random() * 1000000);
   };
 
-  const openModal = useCallback((type, item = {}) => {
+  const openModal = useCallback((type, item = {}, etiqueta = '') => {
     setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '', etiqueta: '' });
     setModalType(type);
-    if (type === 'eliminar' || type === 'editar' || type === 'crearEtiqueta') {
+    if (type === 'eliminar' || type === 'editar' || type === 'crearEtiqueta'|| type === 'eliminarEtiqueta') {
       const formattedItem = {
         ...item,
         fecha: item.fecha.split('/').reverse().join('-'), // Formatea la fecha a yyyy-mm-dd
         precio: item.isFijo ? (parseFloat(item.precio.replace('$', '').trim())).toFixed(2) / item.cantidad : item.precio.replace('$', '').trim(), // Elimina el símbolo de dólar y los espacios en blanco
         cuotas: item.tipo === 'debito' ? 1 : Number(item.cuotas),
-        etiqueta: item.etiqueta || ''
+        etiqueta: etiqueta || item.etiqueta || ''
       };
       setFormData(formattedItem);
     }
@@ -378,9 +412,11 @@ function App() {
                     mydata={mydata}
                     data={data}
                     setMyData={setMyData}
+                    saveMyData={saveMyData}
                     setFormData={setFormData}
                     handleSubmit={handleSubmit}
                     handleDelete={handleDelete}
+                    handleDeleteEtiqueta={handleDeleteEtiqueta}
                     setModalVisible={setModalVisible}
                     handleEdit={handleEdit}
                     handleCloseModal={handleCloseModal}
@@ -389,7 +425,7 @@ function App() {
                     handleCreateEtiqueta={handleCreateEtiqueta}
                     modalType={modalType}
                   />
-                  {modalType !== 'vencimiento' && modalType !== 'fondos' && modalType !== 'crearEtiqueta' && modalType !== 'reporte' &&(
+                  {modalType !== 'vencimiento' && modalType !== 'fondos' && modalType !== 'crearEtiqueta' && modalType !== 'reporte'  && modalType !== 'eliminarEtiqueta'  && modalType !== 'eliminar' && (
                     <div className="calculadora-align" onClick={() => window.location.href = 'ms-calculator://'}>
                       <FaCalculator size={30} />
                     </div>
