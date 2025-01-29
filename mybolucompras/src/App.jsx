@@ -167,8 +167,6 @@ function App() {
   };
 
   const handleDeleteEtiqueta = () => {
-    console.log('formData:', formData); // Verifica el contenido de formData
-    console.log('etiqueta:', formData.etiqueta); // Verifica el valor de etiqueta
 
     const updatedData = data.map(item =>
         item.etiqueta === formData.etiqueta

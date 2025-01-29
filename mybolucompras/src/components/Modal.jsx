@@ -305,7 +305,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                         : modalType === 'reporte'
                           ? '#9965ffd6' :
                           modalType === 'crearEtiqueta'
-                            ? '#3b80ffd5' : modalType === 'eliminarEtiqueta' ? '#ff8b8bd7' : '#76ff69ce',
+                            ? '#000000d5' : modalType === 'eliminarEtiqueta' ? '#ff8b8bd7' : '#76ff69ce',
         }}
       >
         <div className="eliminar-align">
@@ -726,7 +726,37 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                 <CirclePicker
                   color={selectedColor}
                   onChangeComplete={handleColorChange}
-                  colors={['#FF6900', '#FCB900', '#7BDCB5', '#00D084', '#8ED1FC', '#0693E3', '#ABB8C3', '#EB144C', '#F78DA7', '#9900EF', '#e57373', '#f06292', '#ba68c8', '#7986cb', '#64b5f6', '#4fc3f7', '#4dd0e1', '#4db6ac', '#81c784', '#aed581', '#ff8a65', '#d4e157', '#ffca28', '#ffb74d', '#a1887f', '#90a4ae']}
+                  colors={["#0A1172", // Azul Profundo
+                    "#0D47A1", // Azul Cobalto
+                    "#1976D2", // Azul Brillante
+                    "#42A5F5", // Celeste
+                    "#81D4FA", // Azul Pastel
+                    "#00838F", // Turquesa Oscuro
+                    "#00ACC1", // Turquesa Medio
+                    "#26C6DA", // Turquesa Claro
+                    "#004D40", // Verde Azulado Oscuro
+                    "#00796B", // Verde Esmeralda
+                    "#009688", // Verde Agua
+                    "#4DB6AC", // Verde Menta
+                    "#8BC34A", // Verde Lima
+                    "#C0CA33", // Verde Oliva Claro
+                    "#FDD835", // Amarillo Dorado
+                    "#FFEB3B", // Amarillo Brillante
+                    "#FFC107", // Ámbar
+                    "#FF9800", // Naranja Medio
+                    "#FF6F00", // Naranja Intenso
+                    "#E65100", // Naranja Oscuro
+                    "#D84315", // Rojo Anaranjado
+                    "#D32F2F", // Rojo Carmesí
+                    "#C2185B", // Rojo Rubí
+                    "#AD1457", // Rojo Vino
+                    "#880E4F", // Borgoña
+                    "#6A1B9A", // Morado Intenso
+                    "#8E24AA", // Morado Vibrante
+                    "#AB47BC", // Lavanda Oscura
+                    "#CE93D8", // Lavanda Clara
+                    "#E1BEE7"  // Lila Pastel
+                  ]}
                 />
               </div>
             )}

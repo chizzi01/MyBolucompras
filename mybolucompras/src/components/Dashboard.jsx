@@ -92,18 +92,18 @@ const Dashboard = ({ data, mydata }) => {
 
 
 
-    const distribucionGastos = useMemo(() => {
-        const distribucion = {};
-        if (Array.isArray(data)) {
-            data.forEach(item => {
-                if (!distribucion[item.objeto]) {
-                    distribucion[item.objeto] = 0;
-                }
-                distribucion[item.objeto] += parseFloat(item.precio.replace('$', '') / item.cuotas).toFixed(2);
-            });
-        }
-        return distribucion;
-    }, [data]);
+    // const distribucionGastos = useMemo(() => {
+    //     const distribucion = {};
+    //     if (Array.isArray(data)) {
+    //         data.forEach(item => {
+    //             if (!distribucion[item.objeto]) {
+    //                 distribucion[item.objeto] = 0;
+    //             }
+    //             distribucion[item.objeto] += parseFloat(item.precio.replace('$', '') / item.cuotas).toFixed(2);
+    //         });
+    //     }
+    //     return distribucion;
+    // }, [data]);
 
 
 
@@ -134,6 +134,39 @@ const Dashboard = ({ data, mydata }) => {
         }
         return tipos;
     }, [data]);
+
+    const distribucionGastosPorEtiqueta = useMemo(() => {
+        const etiquetas = {};
+        if (Array.isArray(data)) {
+            data.forEach(item => {
+                const etiqueta = item.etiqueta || 'Sin etiqueta';
+                const precio = parseFloat(item.precio.replace('$', '').replace(',', ''));
+                const gasto = item.tipo === 'credito' ? precio / item.cuotas : precio;
+    
+                if (!etiquetas[etiqueta]) {
+                    etiquetas[etiqueta] = 0;
+                }
+                etiquetas[etiqueta] += gasto;
+            });
+        }
+        return etiquetas;
+    }, [data]);
+    
+    const procesarDistribucionGastos = (distribucion) => {
+        const procesado = {};
+    
+        Object.keys(distribucion).forEach((etiqueta) => {
+            const key = !etiqueta || etiqueta === 'undefined' ? 'Sin etiqueta' : etiqueta;
+            if (!procesado[key]) {
+                procesado[key] = 0;
+            }
+            procesado[key] += distribucion[etiqueta];
+        });
+    
+        return procesado;
+    };
+    const distribucionProcesada = procesarDistribucionGastos(distribucionGastosPorEtiqueta);
+    
 
     const gastosPorBanco = useMemo(() => {
         const bancos = {};
@@ -194,14 +227,14 @@ const Dashboard = ({ data, mydata }) => {
     };
 
     const pieData = {
-        labels: Object.keys(distribucionGastos),
+        labels: Object.keys(distribucionProcesada),
         datasets: [
             {
-                label: 'Distribución de Gastos',
-                data: Object.values(distribucionGastos),
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.6)',
-                    'rgba(54, 162, 235, 0.6)',
+                label: 'Gastos por etiqueta',
+                data: Object.values(distribucionProcesada),
+                backgroundColor: ['rgba(255, 99, 132, 0.6)',
+
+                    'rgba(255, 159, 64, 0.6)',
                     'rgba(255, 206, 86, 0.6)',
                     'rgba(75, 192, 192, 0.6)',
                     'rgba(153, 102, 255, 0.6)',

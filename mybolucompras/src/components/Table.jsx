@@ -102,7 +102,6 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     const handleLabelChange = (id, value) => {
         setLabels(prevLabels => {
             const newLabels = { ...prevLabels, [id]: value };
-            console.log('Labels actualizados:', newLabels);
             return newLabels;
         });
         setEditingItemId(id); // Set the editing item ID to trigger useEffect
@@ -116,12 +115,9 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     useEffect(() => {
         if (editingItemId !== null) {
             const etiquetaSeleccionada = labels[editingItemId];
-            console.log('Etiqueta seleccionada:', etiquetaSeleccionada);
             const item = data.find(item => item.id === editingItemId);
-            console.log('Item encontrado:', item);
 
             if (etiquetaSeleccionada !== undefined && item && etiquetaSeleccionada !== item.etiqueta) {
-                console.log('Guardando item:', { id: editingItemId, etiqueta: etiquetaSeleccionada });
                 saveItem({ id: editingItemId, etiqueta: etiquetaSeleccionada });
             }
             setEditingItemId(null); // Reset the editing item ID
@@ -265,15 +261,6 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
         URL.revokeObjectURL(url); // Liberar memoria
     };
 
-    const mediosDePago = useMemo(() => {
-        const medios = new Set();
-        data.forEach(item => {
-            if (item.medio) {
-                medios.add(item.medio);
-            }
-        });
-        return Array.from(medios);
-    }, [data]);
     const isAfterCierre = (fechaCompra, fechaCierreDate, fechaCierreAnterior, medio, tipo) => {
         return (fechaCompra > fechaCierreAnterior && (fechaCompra <= fechaCierreDate || fechaCompra > fechaCierreDate)) && medio !== 'Efectivo' && medio !== 'Transferencia' && tipo === 'credito';
     };
@@ -669,7 +656,12 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                         Precio {sortConfig.key === 'precio' ? (sortConfig.direction === 'ascending' ? <VscArrowUp /> : sortConfig.direction === 'descending' ? <VscArrowDown /> : <VscArrowSwap />) : <VscArrowSwap />}
                                     </div>
                                 </th>
-                                <th>Grupo</th>
+                                <th onClick={() => handleSort('etiqueta')}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                                        Grupo {sortConfig.key === 'etiqueta' ? (sortConfig.direction === 'ascending' ? <VscArrowUp /> : sortConfig.direction === 'descending' ? <VscArrowDown /> : <VscArrowSwap />) : <VscArrowSwap />}
+                                    </div>
+                                </th>
+                                {/* <th>Grupo</th> */}
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -736,7 +728,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                         },
                                                         '& .MuiSelect-select': {
                                                             fontSize: '12px', // Ajusta el tamaño de la fuente
-                                                            padding: '8px', // Ajusta el padding
+                                                            padding: '2px', // Ajusta el padding
                                                             maxWidth: '100px', // Ajusta el ancho máximo
                                                             maxHeight: '25px',
 
@@ -748,7 +740,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                         <MenuItem key={index} value={etiqueta}>
                                                             <ListItemText primary={etiqueta} sx={{
                                                                 '& .MuiListItemText-primary': {
-                                                                    fontSize: '12px',
+                                                                    fontSize: '11px',
                                                                     padding: '0px',
                                                                     margin: '0px',
                                                                 },
