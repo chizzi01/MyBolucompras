@@ -55,7 +55,7 @@ export const calcularCuotasRestantesCredito = (fecha, cuotas, fechaVencimiento, 
     }
 
     // Asegurarse de que no haya cuotas negativas
-    return cuotasRestantes < 0 ? 0 : cuotasRestantes;
+    return cuotasRestantes < 0 ? 0 : cuotasRestantes + 1;
 };
 
 
@@ -76,7 +76,6 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     }
     const [showFilter, setShowFilter] = useState(false);
     const [filterCount, setFilterCount] = useState(0);
-
     const {
         filterObject,
         setFilterObject,
@@ -692,7 +691,13 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                         <td>{isNaN(calcularCuotas(item)) ? 'N/A' : calcularCuotas(item)}</td>
                                         <td>{item.banco}</td>
                                         <td>{item.cantidad}</td>
-                                        <td>${item.precio && typeof item.precio === 'string' ? parseFloat(item.precio.replace('$', '') / item.cuotas).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</td>
+                                        <td>$  {item.precio && typeof item.precio === 'string'
+                                            ? item.isFijo
+                                                ? parseFloat(item.precio.replace('$', '')).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                                : parseFloat(item.precio.replace('$', '') / item.cuotas).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                            : 'N/A'}
+
+                                        </td>
                                         <td>
                                             <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px', maxWidth: '100px', maxHeight: '50px', zIndex: 10, backgroundColor: getEtiquetaColor(item.etiqueta, mydata.etiquetas), borderRadius: '5px' }} >
                                                 <Select

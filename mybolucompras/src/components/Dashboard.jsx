@@ -3,11 +3,37 @@ import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement, ArcElement } from 'chart.js';
 import '../App.css';
 import Timeline from './Timeline';
-import { calcularCuotasRestantesCredito } from './Table';
+import { calcularCuotasRestantesCredito, calcularCuotasRestantes } from './Table';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement, ArcElement);
 
 const Dashboard = ({ data, mydata }) => {
+    // Función helper para parsear precios en formato argentino
+    const parsePrecio = (precio) => {
+        const clean = String(precio).replace(/\s|\$/g, '');
+        // Si tiene coma, es formato argentino (miles con punto, decimal con coma)
+        if (clean.includes(',')) {
+            return parseFloat(clean.replace(/\./g, '').replace(',', '.'));
+        }
+        // Si no tiene coma, es formato US (decimal con punto)
+        return parseFloat(clean);
+    };
+
+    const getCierreDia = () => {
+        // mydata.cierre es 'yyyy-mm-dd' o similar; tomamos solo el día
+        if (!mydata?.cierre) return 1;
+        const d = new Date(mydata.cierre);
+        return Number.isNaN(d.getTime()) ? 1 : d.getDate();
+    };
+
+    const monthKey = (date) =>
+        `${date.toLocaleString('es-ES', { month: 'long' })} ${date.getFullYear()}`;
+
+    const monthDiff = (from, to) =>
+        (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
+
+    const addMonths = (date, n) => new Date(date.getFullYear(), date.getMonth() + n, 1);
+
     // Prepara los datos para los gráficos
     const gastosMensuales = useMemo(() => {
         const gastos = {};
@@ -27,82 +53,114 @@ const Dashboard = ({ data, mydata }) => {
                 if (!gastos[mesAño]) {
                     gastos[mesAño] = 0;
                 }
-                gastos[mesAño] += parseFloat(item.precio.replace('$', ''));
+                gastos[mesAño] += parsePrecio(item.precio);
             });
         }
         return gastos;
     }, [data]);
 
-    const pagosFuturos = useMemo(() => {
-        const pagos = {};
-        const fechaActual = new Date();
+   const pagosFuturos = useMemo(() => {
+  const pagos = {};
+  const hoy = new Date();
+  const actualYm = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
 
-        // Inicializamos los meses futuros en el objeto
-        for (let i = 0; i < 6; i++) {
-            const mesFuturo = new Date(fechaActual.getFullYear(), fechaActual.getMonth() + i, 1);
-            const mesAñoFuturo = `${mesFuturo.toLocaleString('es-ES', { month: 'long' })} ${mesFuturo.getFullYear()}`;
-            pagos[mesAñoFuturo] = 0;
+  // Inicializa próximos 6 meses
+  for (let i = 0; i < 6; i++) {
+    const m = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+    const key = `${m.toLocaleString('es-ES', { month: 'long' })} ${m.getFullYear()}`;
+    pagos[key] = 0;
+  }
+
+  if (!Array.isArray(data)) return pagos;
+
+  const cierreDay = new Date(mydata.cierre).getDate(); // día del cierre (1–31)
+
+  data.forEach((item) => {
+    const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
+    const cuotas = parseInt(item.cuotas, 10) || 0;
+    const precioNum = parsePrecio(item.precio); // viene como total para varios créditos, por el log
+
+    // Fijos: se repiten todos los meses
+    if (item.isFijo) {
+      for (let i = 0; i < 6; i++) {
+        const m = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+        const key = `${m.toLocaleString('es-ES', { month: 'long' })} ${m.getFullYear()}`;
+        pagos[key] += precioNum;
+      }
+      return;
+    }
+
+    // Crédito (o transferencia en cuotas)
+    const esCredito = item.tipo === 'credito' || (item.medio === 'Transferencia' && cuotas > 1);
+
+    if (esCredito && cuotas > 0) {
+      // PRECIO POR CUOTA: dividir el total por cantidad de cuotas
+      const precioPorCuota = precioNum / cuotas;
+
+      // Mes de primera liquidación según día de cierre
+      const firstStatementMonth = new Date(
+        fechaCompra.getFullYear(),
+        fechaCompra.getMonth() + (fechaCompra.getDate() > cierreDay ? 1 : 0),
+        1
+      );
+
+      // Diferencia de meses (firstStatementMonth - actualYm)
+      const diffMeses =
+        (firstStatementMonth.getFullYear() - actualYm.getFullYear()) * 12 +
+        (firstStatementMonth.getMonth() - actualYm.getMonth());
+
+      // Si diffMeses > 0, arranca en el futuro; si <= 0, ya venía facturando: arrancamos en el mes actual
+      const mesInicioOffset = Math.max(0, diffMeses);
+
+      // Cuotas restantes reales desde hoy
+      const cuotasRestantes = calcularCuotasRestantesCredito(
+        item.fecha,
+        cuotas,
+        mydata.vencimiento,
+        mydata.cierre,
+        mydata.vencimientoAnterior,
+        mydata.cierreAnterior
+      );
+
+      if (cuotasRestantes > 0) {
+        for (let i = 0; i < cuotasRestantes && mesInicioOffset + i < 6; i++) {
+          const mesPago = new Date(hoy.getFullYear(), hoy.getMonth() + mesInicioOffset + i, 1);
+          const key = `${mesPago.toLocaleString('es-ES', { month: 'long' })} ${mesPago.getFullYear()}`;
+          pagos[key] += precioPorCuota;
         }
+      }
+      return;
+    }
 
-        if (Array.isArray(data)) {
-            data.forEach(item => {
-                const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
-                const cuotas = parseInt(item.cuotas, 10);
-                const precioTotal = parseFloat(item.precio.replace('$', '').replace(',', '.'));
-                const precioPorCuota = precioTotal / cuotas;
+    // Débito / Efectivo / Transferencia en una sola vez
+    if (item.tipo === 'debito' || item.medio === 'Efectivo' || (item.medio === 'Transferencia' && cuotas <= 1)) {
+      const compraYm = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth(), 1);
+      // Solo si cae entre los próximos 6 meses (y no en el pasado)
+      const diffMesesCompra =
+        (compraYm.getFullYear() - actualYm.getFullYear()) * 12 +
+        (compraYm.getMonth() - actualYm.getMonth());
+      if (diffMesesCompra >= 0 && diffMesesCompra < 6) {
+        const key = `${compraYm.toLocaleString('es-ES', { month: 'long' })} ${compraYm.getFullYear()}`;
+        pagos[key] += precioNum;
+      }
+    }
+  });
 
-                // Incluir gastos repetitivos
-                if (item.isFijo) {
-                    for (let i = 0; i < 6; i++) {
-                        const mesFuturo = new Date(fechaActual.getFullYear(), fechaActual.getMonth() + i, 1);
-                        const mesAñoFuturo = `${mesFuturo.toLocaleString('es-ES', { month: 'long' })} ${mesFuturo.getFullYear()}`;
-                        pagos[mesAñoFuturo] += precioTotal;
-                    }
-                }
-
-                // Incluir gastos en efectivo
-                if (item.medio === 'Efectivo') {
-                    const mesAñoCompra = `${fechaCompra.toLocaleString('es-ES', { month: 'long' })} ${fechaCompra.getFullYear()}`;
-                    if (pagos[mesAñoCompra] !== undefined) {
-                        pagos[mesAñoCompra] += precioTotal;
-                    }
-                }
-
-                // Verificar las cuotas restantes para las compras a crédito
-                if (item.cuotas > 0) {
-                    const cuotasRestantes = calcularCuotasRestantesCredito(item.fecha, item.cuotas, mydata.vencimiento, mydata.cierre, mydata.vencimientoAnterior, mydata.cierreAnterior);
-
-                    if (cuotasRestantes > 0) {
-                        for (let i = 0; i < cuotas; i++) {
-                            // Determinar el mes correspondiente para esta cuota
-                            const mesPago = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth() + i, 1);
-                            const mesAñoPago = `${mesPago.toLocaleString('es-ES', { month: 'long' })} ${mesPago.getFullYear()}`;
-
-                            // Solo sumar cuotas dentro del rango de los próximos 6 meses
-                            if (pagos[mesAñoPago] !== undefined) {
-                                pagos[mesAñoPago] += precioPorCuota;
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        return pagos;
-    }, [data]);
-
+  return pagos;
+}, [data, mydata]);
 
 
     // const distribucionGastos = useMemo(() => {
-    //     const distribucion = {};
-    //     if (Array.isArray(data)) {
-    //         data.forEach(item => {
-    //             if (!distribucion[item.objeto]) {
-    //                 distribucion[item.objeto] = 0;
-    //             }
-    //             distribucion[item.objeto] += parseFloat(item.precio.replace('$', '') / item.cuotas).toFixed(2);
-    //         });
-    //     }
-    //     return distribucion;
+    //    const distribucion = {};
+    //    if (Array.isArray(data)) {
+    //    data.forEach(item => {
+    //    if (!distribucion[item.objeto]) {
+    //    distribucion[item.objeto] = 0;
+    //    }
+    //    distribucion[item.objeto] += parseFloat(item.precio.replace('$', '') / item.cuotas).toFixed(2);
+    //    });
+    //    }
+    //    return distribucion;
     // }, [data]);
 
 
@@ -112,9 +170,9 @@ const Dashboard = ({ data, mydata }) => {
         if (Array.isArray(data)) {
             data.forEach(item => {
                 if (item.tipo === 'credito') {
-                    tipos.credito += parseFloat(item.precio.replace('$', ''));
+                    tipos.credito += parsePrecio(item.precio);
                 } else if (item.tipo === 'debito') {
-                    tipos.debito += parseFloat(item.precio.replace('$', ''));
+                    tipos.debito += parsePrecio(item.precio);
                 }
             });
         }
@@ -140,9 +198,9 @@ const Dashboard = ({ data, mydata }) => {
         if (Array.isArray(data)) {
             data.forEach(item => {
                 const etiqueta = item.etiqueta || 'Sin etiqueta';
-                const precio = parseFloat(item.precio.replace('$', '').replace(',', ''));
+                const precio = parsePrecio(item.precio);
                 const gasto = item.tipo === 'credito' ? precio / item.cuotas : precio;
-    
+
                 if (!etiquetas[etiqueta]) {
                     etiquetas[etiqueta] = 0;
                 }
@@ -151,10 +209,10 @@ const Dashboard = ({ data, mydata }) => {
         }
         return etiquetas;
     }, [data]);
-    
+
     const procesarDistribucionGastos = (distribucion) => {
         const procesado = {};
-    
+
         Object.keys(distribucion).forEach((etiqueta) => {
             const key = !etiqueta || etiqueta === 'undefined' ? 'Sin etiqueta' : etiqueta;
             if (!procesado[key]) {
@@ -162,11 +220,11 @@ const Dashboard = ({ data, mydata }) => {
             }
             procesado[key] += distribucion[etiqueta];
         });
-    
+
         return procesado;
     };
     const distribucionProcesada = procesarDistribucionGastos(distribucionGastosPorEtiqueta);
-    
+
 
     const gastosPorBanco = useMemo(() => {
         const bancos = {};
@@ -175,7 +233,7 @@ const Dashboard = ({ data, mydata }) => {
                 if (!bancos[item.banco]) {
                     bancos[item.banco] = 0;
                 }
-                bancos[item.banco] += parseFloat(item.precio.replace('$', ''));
+                bancos[item.banco] += parsePrecio(item.precio);
             });
         }
         return bancos;
@@ -188,7 +246,7 @@ const Dashboard = ({ data, mydata }) => {
                 if (!medios[item.medio]) {
                     medios[item.medio] = 0;
                 }
-                medios[item.medio] += parseFloat(item.precio.replace('$', ''));
+                medios[item.medio] += parsePrecio(item.precio);
             });
         }
         return medios;
@@ -198,20 +256,30 @@ const Dashboard = ({ data, mydata }) => {
         const gastos = {};
         if (Array.isArray(data)) {
             data.forEach(item => {
-                if (item.precio && parseFloat(item.precio.replace('$', '')) < 20000) {
-                    if (!gastos[item.objeto]) {
-                        gastos[item.objeto] = 0;
-                    }
-                    gastos[item.objeto] += parseFloat(item.precio.replace('$', ''));
+                const precio = parsePrecio(item.precio);
+                if (isNaN(precio)) return;
+
+                // Solo crédito tiene cuotas; débito/efectivo => 0 cuotas restantes
+                const cuotasRestantes = item.tipo === 'credito'
+                    ? calcularCuotasRestantesCredito(
+                        item.fecha,    // dd/mm/yyyy
+                        item.cuotas,
+                        mydata.vencimiento,    // yyyy-mm-dd
+                        mydata.cierre,    // yyyy-mm-dd
+                        mydata.vencimientoAnterior,
+                        mydata.cierreAnterior
+                    )
+                    : calcularCuotasRestantes(item.fecha, item.cuotas);
+
+                // Solo incluir si es < 25000 y tiene al menos 1 cuota restante
+                if (precio < 25000 && cuotasRestantes >= 1) {
+                    if (!gastos[item.objeto]) gastos[item.objeto] = 0;
+                    gastos[item.objeto] += precio;
                 }
             });
         }
-        if (Object.keys(gastos).length === 0) {
-            return { 'Sin gastos hormiga': 0 };
-        } else {
-            return gastos;
-        }
-    }, [data]);
+        return Object.keys(gastos).length === 0 ? { 'Sin gastos hormiga': 0 } : gastos;
+    }, [data, mydata]);
 
     const barData = {
         labels: Object.keys(gastosMensuales),
@@ -290,8 +358,8 @@ const Dashboard = ({ data, mydata }) => {
             {
                 label: 'Cantidad de Gastos por Tipo',
                 data: [cantidadGastosPorTipo.credito, cantidadGastosPorTipo.debito],
-                backgroundColor: [  'rgba(255, 99, 132, 0.6)' ,'rgba(75, 192, 192, 0.6)'
-                  ],
+                backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(75, 192, 192, 0.6)'
+                ],
 
             },
         ],

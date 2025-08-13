@@ -287,7 +287,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
         id="modal-agregar"
         className="modal-content"
         style={{
-          height: modalType === 'vencimiento' ? '300px' : modalType === 'fondos' ? '250px' : modalType === 'eliminar' ? '300px' : modalType === 'reporte' ? '90%' : modalType === 'repetitivo' ? '600px' : modalType === 'crearEtiqueta' ? '500px' : '300px',
+          height: modalType === 'vencimiento' ? '300px' : modalType === 'fondos' ? '250px' : modalType === 'eliminar' ? '300px' : modalType === 'reporte' ? '90%' : modalType === 'repetitivo' ? '600px' : modalType === 'crearEtiqueta' ? '500px' : '500px',
           width: modalType === 'vencimiento' ? '500px' : modalType === 'reporte' ? '90%' : '400px',
           backgroundColor:
             modalType === 'nuevo'

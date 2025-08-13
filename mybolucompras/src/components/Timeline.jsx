@@ -4,9 +4,9 @@ import '../App.css';
 const Timeline = ({ pagosFuturos }) => {
   const months = Object.keys(pagosFuturos);
   const payments = Object.values(pagosFuturos);
-  const formatNumber = (number) => {
-    return number.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
+const formatNumber = (number) => {
+  return number.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
   return (
     <div className="timeline-container">
       {months.map((month, index) => (

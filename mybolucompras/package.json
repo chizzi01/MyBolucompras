@@ -1,22 +1,76 @@
 {
   "name": "mybolucompras",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.3",
   "main": "main.js",
-  "files": [
-    "main.js",
-    "preload.js",
-    "dist/**/*"
-  ],
+  "description": "Aplicación para gestionar compras de manera eficiente.",
+  "author": "Agustin Chizzini Melo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chizzi01/MyBolucompras.git"
+  },
+  "build": {
+    "appId": "com.mybolucompras.app",
+    "productName": "MyBolucompras",
+    "asar": true,
+    "directories": {
+      "output": "dist_electron",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "preload.js",
+      "public/**/*",
+      "build/**/*"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "ia32"
+          ]
+        }
+      ],
+      "signingHashAlgorithms": [
+        "sha256"
+      ],
+      "signAndEditExecutable": false,
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MyBolucompras",
+      "deleteAppDataOnUninstall": true
+    }
+  },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && electron-builder",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "electron main.js",
     "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=img/icon.ico --prune=true --out=release-builds",
-    "package-win": "electron-packager . --overwrite --asar --platform=win32 --arch=ia32 --icon=img/icon.ico --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Mybolucompras\""
+    "package-win": "electron-packager . --overwrite --asar --platform=win32 --arch=ia32 --icon=img/icon.ico --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Mybolucompras\"",
+    "electron:dev": "electron .",
+    "electron:build": "vite build && electron-builder"
   },
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "chizzi01",
+      "repo": "MyBolucompras"
+    }
+  ],
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -24,6 +78,9 @@
     "@mui/material": "^6.3.1",
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
+    "dotenv": "^16.4.7",
+    "electron-log": "^5.3.0",
+    "electron-updater": "^6.3.9",
     "express": "^4.21.2",
     "json2csv": "^6.0.0-alpha.2",
     "papaparse": "^5.4.1",
@@ -40,6 +97,7 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
     "electron-packager": "^17.1.2",
     "eslint": "^9.17.0",
     "eslint-plugin-react": "^7.37.2",

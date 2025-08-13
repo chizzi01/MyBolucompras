@@ -87,7 +87,7 @@ function App() {
       fecha: fecha.split("-").reverse().join("/"),
       medio: medio,
       cuotas: tipo === 'debito' ? 1 : Number(cuotas),
-      tipo: (medio === 'Efectivo' || medio === 'Transferencia') ? 'debito' : tipo,
+      tipo: (medio === 'Efectivo') ? 'debito' : tipo,
       banco: banco,
       cantidad: Number(cantidad),
       precio: isNaN(Number(precio)) || !isFinite(Number(precio)) ? "$ 0" : `$ ${Number(precio).toFixed(2)}`
@@ -190,6 +190,7 @@ function App() {
     const updatedData = data.map(item =>
       item.id === formData.id
         ? {
+          ...item,
           ...formData, fecha: formData.fecha.split('-').reverse().join('/'),
           precio: item.isFijo ? `$ ${parseFloat(formData.precio).toFixed(2) * item.cantidad}` : `$ ${parseFloat(formData.precio).toFixed(2)}`
         }
@@ -285,7 +286,7 @@ function App() {
         ...item,
         fecha: item.fecha.split('/').reverse().join('-'), // Formatea la fecha a yyyy-mm-dd
         precio: item.isFijo ? (parseFloat(item.precio.replace('$', '').trim())).toFixed(2) / item.cantidad : item.precio.replace('$', '').trim(), // Elimina el símbolo de dólar y los espacios en blanco
-        cuotas: item.tipo === 'debito' ? 1 : Number(item.cuotas),
+        cuotas: item.isFijo ? Number(item.cuotas) : (item.tipo === 'debito' ? 1 : Number(item.cuotas)),
         etiqueta: etiqueta || item.etiqueta || ''
       };
       setFormData(formattedItem);
