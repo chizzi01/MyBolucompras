@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 const path = require('path');
-const log = require('electron-log'); 
+const log = require('electron-log');
 //require('dotenv').config();
 
 
@@ -18,12 +18,48 @@ function getAppPath() {
 autoUpdater.logger = require('electron-log');
 autoUpdater.logger.transports.file.level = 'info';
 
+// Configuración del autoUpdater
+function setupAutoUpdater() {
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  // Eventos del autoUpdater -> Renderer via IPC
+  autoUpdater.on('update-available', (info) => {
+    console.log('Update available:', info);
+    mainWindow?.webContents.send('update_available', info);
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    console.log('Download progress:', progress.percent);
+    mainWindow?.webContents.send('update_progress', progress);
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('Update downloaded:', info);
+    mainWindow?.webContents.send('update_downloaded', info);
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('AutoUpdater error:', err);
+    mainWindow?.webContents.send('update_error', String(err));
+  });
+
+  // Chequeo inicial y periódico
+  setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 3000);
+  setInterval(() => autoUpdater.checkForUpdates(), 60 * 60 * 1000); // cada hora
+}
+
+// IPC handler para reiniciar la app desde el renderer
+ipcMain.on('restart_app', () => {
+  autoUpdater.quitAndInstall();
+});
+
 
 function createWindow() {
   console.log('Creating main window...');
   console.log('App is packaged:', app.isPackaged);
   console.log('App path:', getAppPath());
-  
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 600,
@@ -55,7 +91,7 @@ function createWindow() {
     const indexPath = path.join(__dirname, 'dist', 'index.html');
     console.log('Loading production path:', indexPath);
     console.log('File exists:', fs.existsSync(indexPath));
-    
+
     // Lista el contenido del directorio para debugging
     try {
       const files = fs.readdirSync(path.dirname(indexPath));
@@ -63,7 +99,7 @@ function createWindow() {
     } catch (err) {
       console.error('Error reading directory:', err);
     }
-    
+
     mainWindow.loadFile(indexPath)
       .catch((err) => {
         console.error('Error loading index.html:', err);
@@ -103,7 +139,10 @@ function createSplashWindow() {
 app.whenReady().then(() => {
   console.log('App is ready');
   createSplashWindow();
-  setTimeout(createWindow, 2000);
+  setTimeout(() => {
+    createWindow();
+    setupAutoUpdater();
+  }, 2000);
 });
 
 app.on('window-all-closed', () => {

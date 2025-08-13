@@ -7,6 +7,7 @@ import Header from './components/Navbar';
 import Footer from './components/Footer';
 import Preguntas from './components/Preguntas';
 import { FaCalculator } from "react-icons/fa6";
+import UpdateNotification from './components/UpdateNotification';
 
 function App() {
   const [data, setData] = useState([]);
@@ -169,23 +170,23 @@ function App() {
   const handleDeleteEtiqueta = () => {
 
     const updatedData = data.map(item =>
-        item.etiqueta === formData.etiqueta
-            ? { ...item, etiqueta: '' }
-            : item
+      item.etiqueta === formData.etiqueta
+        ? { ...item, etiqueta: '' }
+        : item
     );
 
     setData(updatedData);
     saveData(updatedData);
 
     const updatedMyData = {
-        ...mydata,
-        etiquetas: mydata.etiquetas.filter(etiqueta => etiqueta.nombre !== formData.etiqueta)
+      ...mydata,
+      etiquetas: mydata.etiquetas.filter(etiqueta => etiqueta.nombre !== formData.etiqueta)
     };
 
     setMyData(updatedMyData);
     saveMyData(updatedMyData);
     setModalVisible(false);
-};
+  };
   const handleEdit = () => {
     const updatedData = data.map(item =>
       item.id === formData.id
@@ -281,7 +282,7 @@ function App() {
   const openModal = useCallback((type, item = {}, etiqueta = '') => {
     setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '', etiqueta: '' });
     setModalType(type);
-    if (type === 'eliminar' || type === 'editar' || type === 'crearEtiqueta'|| type === 'eliminarEtiqueta') {
+    if (type === 'eliminar' || type === 'editar' || type === 'crearEtiqueta' || type === 'eliminarEtiqueta') {
       const formattedItem = {
         ...item,
         fecha: item.fecha.split('/').reverse().join('-'), // Formatea la fecha a yyyy-mm-dd
@@ -374,6 +375,7 @@ function App() {
   return (
     <Router>
       <div>
+        <UpdateNotification />
         <Header />
         <Routes>
           <Route path="/preguntas" element={<Preguntas />} />
@@ -424,7 +426,7 @@ function App() {
                     handleCreateEtiqueta={handleCreateEtiqueta}
                     modalType={modalType}
                   />
-                  {modalType !== 'vencimiento' && modalType !== 'fondos' && modalType !== 'crearEtiqueta' && modalType !== 'reporte'  && modalType !== 'eliminarEtiqueta'  && modalType !== 'eliminar' && (
+                  {modalType !== 'vencimiento' && modalType !== 'fondos' && modalType !== 'crearEtiqueta' && modalType !== 'reporte' && modalType !== 'eliminarEtiqueta' && modalType !== 'eliminar' && (
                     <div className="calculadora-align" onClick={() => window.location.href = 'ms-calculator://'}>
                       <FaCalculator size={30} />
                     </div>

@@ -51,7 +51,14 @@
       "createStartMenuShortcut": true,
       "shortcutName": "MyBolucompras",
       "deleteAppDataOnUninstall": true
+    },
+      "publish": [
+    {
+      "provider": "github",
+      "owner": "chizzi01",
+      "repo": "MyBolucompras"
     }
+  ]
   },
   "scripts": {
     "dev": "vite",
@@ -64,13 +71,6 @@
     "electron:dev": "electron .",
     "electron:build": "vite build && electron-builder"
   },
-  "publish": [
-    {
-      "provider": "github",
-      "owner": "chizzi01",
-      "repo": "MyBolucompras"
-    }
-  ],
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
