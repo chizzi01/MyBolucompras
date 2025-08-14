@@ -742,7 +742,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                     }}
                                                 >
                                                     <MenuItem value=""><em>None</em></MenuItem>
-                                                    {[...new Set(mydata.etiquetas.map(e => e.nombre))].map((etiqueta, index) => (
+                                                    {[...new Set((mydata?.etiquetas || []).map(e => e?.nombre).filter(Boolean))].map((etiqueta, index) => (
                                                         <MenuItem key={index} value={etiqueta}>
                                                             <ListItemText primary={etiqueta} sx={{
                                                                 '& .MuiListItemText-primary': {
