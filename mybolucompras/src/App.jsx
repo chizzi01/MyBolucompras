@@ -33,23 +33,29 @@ function App() {
   const [isSwitchOn, setIsSwitchOn] = useState(false);
 
   const calcularCuotas = (item) => {
-    return item.tipo === 'debito'
-      ? calcularCuotasRestantes(item.fecha, item.cuotas)
-      : calcularCuotasRestantesCredito(item.fecha, item.cuotas, mydata.vencimiento, mydata.cierre, mydata.vencimientoAnterior, mydata.cierreAnterior);
+    return item?.tipo === 'debito'
+      ? calcularCuotasRestantes(item?.fecha || '', item?.cuotas || 1)
+      : calcularCuotasRestantesCredito(
+        item?.fecha || '',
+        item?.cuotas || 1,
+        mydata?.vencimiento || null,
+        mydata?.cierre || null,
+        mydata?.vencimientoAnterior || null,
+        mydata?.cierreAnterior || null
+      );
   };
 
-
   const applyFilters = () => {
-    return data.filter(item => {
+    return Array.isArray(data) ? data.filter(item => {
       return (
-        (filterObject === '' || item.objeto.toLowerCase().includes(filterObject.toLowerCase())) &&
-        (filterType === '' || item.tipo === filterType) &&
-        (filterBank === '' || item.banco === filterBank) &&
-        (filterMedio === '' || item.medio === filterMedio) &&
-        (filterEtiqueta === '' || item.etiqueta === filterEtiqueta) &&
+        (filterObject === '' || item?.objeto?.toLowerCase().includes(filterObject.toLowerCase())) &&
+        (filterType === '' || item?.tipo === filterType) &&
+        (filterBank === '' || item?.banco === filterBank) &&
+        (filterMedio === '' || item?.medio === filterMedio) &&
+        (filterEtiqueta === '' || item?.etiqueta === filterEtiqueta) &&
         (isSwitchOn || calcularCuotas(item) >= 1)
       );
-    });
+    }) : [];
   };
 
   const filteredData = applyFilters();
@@ -300,8 +306,9 @@ function App() {
     setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '' });
   }
   const totalGastado = () => {
-    if (!filteredData || filteredData.length === 0) return "0.00";
     let total = 0;
+
+    if (!Array.isArray(filteredData)) return "0.00";
 
     filteredData.forEach((item) => {
       let precioMensual = 0;
@@ -334,40 +341,44 @@ function App() {
     return total.toFixed(2);
   };
 
-  const bancoMasUsado = () => {
-    if (!data || data.length === 0) return "sin datos";
-    const bancos = {};
-    data.forEach((item) => {
-      if (item.banco) {
-        bancos[item.banco] = (bancos[item.banco] || 0) + 1;
-      }
-    });
-    if (Object.keys(bancos).length === 0) return "sin datos";
-    const max = Math.max(...Object.values(bancos));
-    return Object.keys(bancos).find((key) => bancos[key] === max) || "sin datos";
-  }
+const bancoMasUsado = () => {
+  if (!Array.isArray(data) || data.length === 0) return 'N/A';
+  
+  const bancos = {};
+  data.forEach((item) => {
+    const banco = item?.banco || 'Sin banco';
+    if (bancos[banco]) {
+      bancos[banco]++;
+    } else {
+      bancos[banco] = 1;
+    }
+  });
 
-  const tarjetaMasUsada = () => {
-    if (!data || data.length === 0) return "sin datos";
-    const tarjetas = {};
-    data.forEach((item) => {
-      if (item.medio) {
-        tarjetas[item.medio] = (tarjetas[item.medio] || 0) + 1;
-      }
-    });
-    if (Object.keys(tarjetas).length === 0) return "sin datos";
-    const max = Math.max(...Object.values(tarjetas));
-    return Object.keys(tarjetas).find((key) => tarjetas[key] === max) || "sin datos";
-  }
-  const uniqueBanks = data && data.length > 0
-    ? [...new Set(data.map(item => item.banco))]
-    : ["sin datos"];
-  const uniqueMedios = data && data.length > 0
-    ? [...new Set(data.map(item => item.medio))]
-    : ["sin datos"];
-  const uniqueEtiquetas = data && data.length > 0 && data.some(item => item.etiqueta)
-    ? [...new Set(data.filter(item => item.etiqueta).map(item => item.etiqueta))]
-    : ["sin datos"];
+  const max = Math.max(...Object.values(bancos));
+  return Object.keys(bancos).find((key) => bancos[key] === max);
+};
+
+const tarjetaMasUsada = () => {
+  if (!Array.isArray(data) || data.length === 0) return 'N/A';
+  
+  const tarjetas = {};
+  data.forEach((item) => {
+    const medio = item?.medio || 'Sin medio';
+    if (tarjetas[medio]) {
+      tarjetas[medio]++;
+    } else {
+      tarjetas[medio] = 1;
+    }
+  });
+
+  const max = Math.max(...Object.values(tarjetas));
+  return Object.keys(tarjetas).find((key) => tarjetas[key] === max);
+};
+
+
+const uniqueBanks = Array.isArray(data) ? [...new Set(data.map(item => item?.banco).filter(Boolean))] : [];
+const uniqueMedios = Array.isArray(data) ? [...new Set(data.map(item => item?.medio).filter(Boolean))] : [];
+const uniqueEtiquetas = Array.isArray(data) ? [...new Set(data.filter(item => item?.etiqueta).map(item => item.etiqueta))] : [];
 
 
   return (
