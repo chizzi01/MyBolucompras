@@ -1,19 +1,48 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, nativeImage } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 const path = require('path');
 const log = require('electron-log');
 //require('dotenv').config();
+app.setName('MyBolucompras');
 app.setAppUserModelId('com.mybolucompras.app');
 
 
 let mainWindow;
 let splashWindow;
+let appIcon = null;
+
+log.initialize({ spyConsole: true });
+log.catchErrors({ showDialog: false });
+log.transports.file.level = 'info';
+// Muestra la ruta real del archivo de log:
+log.info('Log file:', log.transports.file.getFile().path);
+
+function loadAppIcon() {
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'build', 'icon.ico')
+    : path.join(__dirname, 'build', 'icon.ico'); const icon = nativeImage.createFromPath(iconPath);
+  log.info('Icon path:', iconPath);
+  log.info('Icon exists:', fs.existsSync(iconPath));
+  log.info('Icon isEmpty:', icon.isEmpty());
+  return icon;
+}
 
 // Función para obtener la ruta correcta en desarrollo o producción
 function getAppPath() {
   return app.isPackaged ? path.join(process.resourcesPath, 'app') : app.getAppPath();
 }
+
+// Inicialización de la aplicación
+app.whenReady().then(() => {
+  console.log('App is ready');
+  appIcon = loadAppIcon();
+  createSplashWindow();
+  setTimeout(() => {
+    createWindow();
+    setupAutoUpdater();
+  }, 2000);
+});
 
 autoUpdater.logger = require('electron-log');
 autoUpdater.logger.transports.file.level = 'info';
@@ -54,19 +83,19 @@ ipcMain.on('restart_app', () => {
   autoUpdater.quitAndInstall();
 });
 
-
 function createWindow() {
   console.log('Creating main window...');
   console.log('App is packaged:', app.isPackaged);
   console.log('App path:', getAppPath());
 
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'build', 'icon.ico')
+    : path.join(__dirname, 'build', 'icon.ico');
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 600,
-    icon: (app.isPackaged
-      ? path.join(process.resourcesPath, 'build', 'icon.ico')
-      : path.join(__dirname, 'build', 'icon.ico')
-    ),
+    icon: iconPath,
     autoHideMenuBar: true,
     show: false,
     webPreferences: {
@@ -78,8 +107,6 @@ function createWindow() {
     }
   });
 
-  console.log('Icon path:', icon);
-  console.log('Icon exists:', fs.existsSync(icon));
 
   // Manejadores de eventos para debugging
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
@@ -132,6 +159,8 @@ function createSplashWindow() {
     frame: false,
     alwaysOnTop: true,
     transparent: true,
+    skipTaskbar: true,
+    icon: appIcon,
     webPreferences: {
       contextIsolation: true
     }
@@ -141,15 +170,6 @@ function createSplashWindow() {
   splashWindow.loadFile(splashPath);
 }
 
-// Inicialización de la aplicación
-app.whenReady().then(() => {
-  console.log('App is ready');
-  createSplashWindow();
-  setTimeout(() => {
-    createWindow();
-    setupAutoUpdater();
-  }, 2000);
-});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

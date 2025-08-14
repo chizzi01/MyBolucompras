@@ -1,7 +1,7 @@
 {
   "name": "mybolucompras",
   "private": true,
-  "version": "0.0.12",
+  "version": "0.0.20",
   "main": "main.js",
   "description": "Aplicación para gestionar compras de manera eficiente.",
   "author": "Agustin Chizzini Melo",
@@ -24,6 +24,12 @@
       "preload.js",
       "public/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "build/icon.ico",
+        "to": "build/icon.ico"
+      }
+    ],
     "win": {
       "icon": "build/icon.ico",
       "target": [
@@ -37,7 +43,7 @@
       "signingHashAlgorithms": [
         "sha256"
       ],
-      "signAndEditExecutable": false,
+      "signAndEditExecutable": true,
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "nsis": {
