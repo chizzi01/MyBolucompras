@@ -21,16 +21,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
+          cache-dependency-path: mybolucompras/package-lock.json
 
       - name: Install deps
+        working-directory: mybolucompras
         run: npm ci
 
       - name: Build & Publish (electron-builder)
+        working-directory: mybolucompras
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
           USE_HARD_LINKS: false
         run: npm run build
-        # Tu "build" ya hace: "vite build && electron-builder"
-        # electron-builder publicará a GitHub porque está configurado build.publish en package.json
