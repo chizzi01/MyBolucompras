@@ -299,19 +299,18 @@ function App() {
     setModalVisible(false);
     setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '' });
   }
-
   const totalGastado = () => {
+    if (!filteredData || filteredData.length === 0) return "0.00";
     let total = 0;
 
     filteredData.forEach((item) => {
-
       let precioMensual = 0;
       if (item.precio && typeof item.precio === 'string') {
         const precioNumerico = parseFloat(item.precio.replace('$', '').trim());
         if (!isNaN(precioNumerico)) {
           precioMensual = item.tipo === 'credito' && item.cuotas > 0
             ? precioNumerico / item.cuotas
-            : precioNumerico; // Si no es crédito, usa el precio completo
+            : precioNumerico;
         }
       }
 
@@ -324,13 +323,10 @@ function App() {
           mydata.vencimientoAnterior,
           mydata.cierreAnterior
         );
-
-        // Suma solo si hay cuotas restantes
         if (cuotasRestantes > 0) {
           total += precioMensual;
         }
       } else if (item.tipo === 'debito' || item.medio === 'Efectivo') {
-        // Incluye todos los débitos y pagos en efectivo
         total += precioMensual;
       }
     });
@@ -338,38 +334,40 @@ function App() {
     return total.toFixed(2);
   };
 
-
-
   const bancoMasUsado = () => {
+    if (!data || data.length === 0) return "sin datos";
     const bancos = {};
     data.forEach((item) => {
-      if (bancos[item.banco]) {
-        bancos[item.banco]++;
-      } else {
-        bancos[item.banco] = 1;
+      if (item.banco) {
+        bancos[item.banco] = (bancos[item.banco] || 0) + 1;
       }
     });
-
+    if (Object.keys(bancos).length === 0) return "sin datos";
     const max = Math.max(...Object.values(bancos));
-    return Object.keys(bancos).find((key) => bancos[key] === max);
+    return Object.keys(bancos).find((key) => bancos[key] === max) || "sin datos";
   }
 
   const tarjetaMasUsada = () => {
+    if (!data || data.length === 0) return "sin datos";
     const tarjetas = {};
-    data?.forEach((item) => {
-      if (tarjetas[item.medio]) {
-        tarjetas[item.medio]++;
-      } else {
-        tarjetas[item.medio] = 1;
+    data.forEach((item) => {
+      if (item.medio) {
+        tarjetas[item.medio] = (tarjetas[item.medio] || 0) + 1;
       }
     });
-
+    if (Object.keys(tarjetas).length === 0) return "sin datos";
     const max = Math.max(...Object.values(tarjetas));
-    return Object.keys(tarjetas).find((key) => tarjetas[key] === max);
+    return Object.keys(tarjetas).find((key) => tarjetas[key] === max) || "sin datos";
   }
-  const uniqueBanks = [...new Set(data?.map(item => item.banco))]; // Bancos únicos
-  const uniqueMedios = [...new Set(data?.map(item => item.medio))]; // Medios únicos
-  const uniqueEtiquetas = [...new Set(data?.filter(item => item.etiqueta).map(item => item.etiqueta))]; // Etiquetas únicas
+  const uniqueBanks = data && data.length > 0
+    ? [...new Set(data.map(item => item.banco))]
+    : ["sin datos"];
+  const uniqueMedios = data && data.length > 0
+    ? [...new Set(data.map(item => item.medio))]
+    : ["sin datos"];
+  const uniqueEtiquetas = data && data.length > 0 && data.some(item => item.etiqueta)
+    ? [...new Set(data.filter(item => item.etiqueta).map(item => item.etiqueta))]
+    : ["sin datos"];
 
 
   return (
