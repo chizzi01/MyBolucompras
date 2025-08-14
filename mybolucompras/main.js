@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const log = require('electron-log');
 //require('dotenv').config();
-
+app.setAppUserModelId('com.mybolucompras.app');
 
 
 let mainWindow;
@@ -63,7 +63,10 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 600,
-    icon: path.join(getAppPath(), 'public', 'icon.ico'),
+    icon: (app.isPackaged
+      ? path.join(process.resourcesPath, 'build', 'icon.ico')
+      : path.join(__dirname, 'build', 'icon.ico')
+    ),
     autoHideMenuBar: true,
     show: false,
     webPreferences: {
