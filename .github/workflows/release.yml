@@ -28,10 +28,15 @@ jobs:
         working-directory: mybolucompras
         run: npm ci
 
+      - name: Build frontend (Vite)
+        working-directory: mybolucompras
+        run: npm run build:ui || npx vite build
+        # Si no tienes "build:ui", este comando usa npx vite build
+
       - name: Build & Publish (electron-builder)
         working-directory: mybolucompras
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # Está bien aunque el repo sea público
           CSC_IDENTITY_AUTO_DISCOVERY: false
           USE_HARD_LINKS: false
-        run: npm run build
+        run: npx electron-builder --publish always
