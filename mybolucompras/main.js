@@ -78,6 +78,9 @@ function createWindow() {
     }
   });
 
+  console.log('Icon path:', icon);
+  console.log('Icon exists:', fs.existsSync(icon));
+
   // Manejadores de eventos para debugging
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
     console.error('Failed to load:', errorCode, errorDescription);

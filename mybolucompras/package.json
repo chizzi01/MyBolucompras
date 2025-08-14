@@ -22,8 +22,7 @@
       "dist/**/*",
       "main.js",
       "preload.js",
-      "public/**/*",
-      "build/**/*"
+      "public/**/*"
     ],
     "win": {
       "icon": "build/icon.ico",
