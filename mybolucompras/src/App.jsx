@@ -356,7 +356,7 @@ function App() {
 
   const tarjetaMasUsada = () => {
     const tarjetas = {};
-    data.forEach((item) => {
+    data?.forEach((item) => {
       if (tarjetas[item.medio]) {
         tarjetas[item.medio]++;
       } else {
@@ -367,9 +367,9 @@ function App() {
     const max = Math.max(...Object.values(tarjetas));
     return Object.keys(tarjetas).find((key) => tarjetas[key] === max);
   }
-  const uniqueBanks = [...new Set(data.map(item => item.banco))]; // Bancos únicos
-  const uniqueMedios = [...new Set(data.map(item => item.medio))]; // Medios únicos
-  const uniqueEtiquetas = [...new Set(data.filter(item => item.etiqueta).map(item => item.etiqueta))]; // Etiquetas únicas
+  const uniqueBanks = [...new Set(data?.map(item => item.banco))]; // Bancos únicos
+  const uniqueMedios = [...new Set(data?.map(item => item.medio))]; // Medios únicos
+  const uniqueEtiquetas = [...new Set(data?.filter(item => item.etiqueta).map(item => item.etiqueta))]; // Etiquetas únicas
 
 
   return (

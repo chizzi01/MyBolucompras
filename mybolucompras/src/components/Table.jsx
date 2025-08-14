@@ -107,6 +107,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     };
 
     const getEtiquetaColor = (etiqueta, etiquetas) => {
+        if (!Array.isArray(etiquetas)) return 'transparent';
         const etiquetaObj = etiquetas.find(e => e.nombre === etiqueta);
         return etiquetaObj ? etiquetaObj.color : 'transparent';
     };
@@ -465,7 +466,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                             }}
                                         >
                                             <MenuItem value=""><em>None</em></MenuItem>
-                                            {uniqueBanks.map((bank, index) => (
+                                            {uniqueBanks?.map((bank, index) => (
                                                 <MenuItem key={index} value={bank}>{bank}</MenuItem>
                                             ))}
 
@@ -524,7 +525,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                             }}
                                         >
                                             <MenuItem value=""><em>None</em></MenuItem>
-                                            {uniqueMedios.map((medio, index) => (
+                                            {uniqueMedios?.map((medio, index) => (
                                                 <MenuItem key={index} value={medio}>{medio}</MenuItem>
                                             ))}
 
@@ -583,7 +584,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                             }}
                                         >
                                             <MenuItem value=""><em>None</em></MenuItem>
-                                            {uniqueEtiquetas.map((etiqueta, index) => (
+                                            {uniqueEtiquetas?.map((etiqueta, index) => (
                                                 <MenuItem key={index} value={etiqueta}>{etiqueta}</MenuItem>
                                             ))}
                                         </Select>
