@@ -683,7 +683,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                 {item.isFijo && <PiRepeatBold size={15} color='#ff9a15' />}
                                                 {item.tipo === 'credito' && <FaCreditCard size={15} color='#3181ff' />}
                                                 {item.tipo === 'debito' && item.isFijo == false && item.medio == 'Efectivo' && <FaMoneyBill1Wave size={15} color='#11af00' />}
-                                                {item.tipo === 'debito' && item.isFijo == false && item.medio == 'Transferencia' && <FaMoneyBillTransfer size={15} color='#e773d4' />}
+                                                {item.isFijo == false && item.medio == 'Transferencia' && <FaMoneyBillTransfer size={15} color='#e773d4' />}
                                                 {item.tipo === 'debito' && item.isFijo == false && (item.medio != 'Transferencia' && item.medio != 'Efectivo') && <BsCreditCard2Front size={15} color='#11af00' />}
                                             </div>
                                         </td>
