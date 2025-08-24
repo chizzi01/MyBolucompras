@@ -711,6 +711,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                     displayEmpty
                                                     style={{
                                                         fontSize: '12px',
+                                                        color: (labels[item.id] || item.etiqueta) ? 'white' : 'black',
                                                     }}
                                                     sx={{
                                                         '& .MuiOutlinedInput-root': {
@@ -733,11 +734,10 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                             fontSize: '10px',
                                                         },
                                                         '& .MuiSelect-select': {
-                                                            fontSize: '12px', // Ajusta el tamaño de la fuente
-                                                            padding: '2px', // Ajusta el padding
-                                                            maxWidth: '100px', // Ajusta el ancho máximo
+                                                            fontSize: '12px',
+                                                            padding: '2px', 
+                                                            maxWidth: '100px', 
                                                             maxHeight: '25px',
-
                                                         },
                                                     }}
                                                 >
