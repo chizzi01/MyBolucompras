@@ -15,7 +15,7 @@ let appIcon = null;
 log.initialize({ spyConsole: true });
 log.catchErrors({ showDialog: false });
 log.transports.file.level = 'info';
-// Muestra la ruta real del archivo de log:
+
 log.info('Log file:', log.transports.file.getFile().path);
 
 function loadAppIcon() {
@@ -28,12 +28,12 @@ function loadAppIcon() {
   return icon;
 }
 
-// Función para obtener la ruta correcta en desarrollo o producción
+
 function getAppPath() {
   return app.isPackaged ? path.join(process.resourcesPath, 'app') : app.getAppPath();
 }
 
-// Inicialización de la aplicación
+
 app.whenReady().then(() => {
   console.log('App is ready');
   appIcon = loadAppIcon();
@@ -47,12 +47,12 @@ app.whenReady().then(() => {
 autoUpdater.logger = require('electron-log');
 autoUpdater.logger.transports.file.level = 'info';
 
-// Configuración del autoUpdater
+
 function setupAutoUpdater() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
-  // Eventos del autoUpdater -> Renderer via IPC
+
   autoUpdater.on('update-available', (info) => {
     console.log('Update available:', info);
     mainWindow?.webContents.send('update_available', info);
@@ -73,12 +73,11 @@ function setupAutoUpdater() {
     mainWindow?.webContents.send('update_error', String(err));
   });
 
-  // Chequeo inicial y periódico
+
   setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 3000);
   setInterval(() => autoUpdater.checkForUpdates(), 60 * 60 * 1000); // cada hora
 }
 
-// IPC handler para reiniciar la app desde el renderer
 ipcMain.on('restart_app', () => {
   autoUpdater.quitAndInstall();
 });
@@ -153,6 +152,13 @@ function createWindow() {
 }
 
 function createSplashWindow() {
+  let splashPath;
+  if (app.isPackaged) {
+    splashPath = path.join(process.resourcesPath, 'public', 'splash.html');
+  } else {
+    splashPath = path.join(getAppPath(), 'public', 'splash.html');
+  }
+
   splashWindow = new BrowserWindow({
     width: 400,
     height: 300,
@@ -166,7 +172,7 @@ function createSplashWindow() {
     }
   });
 
-  const splashPath = path.join(getAppPath(), 'public', 'splash.html');
+  // const splashPath = path.join(getAppPath(), 'public', 'splash.html');
   splashWindow.loadFile(splashPath);
 }
 

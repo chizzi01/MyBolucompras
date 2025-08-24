@@ -1,7 +1,7 @@
 {
   "name": "mybolucompras",
   "private": true,
-  "version": "0.0.25",
+  "version": "0.0.26",
   "main": "main.js",
   "description": "Aplicación para gestionar compras de manera eficiente.",
   "author": "Agustin Chizzini Melo",
@@ -22,7 +22,9 @@
       "dist/**/*",
       "main.js",
       "preload.js",
-      "public/**/*"
+      "public/**/*",
+      "build/**/*",
+      "public/splash.html"
     ],
     "extraResources": [
       {
