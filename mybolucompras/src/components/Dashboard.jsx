@@ -80,15 +80,15 @@ const Dashboard = ({ data, mydata }) => {
     const cuotas = parseInt(item.cuotas, 10) || 0;
     const precioNum = parsePrecio(item.precio); // viene como total para varios créditos, por el log
 
-    // Fijos: se repiten todos los meses
-    if (item.isFijo) {
-      for (let i = 0; i < 6; i++) {
-        const m = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-        const key = `${m.toLocaleString('es-ES', { month: 'long' })} ${m.getFullYear()}`;
-        pagos[key] += precioNum;
-      }
-      return;
-    }
+    // // Fijos: se repiten todos los meses
+    // if (item.isFijo) {
+    //   for (let i = 0; i < 6; i++) {
+    //     const m = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+    //     const key = `${m.toLocaleString('es-ES', { month: 'long' })} ${m.getFullYear()}`;
+    //     pagos[key] += precioNum;
+    //   }
+    //   return;
+    // }
 
     // Crédito (o transferencia en cuotas)
     const esCredito = item.tipo === 'credito' || (item.medio === 'Transferencia' && cuotas > 1);
