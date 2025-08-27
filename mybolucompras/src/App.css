@@ -930,9 +930,24 @@ a {
 .totales {
   display: flex;
   justify-content: space-evenly;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   margin: 20px;
+}
+
+.totalGastadoPrecio {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  color: #6EFF6E;
+  font-size: 0.8em;
+  margin-left: 10px;
+}
+
+#totalGastado {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 .hide {
@@ -1909,7 +1924,7 @@ input:checked+.slider:before {
 .timeline-container::before {
   content: '';
   position: absolute;
-  top:30%;
+  top: 30%;
   left: 0;
   right: 0;
   height: 2px;
@@ -2133,22 +2148,23 @@ input:checked+.slider:before {
   .filter-container {
     width: 200px;
   }
-  #agregarFondos-btn{
+
+  #agregarFondos-btn {
     width: 55px;
     height: 55px;
   }
 
-  #agregarFijo-btn{
+  #agregarFijo-btn {
     width: 55px;
     height: 55px;
   }
 
-  #agregar-btn{
+  #agregar-btn {
     width: 55px;
     height: 55px;
   }
 
-  #vencimientoTarjeta-btn{
+  #vencimientoTarjeta-btn {
     width: 55px;
     height: 55px;
   }

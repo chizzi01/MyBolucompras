@@ -6,19 +6,19 @@ function Footer({ totalGastado, tarjetaUsada, bancoUsado }) {
     return number.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-    const renderTotalesPorMoneda = () => {
+  const renderTotalesPorMoneda = () => {
     if (typeof totalGastado === 'object' && totalGastado !== null) {
       return Object.entries(totalGastado).map(([moneda, total]) => (
-        <div key={moneda}>
-          <span style={{ color: '#6EFF6E' }}>
+        <div key={moneda} >
+          <span >
             {moneda}: ${formatNumber(total)}
           </span>
         </div>
       ));
     }
 
-        return (
-      <span style={{ color: '#6EFF6E' }}>
+    return (
+      <span >
         ${formatNumber(Number(totalGastado))}
       </span>
     );
@@ -28,9 +28,9 @@ function Footer({ totalGastado, tarjetaUsada, bancoUsado }) {
     <div className="footer-align">
       <div className="data-container">
         <div className="totales">
-          <h2 id="totalGastado" >Total gastado: <span style={{fontSize: '0.8em'}}>{renderTotalesPorMoneda()}</span></h2>
-          <h2 id="tarjetaUsada">Medio o tarjeta más usado/a: <span style={{color: '#7BB9FF' }}>{tarjetaUsada}</span></h2>
-          <h2 id="bancoUsado">Banco más usado: <span style={{color: '#FFB63F' }}>{bancoUsado}</span></h2>
+          <h2 id="totalGastado" >Total gastado: <span className='totalGastadoPrecio'>{renderTotalesPorMoneda()}</span></h2>
+          <h2 id="tarjetaUsada">Medio o tarjeta más usado/a: <span style={{ color: '#7BB9FF' }}>{tarjetaUsada}</span></h2>
+          <h2 id="bancoUsado">Banco más usado: <span style={{ color: '#FFB63F' }}>{bancoUsado}</span></h2>
         </div>
       </div>
       <footer id="contacto">
@@ -39,7 +39,7 @@ function Footer({ totalGastado, tarjetaUsada, bancoUsado }) {
             <ul className="list-textSiro">
               <li>Powered by:</li>
               <a href="https://chizzi01.github.io/Cv-React/" target="_blank" rel="Agustin Chizzini Melo">
-              Agustin Chizzini Melo
+                Agustin Chizzini Melo
               </a>
             </ul>
           </div>
