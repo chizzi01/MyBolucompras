@@ -311,21 +311,19 @@ function App() {
     setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '' });
   }
   const totalGastado = () => {
-    let total = 0;
+  const totalesPorMoneda = {};
 
-    if (!Array.isArray(filteredData)) return "0.00";
+  filteredData.forEach((item) => {
+    // Usa la moneda del item si existe, si no, pon 'SIN_MONEDA'
+    const moneda = item.moneda && item.moneda.trim() !== '' ? item.moneda : 'ARS';
+    const precioNumerico = parseFloat(item.precio?.replace('$', '').replace(',', '.') || 0);
 
-    filteredData.forEach((item) => {
-      let precioMensual = 0;
-      if (item.precio && typeof item.precio === 'string') {
-        const precioNumerico = parseFloat(item.precio.replace('$', '').trim());
-        if (!isNaN(precioNumerico)) {
-          precioMensual = item.tipo === 'credito' && item.cuotas > 0
-            ? precioNumerico / item.cuotas
-            : precioNumerico;
-        }
-      }
+    if (!isNaN(precioNumerico)) {
+      let precioMensual = item.tipo === 'credito' && item.cuotas > 0
+        ? precioNumerico / item.cuotas
+        : precioNumerico;
 
+      let sumar = false;
       if (item.tipo === 'credito') {
         const cuotasRestantes = calcularCuotasRestantesCredito(
           item.fecha,
@@ -335,16 +333,25 @@ function App() {
           mydata.vencimientoAnterior,
           mydata.cierreAnterior
         );
-        if (cuotasRestantes > 0) {
-          total += precioMensual;
-        }
+        if (cuotasRestantes > 0) sumar = true;
       } else if (item.tipo === 'debito' || item.medio === 'Efectivo') {
-        total += precioMensual;
+        sumar = true;
       }
-    });
 
-    return total.toFixed(2);
-  };
+      if (sumar) {
+        if (!totalesPorMoneda[moneda]) totalesPorMoneda[moneda] = 0;
+        totalesPorMoneda[moneda] += precioMensual;
+      }
+    }
+  });
+
+  // Redondear a 2 decimales
+  Object.keys(totalesPorMoneda).forEach(moneda => {
+    totalesPorMoneda[moneda] = totalesPorMoneda[moneda].toFixed(2);
+  });
+
+  return totalesPorMoneda;
+};
 
 const bancoMasUsado = () => {
   if (!Array.isArray(data) || data.length === 0) return 'N/A';
