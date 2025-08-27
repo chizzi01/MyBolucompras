@@ -20,6 +20,7 @@ function App() {
     medio: '',
     cuotas: 1,
     tipo: 'debito',
+    moneda: '',
     banco: '',
     cantidad: 1,
     precio: ''
@@ -30,6 +31,7 @@ function App() {
   const [filterBank, setFilterBank] = useState('');
   const [filterMedio, setFilterMedio] = useState('');
   const [filterEtiqueta, setFilterEtiqueta] = useState('');
+  const [filterMoneda, setFilterMoneda] = useState('');
   const [isSwitchOn, setIsSwitchOn] = useState(false);
 
   const calcularCuotas = (item) => {
@@ -53,6 +55,7 @@ function App() {
         (filterBank === '' || item?.banco === filterBank) &&
         (filterMedio === '' || item?.medio === filterMedio) &&
         (filterEtiqueta === '' || item?.etiqueta === filterEtiqueta) &&
+        (filterMoneda === '' || item?.moneda === filterMoneda) &&
         (isSwitchOn || calcularCuotas(item) >= 1)
       );
     }) : [];
@@ -86,7 +89,7 @@ function App() {
   }, []);
 
 
-  const agregarDatosObjeto = (id, objeto, fecha, medio, cuotas, tipo, banco, cantidad, precio) => {
+  const agregarDatosObjeto = (id, objeto, fecha, medio, cuotas, tipo, banco, cantidad, precio, moneda) => {
     const NuevoObjeto = {
       id: id,
       isFijo: false,
@@ -95,6 +98,7 @@ function App() {
       medio: medio,
       cuotas: tipo === 'debito' ? 1 : Number(cuotas),
       tipo: (medio === 'Efectivo') ? 'debito' : tipo,
+      moneda: moneda,
       banco: banco,
       cantidad: Number(cantidad),
       precio: isNaN(Number(precio)) || !isFinite(Number(precio)) ? "$ 0" : `$ ${Number(precio).toFixed(2)}`
@@ -105,7 +109,7 @@ function App() {
     saveData(updatedData);
   };
 
-  const agregarDatosObjetoFijo = (id, objeto, fecha, medio, cuotas, banco, cantidad, precio) => {
+  const agregarDatosObjetoFijo = (id, objeto, fecha, medio, cuotas, banco, cantidad, precio, moneda) => {
     const precioTotal = Number(precio) * Number(cantidad);
     const NuevoObjeto = {
       id: id,
@@ -115,6 +119,7 @@ function App() {
       medio: medio,
       cuotas: Number(cuotas),
       tipo: "debito",
+      moneda: moneda,
       banco: banco,
       cantidad: Number(cantidad),
       precio: isNaN(precioTotal) || !isFinite(precioTotal) ? "$ 0" : `$ ${precioTotal.toFixed(2)}`
@@ -158,12 +163,12 @@ function App() {
   const handleSubmit = () => {
     const id = generateUniqueId();
     if (modalType === 'repetitivo') {
-      agregarDatosObjetoFijo(id, formData.objeto, formData.fecha, formData.medio, formData.cuotas, formData.banco, formData.cantidad, formData.precio);
+      agregarDatosObjetoFijo(id, formData.objeto, formData.fecha, formData.medio, formData.cuotas, formData.banco, formData.cantidad, formData.precio, formData.moneda);
     } else {
-      agregarDatosObjeto(id, formData.objeto, formData.fecha, formData.medio, formData.cuotas, formData.tipo, formData.banco, formData.cantidad, formData.precio);
+      agregarDatosObjeto(id, formData.objeto, formData.fecha, formData.medio, formData.cuotas, formData.tipo, formData.banco, formData.cantidad, formData.precio, formData.moneda);
     }
     setModalVisible(false);
-    setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '' });
+    setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '', moneda: '' });
   };
 
   const handleDelete = () => {
@@ -379,6 +384,7 @@ const tarjetaMasUsada = () => {
 const uniqueBanks = Array.isArray(data) ? [...new Set(data.map(item => item?.banco).filter(Boolean))] : [];
 const uniqueMedios = Array.isArray(data) ? [...new Set(data.map(item => item?.medio).filter(Boolean))] : [];
 const uniqueEtiquetas = Array.isArray(data) ? [...new Set(data.filter(item => item?.etiqueta).map(item => item.etiqueta))] : [];
+const uniqueMonedas = Array.isArray(data) ? [...new Set(data.map(item => item?.moneda).filter(Boolean))] : [];
 
 
   return (
@@ -398,6 +404,7 @@ const uniqueEtiquetas = Array.isArray(data) ? [...new Set(data.filter(item => it
                 uniqueBanks={uniqueBanks}
                 uniqueMedios={uniqueMedios}
                 uniqueEtiquetas={uniqueEtiquetas}
+                uniqueMonedas={uniqueMonedas}
                 saveItem={saveItem}
                 filters={{
                   filterObject,
@@ -412,6 +419,8 @@ const uniqueEtiquetas = Array.isArray(data) ? [...new Set(data.filter(item => it
                   setFilterEtiqueta,
                   isSwitchOn,
                   handleSwitchChange,
+                  filterMoneda,
+                  setFilterMoneda,
                 }}
               />
               <Footer totalGastado={totalGastado()} bancoUsado={bancoMasUsado()} tarjetaUsada={tarjetaMasUsada()} />

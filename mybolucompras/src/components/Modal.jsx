@@ -281,6 +281,33 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
     </>
   );
 
+  // Lista de monedas y símbolos
+  const currencies = [
+    { code: 'ARS', symbol: '$', label: 'Peso Argentino' },
+    { code: 'USD', symbol: 'US$', label: 'Dólar Estadounidense' },
+    { code: 'EUR', symbol: '€', label: 'Euro' },
+    { code: 'BRL', symbol: 'R$', label: 'Real Brasileño' },
+    { code: 'CLP', symbol: 'CLP$', label: 'Peso Chileno' },
+    { code: 'UYU', symbol: 'UY$', label: 'Peso Uruguayo' },
+    { code: 'GBP', symbol: '£', label: 'Libra Esterlina' },
+    { code: 'JPY', symbol: '¥', label: 'Yen Japonés' },
+  ];
+
+  // Estado para la moneda seleccionada
+  const [selectedCurrency, setSelectedCurrency] = useState(formData.moneda || 'ARS');
+
+  // Actualiza la moneda en el formData y el estado local
+  const handleCurrencyChange = (e) => {
+    setSelectedCurrency(e.target.value);
+    setFormData({ ...formData, moneda: e.target.value });
+  };
+
+  // Obtiene el símbolo de la moneda seleccionada
+  const getCurrencySymbol = (code) => {
+    const found = currencies.find(c => c.code === code);
+    return found ? found.symbol : '$';
+  };
+
   return (
     <div className="modal-overlay">
       <div
@@ -491,6 +518,45 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                     />
                   </>
                 )}
+                <FormControl variant="outlined" fullWidth={false} margin="normal"                   sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: selectedCurrency ? '#b0ffc3' : 'white',
+                      '& fieldset': {
+                        borderColor: selectedCurrency ? '#bfffce' : '#777777',
+                        color: '#777777',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: selectedCurrency ? '#bfffce' : '#777777',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: selectedCurrency ? '#bfffce' : '#777777',
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: 'black',
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: 'black',
+                    },
+                    '& .MuiFormHelperText-root': {
+                      color: '#c30000',
+                      fontSize: '12px',
+                    },
+                  }}>
+                  <InputLabel id="currency-label">Moneda</InputLabel>
+                  <Select
+                    labelId="currency-label"
+                    value={selectedCurrency}
+                    onChange={handleCurrencyChange}
+                    label="Moneda"
+                  >
+                    {currencies.map((c) => (
+                      <MenuItem key={c.code} value={c.code}>
+                        {c.symbol} - {c.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
                 <TextField
                   label="Precio"
                   type="number"
@@ -504,7 +570,11 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                   margin="normal"
                   helperText={showHelperText && !formData.precio ? "Ingrese el precio" : ""}
                   InputProps={{
-                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        {getCurrencySymbol(selectedCurrency)}
+                      </InputAdornment>
+                    ),
                   }}
                   sx={{
                     '& .MuiOutlinedInput-root': {

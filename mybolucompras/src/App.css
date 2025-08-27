@@ -1554,7 +1554,7 @@ input:checked+.slider:before {
   flex-flow: column wrap;
   justify-content: flex-start;
   /* align-items: center; */
-  width: 300px;
+  width: 400px;
   animation: slideInLeft 0.1s linear forwards;
 }
 
@@ -1564,7 +1564,7 @@ input:checked+.slider:before {
   justify-content: center;
   align-items: center;
   gap: 5px;
-  max-width: 400px;
+  max-width: 500px;
 }
 
 .dropdown-content {

@@ -70,7 +70,7 @@ export const calcularCuotasRestantes = (fecha, cuotas) => {
 };
 
 
-function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMedios, uniqueEtiquetas, saveItem }) {
+function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMedios, uniqueEtiquetas, saveItem, uniqueMonedas }) {
     if (!Array.isArray(data)) {
         return <div>No hay datos</div>;
     }
@@ -87,6 +87,8 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
         setFilterMedio,
         filterEtiqueta,
         setFilterEtiqueta,
+        filterMoneda,
+        setFilterMoneda,
         isSwitchOn,
         handleSwitchChange,
     } = filters;
@@ -135,12 +137,13 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
         if (filterBank) count++;
         if (filterMedio) count++;
         if (filterEtiqueta) count++;
+        if (filterMoneda) count++;
         setFilterCount(count);
     };
 
     useEffect(() => {
         countFilters();
-    }, [filterObject, filterType, filterBank, filterMedio, filterEtiqueta]);
+    }, [filterObject, filterType, filterBank, filterMedio, filterEtiqueta, filterMoneda]);
 
     const mesActual = new Date().toLocaleString('es-ES', { month: 'long' });
 
@@ -364,7 +367,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                             '& .MuiOutlinedInput-root': {
                                                 backgroundColor: filterType ? '#5ca8ffbf' : 'transparent',
                                                 fontSize: '12px',
-                                                maxWidth: '100px',
+                                                maxWidth: '90px',
                                                 '& fieldset': {
                                                     borderColor: 'white',
 
@@ -405,7 +408,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                 '& .MuiSelect-select': {
                                                     fontSize: '12px', // Ajusta el tamaño de la fuente
                                                     padding: '10px', // Ajusta el padding
-                                                    maxWidth: '100px', // Ajusta el ancho máximo
+                                                    maxWidth: '90px',
                                                 },
                                             }}
                                         >
@@ -421,7 +424,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                             '& .MuiOutlinedInput-root': {
                                                 backgroundColor: filterBank ? '#5ca8ffbf' : 'transparent',
                                                 fontSize: '12px',
-                                                maxWidth: '100px',
+                                                maxWidth: '90px',
                                                 '& fieldset': {
                                                     borderColor: 'white',
                                                 },
@@ -461,7 +464,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                 '& .MuiSelect-select': {
                                                     fontSize: '12px', // Ajusta el tamaño de la fuente
                                                     padding: '10px', // Ajusta el padding
-                                                    maxWidth: '100px', // Ajusta el ancho máximo
+                                                    maxWidth: '90px',
                                                 },
                                             }}
                                         >
@@ -479,7 +482,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                             '& .MuiOutlinedInput-root': {
                                                 backgroundColor: filterMedio ? '#5ca8ffbf' : 'transparent',
                                                 fontSize: '12px',
-                                                maxWidth: '100px',
+                                                maxWidth: '90px',
                                                 '& fieldset': {
                                                     borderColor: 'white',
                                                 },
@@ -520,7 +523,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                 '& .MuiSelect-select': {
                                                     fontSize: '12px', // Ajusta el tamaño de la fuente
                                                     padding: '10px', // Ajusta el padding
-                                                    maxWidth: '100px', // Ajusta el ancho máximo
+                                                    maxWidth: '90px', // Ajusta el ancho máximo
                                                 },
                                             }}
                                         >
@@ -538,7 +541,65 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                             '& .MuiOutlinedInput-root': {
                                                 backgroundColor: filterEtiqueta ? '#5ca8ffbf' : 'transparent',
                                                 fontSize: '12px',
-                                                maxWidth: '100px',
+                                                maxWidth: '90px',
+                                                '& fieldset': {
+                                                    borderColor: 'white',
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: 'white',
+                                                    color: 'white',
+
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: 'white',
+                                                    color: 'white',
+                                                },
+                                            },
+                                            '& .MuiInputLabel-root': {
+                                                color: 'white',
+                                            },
+                                            '& .MuiInputLabel-root.Mui-focused': {
+                                                color: 'white',
+                                            },
+                                        }}
+                                    >
+                                        <InputLabel
+                                            sx={{
+                                                '&.MuiInputLabel-root': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                    top: '-5px', // Ajusta la posición de la etiqueta
+                                                },
+                                                '&.MuiInputLabel-root.Mui-focused': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                },
+                                            }}
+                                        >Moneda</InputLabel>
+                                        <Select
+                                            value={filterMoneda}
+                                            onChange={(e) => setFilterMoneda(e.target.value)}
+                                            label="Moneda"
+                                            sx={{
+                                                '& .MuiSelect-select': {
+                                                    fontSize: '12px', // Ajusta el tamaño de la fuente
+                                                    padding: '10px', // Ajusta el padding
+                                                    maxWidth: '100px', // Ajusta el ancho máximo
+                                                },
+                                            }}
+                                        >
+                                            <MenuItem value=""><em>None</em></MenuItem>
+                                            {uniqueMonedas?.map((moneda, index) => (
+                                                <MenuItem key={index} value={moneda}>{moneda}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </div>
+                                <div className="verticalBtn-textFilters">
+                                    <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                backgroundColor: filterEtiqueta ? '#5ca8ffbf' : 'transparent',
+                                                fontSize: '12px',
+                                                maxWidth: '90px',
                                                 '& fieldset': {
                                                     borderColor: 'white',
                                                 },
@@ -579,7 +640,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                 '& .MuiSelect-select': {
                                                     fontSize: '12px', // Ajusta el tamaño de la fuente
                                                     padding: '10px', // Ajusta el padding
-                                                    maxWidth: '100px', // Ajusta el ancho máximo
+                                                    maxWidth: '90px', // Ajusta el ancho máximo
                                                 },
                                             }}
                                         >
@@ -588,6 +649,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                 <MenuItem key={index} value={etiqueta}>{etiqueta}</MenuItem>
                                             ))}
                                         </Select>
+
                                     </FormControl>
                                 </div>
                             </div>
@@ -692,12 +754,31 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                         <td>{isNaN(calcularCuotas(item)) ? 'N/A' : calcularCuotas(item)}</td>
                                         <td>{item.banco}</td>
                                         <td>{item.cantidad}</td>
-                                        <td>$  {item.precio && typeof item.precio === 'string'
-                                            ? item.isFijo
-                                                ? parseFloat(item.precio.replace('$', '')).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                                : parseFloat(item.precio.replace('$', '') / item.cuotas).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                            : 'N/A'}
-
+                                        <td>
+                                            {(() => {
+                                                let symbol = '$';
+                                                if (item.moneda === 'USD') symbol = 'US$';
+                                                else if (item.moneda === 'EUR') symbol = '€';
+                                                else if (item.moneda === 'BRL') symbol = 'R$';
+                                                else if (item.moneda === 'ARS') symbol = '$';
+                                                else if (item.moneda === 'GBP') symbol = '£';
+                                                else if (item.moneda === 'CLP') symbol = 'CLP$';
+                                                else if (item.moneda === 'UYU') symbol = 'UY$';
+                                                else if (item.moneda === 'JPY') symbol = '¥';
+                                                if (item.precio && typeof item.precio === 'string') {
+                                                    const precioNum = parseFloat(item.precio.replace('$', ''));
+                                                    const valor = item.isFijo
+                                                        ? precioNum
+                                                        : precioNum / item.cuotas;
+                                                    return (
+                                                        <span>
+                                                            {symbol} {valor.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </span>
+                                                    );
+                                                } else {
+                                                    return 'N/A';
+                                                }
+                                            })()}
                                         </td>
                                         <td>
                                             <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px', maxWidth: '100px', maxHeight: '50px', zIndex: 10, backgroundColor: getEtiquetaColor(item.etiqueta, mydata.etiquetas), borderRadius: '5px' }} >
@@ -735,8 +816,8 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                         },
                                                         '& .MuiSelect-select': {
                                                             fontSize: '12px',
-                                                            padding: '2px', 
-                                                            maxWidth: '100px', 
+                                                            padding: '2px',
+                                                            maxWidth: '100px',
                                                             maxHeight: '25px',
                                                         },
                                                     }}
