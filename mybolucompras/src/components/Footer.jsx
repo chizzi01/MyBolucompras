@@ -3,7 +3,8 @@ import '../App.css';
 
 function Footer({ totalGastado, tarjetaUsada, bancoUsado }) {
   const formatNumber = (number) => {
-    return number.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+     const num = Number(number) || 0;
+    return num.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   const renderTotalesPorMoneda = () => {

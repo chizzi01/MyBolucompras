@@ -62,85 +62,103 @@ const Dashboard = ({ data, mydata }) => {
     }, [dataARS]);
 
     const pagosFuturos = useMemo(() => {
-    // { mes: { ARS: monto, USD: monto, ... }, ... }
-    const pagos = {};
-    const hoy = new Date();
-    const actualYm = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        const pagos = {};
+        const hoy = new Date();
+        const actualYm = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
 
-    // Inicializa próximos 6 meses para todas las monedas
-    const allMonedas = Array.isArray(data) ? [...new Set(data.map(item => item.moneda || 'ARS'))] : ['ARS'];
-    for (let i = 0; i < 6; i++) {
-        const m = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-        const key = `${m.toLocaleString('es-ES', { month: 'long' })} ${m.getFullYear()}`;
-        pagos[key] = {};
-        allMonedas.forEach(moneda => {
-            pagos[key][moneda] = 0;
-        });
-    }
+        // Inicializa próximos 6 meses para todas las monedas
+        const allMonedas = Array.isArray(data) ? [...new Set(data.map(item => item.moneda || 'ARS'))] : ['ARS'];
+        for (let i = 0; i < 6; i++) {
+            const m = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+            const key = `${m.toLocaleString('es-ES', { month: 'long' })} ${m.getFullYear()}`;
+            pagos[key] = {};
+            allMonedas.forEach(moneda => {
+                pagos[key][moneda] = 0;
+            });
+        }
 
-    if (!Array.isArray(data)) return pagos;
+        if (!Array.isArray(data)) return pagos;
 
-    const cierreDay = new Date(mydata.cierre).getDate();
+        const cierreDay = new Date(mydata.cierre).getDate();
 
-    data.forEach((item) => {
-        const moneda = item.moneda || 'ARS';
-        const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
-        const cuotas = parseInt(item.cuotas, 10) || 0;
-        const precioNum = parsePrecio(item.precio);
+      data.forEach((item) => {
+            const moneda = item.moneda || 'ARS';
+            const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
+            const cuotas = parseInt(item.cuotas, 10) || 0;
+            const precioNum = parsePrecio(item.precio);
 
-        // Crédito (o transferencia en cuotas)
-        const esCredito = item.tipo === 'credito' || (item.medio === 'Transferencia' && cuotas > 1);
+            // Gastos fijos: se repiten por la cantidad de meses especificada en cuotas
+            if (item.isFijo === true) {
+                const mesesDuracion = cuotas || 1;
+                for (let i = 0; i < mesesDuracion; i++) {
+                    const mesPago = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth() + i, 1);
+                    const diffMesesFijo = 
+                        (mesPago.getFullYear() - actualYm.getFullYear()) * 12 +
+                        (mesPago.getMonth() - actualYm.getMonth());
+                    
+                    if (diffMesesFijo >= 0 && diffMesesFijo < 6) {
+                        const key = `${mesPago.toLocaleString('es-ES', { month: 'long' })} ${mesPago.getFullYear()}`;
+                        if (!pagos[key]) pagos[key] = {};
+                        if (!pagos[key][moneda]) pagos[key][moneda] = 0;
+                        pagos[key][moneda] += precioNum; // Precio completo cada mes
+                    }
+                }
+                return;
+            }
 
-        if (esCredito && cuotas > 0) {
-            const precioPorCuota = precioNum / cuotas;
-            const firstStatementMonth = new Date(
-                fechaCompra.getFullYear(),
-                fechaCompra.getMonth() + (fechaCompra.getDate() > cierreDay ? 1 : 0),
-                1
-            );
-            const diffMeses =
-                (firstStatementMonth.getFullYear() - actualYm.getFullYear()) * 12 +
-                (firstStatementMonth.getMonth() - actualYm.getMonth());
-            const mesInicioOffset = Math.max(0, diffMeses);
+            // Crédito (o transferencia en cuotas)
+            const esCredito = item.tipo === 'credito' || (item.medio != 'credito' && cuotas > 1);
 
-            const cuotasRestantes = calcularCuotasRestantesCredito(
-                item.fecha,
-                cuotas,
-                mydata.vencimiento,
-                mydata.cierre,
-                mydata.vencimientoAnterior,
-                mydata.cierreAnterior
-            );
+            if (esCredito && cuotas > 0) {
+                const precioPorCuota = precioNum / cuotas;
+                const firstStatementMonth = new Date(
+                    fechaCompra.getFullYear(),
+                    fechaCompra.getMonth() + (fechaCompra.getDate() > cierreDay ? 1 : 0),
+                    1
+                );
+                const diffMeses =
+                    (firstStatementMonth.getFullYear() - actualYm.getFullYear()) * 12 +
+                    (firstStatementMonth.getMonth() - actualYm.getMonth());
+                const mesInicioOffset = Math.max(0, diffMeses);
 
-            if (cuotasRestantes > 0) {
-                for (let i = 0; i < cuotasRestantes && mesInicioOffset + i < 6; i++) {
-                    const mesPago = new Date(hoy.getFullYear(), hoy.getMonth() + mesInicioOffset + i, 1);
-                    const key = `${mesPago.toLocaleString('es-ES', { month: 'long' })} ${mesPago.getFullYear()}`;
+                const cuotasRestantes = calcularCuotasRestantesCredito(
+                    item.fecha,
+                    cuotas,
+                    mydata.vencimiento,
+                    mydata.cierre,
+                    mydata.vencimientoAnterior,
+                    mydata.cierreAnterior
+                );
+
+                if (cuotasRestantes > 0) {
+                    for (let i = 0; i < cuotasRestantes && mesInicioOffset + i < 6; i++) {
+                        const mesPago = new Date(hoy.getFullYear(), hoy.getMonth() + mesInicioOffset + i, 1);
+                        const key = `${mesPago.toLocaleString('es-ES', { month: 'long' })} ${mesPago.getFullYear()}`;
+                        if (!pagos[key]) pagos[key] = {};
+                        if (!pagos[key][moneda]) pagos[key][moneda] = 0;
+                        pagos[key][moneda] += precioPorCuota;
+                    }
+                }
+                return;
+            }
+
+            // Débito / Efectivo / Transferencia en una sola vez
+            if ((item.tipo === 'debito' && item.cuotas <= 1) || (item.medio === 'Efectivo' && item.cuotas <= 1) || (item.medio === 'Transferencia' && cuotas <= 1)) {
+                const compraYm = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth(), 1);
+                const diffMesesCompra =
+                    (compraYm.getFullYear() - actualYm.getFullYear()) * 12 +
+                    (compraYm.getMonth() - actualYm.getMonth());
+                if (diffMesesCompra >= 0 && diffMesesCompra < 6) {
+                    const key = `${compraYm.toLocaleString('es-ES', { month: 'long' })} ${compraYm.getFullYear()}`;
                     if (!pagos[key]) pagos[key] = {};
                     if (!pagos[key][moneda]) pagos[key][moneda] = 0;
-                    pagos[key][moneda] += precioPorCuota;
+                    pagos[key][moneda] += precioNum;
                 }
             }
-            return;
-        }
+        });
 
-        // Débito / Efectivo / Transferencia en una sola vez
-        if (item.tipo === 'debito' || item.medio === 'Efectivo' || (item.medio === 'Transferencia' && cuotas <= 1)) {
-            const compraYm = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth(), 1);
-            const diffMesesCompra =
-                (compraYm.getFullYear() - actualYm.getFullYear()) * 12 +
-                (compraYm.getMonth() - actualYm.getMonth());
-            if (diffMesesCompra >= 0 && diffMesesCompra < 6) {
-                const key = `${compraYm.toLocaleString('es-ES', { month: 'long' })} ${compraYm.getFullYear()}`;
-                if (!pagos[key]) pagos[key] = {};
-                if (!pagos[key][moneda]) pagos[key][moneda] = 0;
-                pagos[key][moneda] += precioNum;
-            }
-        }
-    });
-
-    return pagos;
-}, [data, mydata]);
+        return pagos;
+    }, [data, mydata]);
 
 
     // const distribucionGastos = useMemo(() => {

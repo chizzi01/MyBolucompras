@@ -357,7 +357,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                 {renderCommonFields()}
                 {(modalType === 'nuevo' || modalType === 'editar') && (
                   <>
-                    {formData.medio != 'Efectivo' && formData.medio != 'Transferencia' && (
+                    {formData.medio != 'Efectivo' && formData.medio != 'Transferencia' && !(modalType === 'editar' && formData.isFijo) && (
                       <FormControl variant="outlined" fullWidth={false} margin="normal" sx={{
                         '& .MuiOutlinedInput-root': {
                           backgroundColor: formData.tipo ? '#b0ffc3' : 'white',
