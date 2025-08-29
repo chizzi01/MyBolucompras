@@ -103,6 +103,7 @@ const Dashboard = ({ data, mydata }) => {
                         pagos[key][moneda] += precioNum; // Precio completo cada mes
                     }
                 }
+                console.log(`Gasto registrado: ${item.objeto} - ${item.fecha} - ${item.precio}`);
                 return;
             }
 
@@ -139,6 +140,7 @@ const Dashboard = ({ data, mydata }) => {
                         pagos[key][moneda] += precioPorCuota;
                     }
                 }
+                console.log(`Gasto registrado: ${item.objeto} - ${item.fecha} - ${item.precio}`);
                 return;
             }
 
@@ -154,6 +156,7 @@ const Dashboard = ({ data, mydata }) => {
                     if (!pagos[key][moneda]) pagos[key][moneda] = 0;
                     pagos[key][moneda] += precioNum;
                 }
+                console.log(`Gasto registrado: ${item.objeto} - ${item.fecha} - ${item.precio}`);
             }
         });
 
