@@ -313,47 +313,65 @@ function App() {
     setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '' });
   }
   const totalGastado = () => {
-    const totalesPorMoneda = {};
+  const totalesPorMoneda = {};
+  const hoy = new Date();
+  const mesActual = hoy.getMonth();
+  const anioActual = hoy.getFullYear();
 
-    filteredData.forEach((item) => {
+  filteredData.forEach((item) => {
+    const moneda = item.moneda && item.moneda.trim() !== '' ? item.moneda : 'ARS';
+    const precioNumerico = parseFloat(item.precio?.replace('$', '').replace(',', '.') || 0);
 
-      const moneda = item.moneda && item.moneda.trim() !== '' ? item.moneda : 'ARS';
-      const precioNumerico = parseFloat(item.precio?.replace('$', '').replace(',', '.') || 0);
+    if (!isNaN(precioNumerico)) {
+      let sumar = false;
+      let precioMensual = precioNumerico;
 
-      if (!isNaN(precioNumerico)) {
-        let precioMensual = item.tipo === 'credito' && item.cuotas > 0
-          ? precioNumerico / item.cuotas
-          : precioNumerico;
+      if (item.tipo === 'credito' && item.cuotas > 0) {
+        // Calcular en qué mes cae cada cuota
+        const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
+        const cuotas = parseInt(item.cuotas, 10) || 1;
+        const precioPorCuota = precioNumerico / cuotas;
 
-        let sumar = false;
-        if (item.tipo === 'credito') {
-          const cuotasRestantes = calcularCuotasRestantesCredito(
-            item.fecha,
-            item.cuotas,
-            mydata.vencimiento,
-            mydata.cierre,
-            mydata.vencimientoAnterior,
-            mydata.cierreAnterior
-          );
-          if (cuotasRestantes > 0) sumar = true;
-        } else if (item.tipo === 'debito' || item.medio === 'Efectivo') {
+        // Determinar el primer mes de pago de la tarjeta
+        let primerMesPago = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth(), 1);
+        if (mydata && mydata.cierre) {
+          const cierreDay = new Date(mydata.cierre).getDate();
+          if (fechaCompra.getDate() > cierreDay) {
+            primerMesPago = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth() + 1, 1);
+          }
+        }
+
+        // Para cada cuota, ver si corresponde al mes actual
+        for (let i = 0; i < cuotas; i++) {
+          const mesCuota = new Date(primerMesPago.getFullYear(), primerMesPago.getMonth() + i, 1);
+          if (mesCuota.getMonth() === mesActual && mesCuota.getFullYear() === anioActual) {
+            sumar = true;
+            precioMensual = precioPorCuota;
+            break;
+          }
+        }
+      } else if (item.tipo === 'debito' || item.medio === 'Efectivo') {
+        // Solo sumar si la compra es del mes actual
+        const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
+        if (fechaCompra.getMonth() === mesActual && fechaCompra.getFullYear() === anioActual) {
           sumar = true;
         }
-
-        if (sumar) {
-          if (!totalesPorMoneda[moneda]) totalesPorMoneda[moneda] = 0;
-          totalesPorMoneda[moneda] += precioMensual;
-        }
       }
-    });
 
-    // Redondear a 2 decimales
-    Object.keys(totalesPorMoneda).forEach(moneda => {
-      totalesPorMoneda[moneda] = totalesPorMoneda[moneda].toFixed(2);
-    });
+      if (sumar) {
+        if (!totalesPorMoneda[moneda]) totalesPorMoneda[moneda] = 0;
+        totalesPorMoneda[moneda] += precioMensual;
+      }
+    }
+  });
 
-    return totalesPorMoneda;
-  };
+  // Redondear a 2 decimales
+  Object.keys(totalesPorMoneda).forEach(moneda => {
+    totalesPorMoneda[moneda] = totalesPorMoneda[moneda].toFixed(2);
+  });
+
+  return totalesPorMoneda;
+};
 
   const bancoMasUsado = () => {
     if (!Array.isArray(data) || data.length === 0) return 'N/A';
