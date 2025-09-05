@@ -66,11 +66,11 @@ const Dashboard = ({ data, mydata }) => {
         const hoy = new Date();
         const actualYm = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
 
-        // Inicializa próximos 6 meses para todas las monedas
+        // Inicializa próximos 6 meses
         const allMonedas = Array.isArray(data) ? [...new Set(data.map(item => item.moneda || 'ARS'))] : ['ARS'];
         for (let i = 0; i < 6; i++) {
             const m = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-            const key = `${m.toLocaleString('es-ES', { month: 'long' })} ${m.getFullYear()}`;
+            const key = monthKey(m);
             pagos[key] = {};
             allMonedas.forEach(moneda => {
                 pagos[key][moneda] = 0;
@@ -79,89 +79,102 @@ const Dashboard = ({ data, mydata }) => {
 
         if (!Array.isArray(data)) return pagos;
 
-        const cierreDay = new Date(mydata.cierre).getDate();
+        const cierreAnterior = new Date(mydata?.cierreAnterior);
+        const cierreDay = cierreAnterior.getDate();
 
-      data.forEach((item) => {
+        data.forEach((item) => {
             const moneda = item.moneda || 'ARS';
             const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
             const cuotas = parseInt(item.cuotas, 10) || 0;
             const precioNum = parsePrecio(item.precio);
 
-            // Gastos fijos: se repiten por la cantidad de meses especificada en cuotas
-            if (item.isFijo === true) {
-                const mesesDuracion = cuotas || 1;
-                for (let i = 0; i < mesesDuracion; i++) {
-                    const mesPago = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth() + i, 1);
-                    const diffMesesFijo = 
-                        (mesPago.getFullYear() - actualYm.getFullYear()) * 12 +
-                        (mesPago.getMonth() - actualYm.getMonth());
-                    
-                    if (diffMesesFijo >= 0 && diffMesesFijo < 6) {
-                        const key = `${mesPago.toLocaleString('es-ES', { month: 'long' })} ${mesPago.getFullYear()}`;
-                        if (!pagos[key]) pagos[key] = {};
-                        if (!pagos[key][moneda]) pagos[key][moneda] = 0;
-                        pagos[key][moneda] += precioNum; // Precio completo cada mes
+            // 🟢 Gastos fijos (tipo débito, monto entero cada mes)
+            if (item.isFijo && cuotas > 0) {
+                const precioPorCuota = precioNum; // siempre el total, no se divide
+
+                // Mes de la compra
+                const compraYm = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth(), 1);
+
+                // Cuántos meses pasaron desde la compra hasta hoy
+                const diff = monthDiff(compraYm, actualYm);
+
+                // Cuántas cuotas quedan contando desde este mes
+                const cuotasRestantes = Math.max(0, cuotas - diff);
+
+                if (cuotasRestantes > 0) {
+                    for (let i = 0; i < Math.min(cuotasRestantes, 6); i++) {
+                        const mesPago = addMonths(actualYm, i);
+                        const key = monthKey(mesPago);
+
+                        if (pagos[key]) {
+                            pagos[key][moneda] += precioPorCuota;
+                        }
                     }
                 }
-                console.log(`Gasto registrado: ${item.objeto} - ${item.fecha} - ${item.precio}`);
-                return;
             }
 
-            // Crédito (o transferencia en cuotas)
-            const esCredito = item.tipo === 'credito' || (item.medio != 'credito' && cuotas > 1);
 
-            if (esCredito && cuotas > 0) {
+
+
+
+
+            // 🟢 Crédito
+            else if (item.tipo === 'credito' && cuotas > 0) {
                 const precioPorCuota = precioNum / cuotas;
-                const firstStatementMonth = new Date(
-                    fechaCompra.getFullYear(),
-                    fechaCompra.getMonth() + (fechaCompra.getDate() > cierreDay ? 1 : 0),
-                    1
-                );
-                const diffMeses =
-                    (firstStatementMonth.getFullYear() - actualYm.getFullYear()) * 12 +
-                    (firstStatementMonth.getMonth() - actualYm.getMonth());
-                const mesInicioOffset = Math.max(0, diffMeses);
+
+                let firstStatementMonth;
+
+                // Si la compra fue antes o igual al cierreAnterior → arranca este mes
+                if (fechaCompra <= cierreAnterior) {
+                    firstStatementMonth = actualYm;
+                }
+                // Si fue después del cierreAnterior → arranca el mes siguiente
+                else {
+                    firstStatementMonth = addMonths(actualYm, 1);
+                }
 
                 const cuotasRestantes = calcularCuotasRestantesCredito(
                     item.fecha,
                     cuotas,
-                    mydata.vencimiento,
-                    mydata.cierre,
-                    mydata.vencimientoAnterior,
-                    mydata.cierreAnterior
+                    mydata?.vencimiento,
+                    mydata?.cierre,
+                    mydata?.vencimientoAnterior,
+                    mydata?.cierreAnterior
                 );
 
                 if (cuotasRestantes > 0) {
-                    for (let i = 0; i < cuotasRestantes && mesInicioOffset + i < 6; i++) {
-                        const mesPago = new Date(hoy.getFullYear(), hoy.getMonth() + mesInicioOffset + i, 1);
-                        const key = `${mesPago.toLocaleString('es-ES', { month: 'long' })} ${mesPago.getFullYear()}`;
-                        if (!pagos[key]) pagos[key] = {};
-                        if (!pagos[key][moneda]) pagos[key][moneda] = 0;
-                        pagos[key][moneda] += precioPorCuota;
+                    for (let i = 0; i < Math.min(cuotasRestantes, 6); i++) {
+                        const mesPago = addMonths(firstStatementMonth, i);
+                        const key = monthKey(mesPago);
+
+                        if (pagos[key]) {
+                            pagos[key][moneda] += precioPorCuota;
+                        }
                     }
                 }
-                console.log(`Gasto registrado: ${item.objeto} - ${item.fecha} - ${item.precio}`);
-                return;
             }
 
-            // Débito / Efectivo / Transferencia en una sola vez
-            if ((item.tipo === 'debito' && item.cuotas <= 1) || (item.medio === 'Efectivo' && item.cuotas <= 1) || (item.medio === 'Transferencia' && cuotas <= 1)) {
+
+
+            // 🟢 Débito / Efectivo / Transferencia (no fijos)
+            else if (
+                !item.isFijo &&
+                (item.tipo === 'debito' ||
+                    item.medio === 'Efectivo' ||
+                    item.medio === 'transferencia')
+            ) {
+                // Solo en el mes exacto de la compra
                 const compraYm = new Date(fechaCompra.getFullYear(), fechaCompra.getMonth(), 1);
-                const diffMesesCompra =
-                    (compraYm.getFullYear() - actualYm.getFullYear()) * 12 +
-                    (compraYm.getMonth() - actualYm.getMonth());
-                if (diffMesesCompra >= 0 && diffMesesCompra < 6) {
-                    const key = `${compraYm.toLocaleString('es-ES', { month: 'long' })} ${compraYm.getFullYear()}`;
-                    if (!pagos[key]) pagos[key] = {};
-                    if (!pagos[key][moneda]) pagos[key][moneda] = 0;
+                const key = monthKey(compraYm);
+                if (pagos[key]) {
                     pagos[key][moneda] += precioNum;
                 }
-                console.log(`Gasto registrado: ${item.objeto} - ${item.fecha} - ${item.precio}`);
             }
         });
 
         return pagos;
     }, [data, mydata]);
+
 
 
     // const distribucionGastos = useMemo(() => {
