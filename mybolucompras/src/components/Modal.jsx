@@ -314,27 +314,46 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
         id="modal-agregar"
         className="modal-content"
         style={{
-          height: modalType === 'vencimiento' ? '300px' : modalType === 'fondos' ? '250px' : modalType === 'eliminar' ? '300px' : modalType === 'reporte' ? '90%' : modalType === 'repetitivo' ? '600px' : modalType === 'crearEtiqueta' ? '500px' : '500px',
-          width: modalType === 'vencimiento' ? '500px' : modalType === 'reporte' ? '90%' : '400px',
-          backgroundColor:
-            modalType === 'nuevo'
-              ? '#76ff69ce'
-              : modalType === 'repetitivo'
-                ? '#ffc170d2'
-                : modalType === 'fondos'
-                  ? '#55f2f798'
-                  : modalType === 'vencimiento'
-                    ? '#e773d4c2'
-                    : modalType === 'eliminar'
-                      ? '#ff8b8bd7'
-                      : modalType === 'editar'
-                        ? '#3b80ffd5'
-                        : modalType === 'reporte'
-                          ? '#9965ffd6' :
-                          modalType === 'crearEtiqueta'
-                            ? '#000000d5' : modalType === 'eliminarEtiqueta' ? '#ff8b8bd7' : '#76ff69ce',
+          height:
+            modalType === "vencimiento"
+              ? "300px"
+              : modalType === "fondos"
+                ? "250px"
+                : modalType === "eliminar"
+                  ? "300px"
+                  : modalType === "reporte"
+                    ? "90%"
+                    : modalType === "repetitivo"
+                      ? "600px"
+                      : modalType === "crearEtiqueta"
+                        ? "500px"
+                        : "500px",
+          width: modalType === "reporte" ? "90%" : "400px",
+
+          // 🎨 Fondo según tipo de modal
+          background:
+            modalType === "vencimiento"
+              ? "linear-gradient(135deg, rgba(255, 194, 237, 0.67), rgba(228, 83, 204, 0.72))" // rosa pastel violeta
+              : modalType === "fondos"
+                ? "linear-gradient(135deg, rgba(173, 255, 228, 0.67), rgba(85, 242, 247, 0.72))" // celeste-menta pastel
+                : modalType === "eliminar"
+                  ? "linear-gradient(135deg, rgba(255, 165, 165, 0.67), rgba(255, 111, 111, 0.72))" // rojo coral pastel
+                  : modalType === "reporte"
+                    ? "linear-gradient(135deg, rgba(154, 129, 255, 0.67), rgba(98, 19, 255, 0.73))" // violeta pastel
+                    : modalType === "repetitivo"
+                      ? "linear-gradient(135deg, rgba(253, 232, 123, 0.8), rgba(253, 207, 82, 0.76))" // amarillo pastel
+                      : modalType === "crearEtiqueta"
+                        ? "linear-gradient(135deg, rgba(214, 184, 255, 0.9), rgba(157, 11, 255, 0.72))" // violeta suave
+                        : "linear-gradient(135deg, rgba(175, 255, 164, 0.78), rgba(100, 255, 28, 0.72))", // default
+
+          backdropFilter: "blur(16px) saturate(180%)",
+          WebkitBackdropFilter: "blur(16px) saturate(180%)",
+          borderRadius: "20px",
+          border: "1px solid rgba(255, 255, 255, 0.25)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.15)",
         }}
       >
+
         <div className="eliminar-align">
           <span id="eliminar" className="close" onClick={() => handleCloseModal()}>
             <IoArrowBackCircle size={30} />
@@ -518,31 +537,31 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                     />
                   </>
                 )}
-                <FormControl variant="outlined" fullWidth={false} margin="normal"                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: selectedCurrency ? '#b0ffc3' : 'white',
-                      '& fieldset': {
-                        borderColor: selectedCurrency ? '#bfffce' : '#777777',
-                        color: '#777777',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: selectedCurrency ? '#bfffce' : '#777777',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: selectedCurrency ? '#bfffce' : '#777777',
-                      },
+                <FormControl variant="outlined" fullWidth={false} margin="normal" sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: selectedCurrency ? '#b0ffc3' : 'white',
+                    '& fieldset': {
+                      borderColor: selectedCurrency ? '#bfffce' : '#777777',
+                      color: '#777777',
                     },
-                    '& .MuiInputLabel-root': {
-                      color: 'black',
+                    '&:hover fieldset': {
+                      borderColor: selectedCurrency ? '#bfffce' : '#777777',
                     },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: 'black',
+                    '&.Mui-focused fieldset': {
+                      borderColor: selectedCurrency ? '#bfffce' : '#777777',
                     },
-                    '& .MuiFormHelperText-root': {
-                      color: '#c30000',
-                      fontSize: '12px',
-                    },
-                  }}>
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'black',
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: 'black',
+                  },
+                  '& .MuiFormHelperText-root': {
+                    color: '#c30000',
+                    fontSize: '12px',
+                  },
+                }}>
                   <InputLabel id="currency-label">Moneda</InputLabel>
                   <Select
                     labelId="currency-label"

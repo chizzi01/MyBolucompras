@@ -274,7 +274,11 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
         <section id="gastos">
             <div className="componentContainer">
                 <div className="tituloContainer">
-                    <h1 id="mesBolucompras">Mis Bolucompras del mes de: <span style={{ color: '#7BB9FF' }}>{mesActual.toLocaleUpperCase()}</span></h1>
+                    <h1 id="mesBolucompras">
+                        Mis <span className="highlight">Bolucompras</span> del mes de:{' '}
+                        <span className="mes-actual">{mesActual.toLocaleUpperCase()}</span>
+                    </h1>
+
                     <hr />
                 </div>
                 <div className="dropdown">
@@ -311,13 +315,14 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                     <button className="dropbtnFilter" onClick={handleFilterClick}>
                         <MdFilterListAlt size={25} />
                         {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
-                        {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterObject(''); setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); }} />}
+                        {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterObject(''); setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); setFilterMoneda('') }} />}
 
                     </button>
                     {showFilter && (
                         <div className="filter-container">
                             <div className="verticalBtn-textFilters">
                                 <TextField
+                                    className="glass-filter-input"
                                     label="Objeto"
                                     variant="outlined"
                                     fullWidth
@@ -363,6 +368,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                             <div className='selectFilters-container'>
                                 <div className="verticalBtn-textFilters">
                                     <FormControl variant="outlined" fullWidth={false} margin="normal" style={{ minWidth: '90px' }}
+                                        className="glass-filter-input"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 backgroundColor: filterType ? '#5ca8ffbf' : 'transparent',
@@ -420,6 +426,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                 </div>
                                 <div className="verticalBtn-textFilters">
                                     <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                        className="glass-filter-input"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 backgroundColor: filterBank ? '#5ca8ffbf' : 'transparent',
@@ -478,6 +485,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                 </div>
                                 <div className="verticalBtn-textFilters">
                                     <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                        className="glass-filter-input"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 backgroundColor: filterMedio ? '#5ca8ffbf' : 'transparent',
@@ -537,6 +545,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                 </div>
                                 <div className="verticalBtn-textFilters">
                                     <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                        className="glass-filter-input"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 backgroundColor: filterEtiqueta ? '#5ca8ffbf' : 'transparent',
@@ -595,6 +604,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                 </div>
                                 <div className="verticalBtn-textFilters">
                                     <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                        className="glass-filter-input"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
                                                 backgroundColor: filterEtiqueta ? '#5ca8ffbf' : 'transparent',
@@ -869,15 +879,15 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                                 left: 0,
                                                 width: '100%',
                                                 height: '100%',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                                backgroundColor: 'rgba(224, 224, 224, 0.7)',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 zIndex: 1,
-                                                backdropFilter: 'blur(1px)',
+                                                backdropFilter: 'blur(2px)',
                                                 border: '1px solid #8C52FF',
                                             }}>
-                                                <MdLock size={20} color='#8C52FF' />
+                                                <MdLock size={20} color='#4700d6ff' />
                                                 <span>Entra para el próximo mes 🎉</span>
                                             </div>
                                         )}
