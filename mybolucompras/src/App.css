@@ -589,12 +589,13 @@ button,
 
 .tabla {
   padding: 20px;
-  margin: 20px;
+  margin-bottom: 20px;
+  margin-top: 10px;
   margin-bottom: 10px;
   height: 60vh;
   overflow: auto;
   overflow-y: scroll;
-  border: #fff solid 2px;
+  /* border: #fff solid 2px; */
   /* box-shadow: #ffffff 0px 0px 10px; */
   border-radius: 12px;
 }
