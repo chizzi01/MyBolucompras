@@ -1213,7 +1213,7 @@ a {
 
 #modal-agregar h2 {
   color: #ffffff;
-  text-shadow: #5912ff 1px 1px 1px;
+  text-shadow: #5f5f5f 1px 1px 1px;
   font-size: 30px;
 }
 
@@ -2069,10 +2069,10 @@ input:checked+.slider:before {
 }
 
 .timeline-circle {
-  width: 70px;
-  height: 70px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background-color: #4bc0c0;
+  background: linear-gradient(135deg, #5d75ff, #3cffef);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2081,6 +2081,7 @@ input:checked+.slider:before {
   color: white;
   font-weight: bold;
   margin-bottom: 10px;
+  padding: 20px;
 }
 
 .timeline-payment {
@@ -2091,7 +2092,7 @@ input:checked+.slider:before {
 .timeline-container::before {
   content: '';
   position: absolute;
-  top: 30%;
+  top: 40%;
   left: 0;
   right: 0;
   height: 2px;
