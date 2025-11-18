@@ -955,8 +955,8 @@ a {
       rgba(142, 81, 255, 0.082),
       rgba(145, 20, 255, 0.068));
   color: rgb(245, 245, 255);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  /* backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px); */
   clip-path: ellipse(99% 100% at 52.94% 100%);
 }
 
@@ -1084,7 +1084,7 @@ a {
   vertical-align: middle;
   color: #222;
   background: rgba(255, 255, 255, 0.712);
-  backdrop-filter: blur(6px);
+  /* backdrop-filter: blur(6px); */
   transition: all 0.2s ease;
 }
 
