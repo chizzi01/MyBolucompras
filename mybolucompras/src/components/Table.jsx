@@ -275,11 +275,11 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
             <div className="componentContainer">
                 <div className="tituloContainer">
                     <h1 id="mesBolucompras">
-                        Mis <span className="highlight">Bolucompras</span> del mes de:{' '}
+                        Mis <span className="highlight">Bolucompras</span> de:{' '}
                         <span className="mes-actual">{mesActual.toLocaleUpperCase()}</span>
                     </h1>
 
-                    <hr />
+                    {/* <hr /> */}
                 </div>
                 <div className="dropdown">
                     <button className="dropbtn"><IoMdAdd size={30} /></button>
@@ -667,11 +667,25 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                     )}
                 </div>
 
-                <div className="fondosAlign">
-                    <h2 id="fondos"><FaWallet size={20} /> Fondos: <span style={{ color: "#FFB63F" }}>
-
-                        ${parseFloat((mydata.fondos || 0) - (typeof total === 'object' ? Number(total.ARS || 0) : Number(total))).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}                        </span></h2>
+                <div class="fondosAlign">
+                    <h2 class="fondosTitulo">
+                        <FaWallet size={20} />
+                        Fondos:
+                        <span class="fondosMonto">
+                            $
+                            {parseFloat(
+                                (mydata.fondos || 0) -
+                                (typeof total === 'object'
+                                    ? Number(total.ARS || 0)
+                                    : Number(total))
+                            ).toLocaleString('es-ES', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })}
+                        </span>
+                    </h2>
                 </div>
+
                 <div className="reportesAlign">
                     <button id="report-btn" onClick={() => openModal('reporte')}>
                         <FaChartPie size={20} /> Ver Reporte de Gastos

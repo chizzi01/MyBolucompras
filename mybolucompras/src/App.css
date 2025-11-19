@@ -243,9 +243,39 @@ a {
   justify-content: flex-end;
   align-items: center;
   color: #F5F5F5;
-  margin-top: -45px;
+  margin-top: -60px;
   margin-right: 50px;
 }
+
+/* Título */
+.fondosTitulo {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  color: #ffffffc9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+/* Monto destacado */
+.fondosMonto {
+  margin-left: 6px;
+  font-weight: 700;
+  font-size: 22px;
+
+  /* Color dorado futurista */
+  background: linear-gradient(90deg, #ffc86a, #ffb63f, #ffd88a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* Glow dorado */
+  text-shadow:
+    0 0 8px rgba(255, 182, 63, 0.35),
+    0 0 14px rgba(255, 182, 63, 0.25);
+}
+
 
 .reportesAlign {
   position: absolute;
@@ -1125,33 +1155,85 @@ a {
 
 #mesBolucompras {
   font-family: 'Poppins', sans-serif;
-  font-weight: 600;
-  font-size: 26px;
-  color: white;
+  font-weight: 700;
+  font-size: 32px;
+
+  /* --- LAYOUT --- */
+  padding: 28px 40px;
+  border-radius: 26px;
   text-align: center;
-  margin-top: 20px;
-  padding: 15px 25px;
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.25);
-  letter-spacing: 1px;
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
+
+  /* --- GLASS REAL --- */
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+
+  /* --- GLOW EXTERNO SUAVE (como el recuadro de la imagen) --- */
+  box-shadow:
+    0 0 25px rgba(80, 140, 255, 0.25),
+    0 0 45px rgba(120, 80, 255, 0.18);
+
+  /* --- TIPOGRAFÍA --- */
+  color: white;
+  letter-spacing: 0.5px;
+
+  /* --- TRANSICIÓN --- */
+  transition: all 0.35s ease;
 }
 
-.highlight {
-  color: #6179ff;
-  background: linear-gradient(135deg, #9b30ff, #5906ff);
+/* Texto que se parece al degradado del título (Bolocompras en la imagen) */
+#mesBolucompras .highlight {
+  background: linear-gradient(90deg, #5500df 0%, #792cff 40%, #0094d3 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+
+  text-shadow:
+    0 0 12px rgba(140, 100, 255, 0.4),
+    0 0 22px rgba(80, 200, 255, 0.35);
 }
 
-.mes-actual {
-  color: #8a9fff;
-  font-weight: 700;
-  text-shadow: 0 0 6px rgba(4, 42, 124, 0.4);
+
+/* Hover futurista */
+#mesBolucompras:hover {
+  box-shadow:
+    0 0 35px rgba(100, 150, 255, 0.35),
+    0 0 55px rgba(150, 100, 255, 0.28);
+  transform: translateY(-2px);
 }
+
+
+/* Highlight animado al hover */
+.highlight:hover {
+  filter: brightness(1.15);
+  text-shadow:
+    0 0 10px rgba(150, 120, 255, 0.55),
+    0 0 18px rgba(90, 220, 255, 0.45);
+}
+
+
+/* Mes actual – glow más fuerte y estilo "neon cold blue" */
+.mes-actual {
+  font-size: 36px;
+  font-weight: 800;
+
+  background: linear-gradient(90deg, #6ee6ff, #b288ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  text-shadow:
+    0 0 14px rgba(110, 230, 255, 0.8),
+    0 0 30px rgba(110, 230, 255, 0.5);
+}
+
+/* Efecto futurista al pasar el mouse sobre el mes */
+.mes-actual:hover {
+  filter: brightness(1.18);
+  text-shadow:
+    0 0 12px rgba(120, 165, 255, 0.9),
+    0 0 22px rgba(80, 150, 255, 0.6);
+}
+
 
 
 
