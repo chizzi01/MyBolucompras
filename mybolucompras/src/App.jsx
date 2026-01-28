@@ -372,7 +372,7 @@ function App() {
         } else if (
           item.tipo === 'debito' ||
           item.medio === 'Efectivo' ||
-          item.medio === 'transferencia'
+          item.medio === 'Transferencia'
         ) {
           const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
           if (fechaCompra.getMonth() === mesActual && fechaCompra.getFullYear() === anioActual) {

@@ -3,27 +3,26 @@ import '../App.css';
 
 function Footer({ totalGastado, tarjetaUsada, bancoUsado }) {
   const formatNumber = (number) => {
-     const num = Number(number) || 0;
+    const num = Number(number) || 0;
     return num.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   const renderTotalesPorMoneda = () => {
-    if (typeof totalGastado === 'object' && totalGastado !== null) {
+    if (
+      totalGastado &&
+      typeof totalGastado === 'object' &&
+      !Array.isArray(totalGastado)
+    ) {
       return Object.entries(totalGastado).map(([moneda, total]) => (
-        <div key={moneda} >
-          <span >
-            {moneda}: ${formatNumber(total)}
-          </span>
-        </div>
+        <p key={moneda}>
+          {moneda}: ${formatNumber(total)}
+        </p>
       ));
     }
 
-    return (
-      <span >
-        ${formatNumber(Number(totalGastado))}
-      </span>
-    );
+    return <p>${formatNumber(totalGastado)}</p>;
   };
+
 
   return (
     <div className="footer-align">

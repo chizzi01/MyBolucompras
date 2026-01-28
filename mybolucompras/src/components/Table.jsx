@@ -7,6 +7,7 @@ import { FaTrash } from "react-icons/fa";
 import { PiRepeatBold } from "react-icons/pi";
 import { GiReceiveMoney } from "react-icons/gi";
 import { FaPiggyBank } from "react-icons/fa";
+import { CiBank } from "react-icons/ci";
 import { FaMoneyCheckDollar, FaXmark } from "react-icons/fa6";
 import { IoMdAdd, IoMdTrash } from "react-icons/io";
 import { FaCalendarAlt } from "react-icons/fa";
@@ -688,7 +689,12 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
 
                 <div className="reportesAlign">
                     <button id="report-btn" onClick={() => openModal('reporte')}>
-                        <FaChartPie size={20} /> Ver Reporte de Gastos
+                        <FaChartPie size={20} /> Reporte de Gastos
+                    </button>
+                </div>
+                <div className="presupuestoAlign">
+                    <button id="presupuesto-btn" onClick={() => openModal('presupuesto')}>
+                        <CiBank size={20} /> Presupuestos
                     </button>
                 </div>
                 <div className="switch-align">

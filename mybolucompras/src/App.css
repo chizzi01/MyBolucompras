@@ -243,7 +243,8 @@ a {
   justify-content: flex-end;
   align-items: center;
   color: #F5F5F5;
-  margin-top: -60px;
+  margin-top: -75px;
+  margin-bottom: 50px;
   margin-right: 50px;
 }
 
@@ -290,7 +291,7 @@ a {
   transition-duration: 0.4s;
   float: right;
   right: 50px;
-  top: 270px;
+  top: 250px;
 }
 
 #report-btn {
@@ -319,6 +320,153 @@ a {
   transform: translateY(-2px);
 }
 
+.presupuestoAlign {
+  position: absolute;
+  border: none;
+  color: #ffffff;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 60px;
+  transition-duration: 0.4s;
+  float: right;
+  right: 50px;
+  top: 300px;
+}
+
+#presupuesto-btn {
+  background: linear-gradient(135deg, rgba(54, 141, 255, 0.86), rgba(99, 109, 255, 0.25));
+  color: #fff;
+  font-weight: 700;
+  width: 200px;
+  height: 45px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 20px rgba(100, 23, 255, 0.25);
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+#presupuesto-btn:hover {
+  background-color: rgba(78, 24, 255, 0.86);
+  box-shadow: 0 6px 25px rgba(120, 60, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+.presupuesto-container {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 20px;
+}
+
+.presupuesto-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+
+.presupuesto-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+}
+
+.presupuesto-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: capitalize;
+}
+
+/* Gastado */
+.presupuesto-card p {
+  margin: 4px 0 10px;
+  font-size: 0.9rem;
+  color: #bdbdbd;
+}
+
+/* Barra de progreso */
+.barra {
+  width: 100%;
+  height: 8px;
+  background: #2b2b2b;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.barra-progreso {
+  height: 100%;
+  min-width: 2px; /* CLAVE para valores chicos */
+  transition: width 0.4s ease;
+}
+
+
+/* Excedido */
+.presupuesto-card.excedido {
+  border-color: #e53935;
+}
+
+.presupuesto-card.excedido .barra-progreso {
+  background: linear-gradient(90deg, #e53935, #ff7043);
+}
+
+
+.presupuesto-card select {
+  width: 100%;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.presupuesto-card input:focus,
+.presupuesto-card select:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+
+.presupuesto-card button {
+  width: 100%;
+  margin-top: 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+ .presupuesto-card.excedido::after {
+  content: '⚠ Presupuesto excedido';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #e53935;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+} 
+
+.etiquetasocultas-container {
+  margin-top: 20px;
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #ffffffc9;
+}
 
 .agregar-btns {
   display: flex;

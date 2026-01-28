@@ -11,18 +11,200 @@ import { BsCreditCard2Front } from "react-icons/bs";
 import { CiBank } from "react-icons/ci";
 import { SiAmericanexpress, SiMastercard, SiVisa } from "react-icons/si";
 import { CirclePicker } from 'react-color';
-
-
-function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, handleDelete, handleDeleteEtiqueta, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
+import { IoAddCircleOutline } from "react-icons/io5";
+import { calcularCuotasRestantesCredito, calcularCuotasRestantes } from './Table';
+function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, handleSubmit, handleDelete, handleDeleteEtiqueta, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
   const [showSumInput, setShowSumInput] = useState(false);
   const [additionalFunds, setAdditionalFunds] = useState('');
   const [tempCierre, setTempCierre] = useState(mydata.cierre || '');
   const [showHelperText, setShowHelperText] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#fff');
+  const [confirmarBorrado, setConfirmarBorrado] = useState(null);
+
+  const getEstadoPresupuesto = (gastado, presupuesto) => {
+    if (!presupuesto || presupuesto <= 0) {
+      return {
+        porcentaje: 0,
+        color: '#9ca3af', // gris
+        mensaje: 'Sin presupuesto definido'
+      };
+    }
+
+    const porcentajeReal = (gastado / presupuesto) * 100;
+    const porcentaje = Math.min(porcentajeReal, 100);
+
+    // 🔴 EXCEDIDO
+    if (gastado > presupuesto) {
+      return {
+        porcentaje,
+        color: '#ef4444', // rojo
+        mensaje: '⚠️ Presupuesto excedido'
+      };
+    }
+
+    // 🟡 CERCA DEL LÍMITE
+    if (porcentajeReal >= 80) {
+      return {
+        porcentaje,
+        color: '#f59e0b', // amarillo
+        mensaje: '⚠️ Cerca del límite'
+      };
+    }
+
+    // 🟢 OK
+    return {
+      porcentaje,
+      color: '#22c55e', // verde
+      mensaje: 'En presupuesto'
+    };
+  };
+
+  // guarda la etiqueta que se quiere borrar
+  const calcularMontoMensual = (item) => {
+    const hoy = new Date();
+    const mesActual = hoy.getMonth();
+    const anioActual = hoy.getFullYear();
+
+    const moneda = item.moneda && item.moneda.trim() !== '' ? item.moneda : 'ARS';
+    const precio = parsePrecio(item.precio);
+
+    if (isNaN(precio)) return null;
+
+    // 🟢 GASTOS FIJOS
+    if (item.isFijo) {
+      return { moneda, monto: precio };
+    }
+
+    // 🟢 CRÉDITO EN CUOTAS
+    if (item.tipo === 'credito' && item.cuotas > 0) {
+      const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
+      const cierreAnterior = new Date(mydata?.cierreAnterior);
+
+      if (fechaCompra <= cierreAnterior) {
+        const cuotas = parseInt(item.cuotas, 10) || 1;
+        const precioPorCuota = precio / cuotas;
+        const cierreDay = cierreAnterior.getDate();
+
+        const firstStatementMonth = new Date(
+          fechaCompra.getFullYear(),
+          fechaCompra.getMonth() + (fechaCompra.getDate() > cierreDay ? 1 : 0),
+          1
+        );
+
+        for (let i = 0; i < cuotas; i++) {
+          const mesCuota = new Date(
+            firstStatementMonth.getFullYear(),
+            firstStatementMonth.getMonth() + i,
+            1
+          );
+
+          if (
+            mesCuota.getMonth() === mesActual &&
+            mesCuota.getFullYear() === anioActual
+          ) {
+            const cuotasRestantes = calcularCuotasRestantesCredito(
+              item.fecha,
+              item.cuotas,
+              mydata?.vencimiento,
+              mydata?.cierre,
+              mydata?.vencimientoAnterior,
+              mydata?.cierreAnterior
+            );
+
+            if (cuotasRestantes > 0) {
+              return { moneda, monto: precioPorCuota };
+            }
+          }
+        }
+      }
+
+      return null;
+    }
+
+    // 🟢 DÉBITO / EFECTIVO / TRANSFERENCIA
+    const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
+    if (
+      fechaCompra.getMonth() === mesActual &&
+      fechaCompra.getFullYear() === anioActual
+    ) {
+      return { moneda, monto: precio };
+    }
+
+    return null;
+  };
+
 
   const handleColorChange = (color) => {
     setSelectedColor(color.hex);
     setFormData({ ...formData, color: color.hex });
+  };
+
+  const ocultarEtiqueta = (etiqueta) => {
+    const updated = {
+      ...mydata,
+      presupuestos: {
+        ...mydata.presupuestos,
+        [etiqueta]: {
+          ...(mydata.presupuestos?.[etiqueta] || {}),
+          visible: false
+        }
+      }
+    };
+
+    setMyData(updated);
+    saveMyData(updated);
+  };
+
+  const etiquetasOcultas = mydata.etiquetas.filter(
+    e => mydata.presupuestos?.[e.nombre]?.visible === false
+  );
+  const mostrarEtiqueta = (etiqueta) => {
+    const updated = {
+      ...mydata,
+      presupuestos: {
+        ...mydata.presupuestos,
+        [etiqueta]: {
+          ...(mydata.presupuestos?.[etiqueta] || {}),
+          visible: true
+        }
+      }
+    };
+
+    setMyData(updated);
+    saveMyData(updated);
+  };
+  const actualizarPresupuesto = (nombre, cambios) => {
+    const nuevoMyData = {
+      ...mydata,
+      presupuestos: {
+        ...mydata.presupuestos,
+        [nombre]: {
+          ...(mydata.presupuestos?.[nombre] || {}),
+          ...cambios
+        }
+      }
+    };
+
+    setMyData(nuevoMyData);
+    saveMyData(nuevoMyData);
+  };
+  const parsePrecio = (valor) => {
+    if (typeof valor === 'number') return valor;
+
+    if (!valor) return 0;
+
+    const limpio = String(valor).trim();
+
+    // Caso: "1234.56" → decimal punto
+    if (/^\d+(\.\d+)?$/.test(limpio)) {
+      return Number(limpio);
+    }
+
+    // Caso: "1.234,56" o "$1.234"
+    return Number(
+      limpio
+        .replace(/\$/g, '')
+    ) || 0;
   };
 
   const validateForm = () => {
@@ -37,6 +219,44 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
     }
     return true;
   };
+  // console.log('DATA EN MODAL:', data);
+
+  const gastosPorEtiqueta = useMemo(() => {
+    const totales = {};
+    if (!Array.isArray(data)) return totales;
+
+    data.forEach(item => {
+      if (!item.etiqueta) return;
+
+      const resultado = calcularMontoMensual(item);
+      if (!resultado) return;
+
+      const { moneda, monto } = resultado;
+      const etiqueta = item.etiqueta;
+
+      if (!totales[etiqueta]) totales[etiqueta] = {};
+      if (!totales[etiqueta][moneda]) totales[etiqueta][moneda] = 0;
+
+      totales[etiqueta][moneda] += monto;
+    });
+
+    return totales;
+  }, [
+    data,
+    mydata.cierre,
+    mydata.cierreAnterior,
+    mydata.vencimiento,
+    mydata.vencimientoAnterior
+  ]);
+
+
+
+
+
+
+  const coloresPorEtiqueta = Object.fromEntries(
+    (mydata.etiquetas || []).map(e => [e.nombre, e.color])
+  );
 
 
   const handleSave = () => {
@@ -64,6 +284,25 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
     setAdditionalFunds('');
     setShowSumInput(false);
   };
+
+  const handlePresupuestoChange = (etiqueta, campo, valor) => {
+    const updatedMyData = {
+      ...mydata,
+      presupuestos: {
+        ...mydata.presupuestos,
+        [etiqueta]: {
+          ...mydata.presupuestos?.[etiqueta],
+          [campo]: valor
+        }
+      }
+    };
+
+    setMyData(updatedMyData);
+    saveMyData(updatedMyData);
+  };
+
+
+
   const renderCommonFields = () => (
     <>
       <TextField
@@ -323,12 +562,14 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                   ? "300px"
                   : modalType === "reporte"
                     ? "90%"
-                    : modalType === "repetitivo"
-                      ? "600px"
-                      : modalType === "crearEtiqueta"
-                        ? "500px"
-                        : "500px",
-          width: modalType === "reporte" ? "90%" : "400px",
+                    : modalType === "presupuesto"
+                      ? "90%"
+                      : modalType === "repetitivo"
+                        ? "600px"
+                        : modalType === "crearEtiqueta"
+                          ? "500px"
+                          : "500px",
+          width: modalType === "reporte" || modalType === "presupuesto" ? "90%" : "400px",
 
           // 🎨 Fondo según tipo de modal
           background:
@@ -340,11 +581,13 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                   ? "linear-gradient(135deg, rgba(255, 165, 165, 0.67), rgba(255, 111, 111, 0.72))" // rojo coral pastel
                   : modalType === "reporte"
                     ? "linear-gradient(135deg, rgba(154, 129, 255, 0.67), rgba(98, 19, 255, 0.73))" // violeta pastel
-                    : modalType === "repetitivo"
-                      ? "linear-gradient(135deg, rgba(253, 232, 123, 0.8), rgba(253, 207, 82, 0.76))" // amarillo pastel
-                      : modalType === "crearEtiqueta"
-                        ? "linear-gradient(135deg, rgba(214, 184, 255, 0.9), rgba(157, 11, 255, 0.72))" // violeta suave
-                        : "linear-gradient(135deg, rgba(175, 255, 164, 0.78), rgba(100, 255, 28, 0.72))", // default
+                    : modalType === "presupuesto"
+                      ? "linear-gradient(135deg, rgba(67, 111, 255, 0.67), rgba(19, 35, 255, 0.73))" // violeta pastel
+                      : modalType === "repetitivo"
+                        ? "linear-gradient(135deg, rgba(253, 232, 123, 0.8), rgba(253, 207, 82, 0.76))" // amarillo pastel
+                        : modalType === "crearEtiqueta"
+                          ? "linear-gradient(135deg, rgba(214, 184, 255, 0.9), rgba(157, 11, 255, 0.72))" // violeta suave
+                          : "linear-gradient(135deg, rgba(175, 255, 164, 0.78), rgba(100, 255, 28, 0.72))", // default
 
           backdropFilter: "blur(16px) saturate(180%)",
           WebkitBackdropFilter: "blur(16px) saturate(180%)",
@@ -849,8 +1092,164 @@ function Modal({ data, formData, setFormData, mydata, setMyData, handleSubmit, h
                 />
               </div>
             )}
+            {modalType === 'presupuesto' && (
+              <div className="presupuesto-container">
+
+                {mydata.etiquetas.map(et => {
+                  const nombre = et.nombre;
+
+                  const presupuestoData = mydata.presupuestos?.[nombre] || {};
+                  const visible = presupuestoData.visible !== false;
+                  if (!visible) return null;
+
+                  const gastos = gastosPorEtiqueta[nombre] || {};
+                  const totalGastado = Number(gastos.ARS || 0);
+                  const presupuesto = Number(presupuestoData.monto || 0);
+
+                  const gastado = Number(
+                    gastosPorEtiqueta?.[nombre]?.ARS || 0
+                  );
+
+                  const excedido = presupuesto > 0 && gastado > presupuesto;
+
+                  const colorEtiqueta = et.color || '#000000';
+
+        
+                  const {
+                    porcentaje,
+                    color,
+                    mensaje
+                  } = getEstadoPresupuesto(gastado, presupuesto);
+                    const colorEstado = excedido ? '#ff4d4d' : porcentaje >= 80 ? '#ffb300' : '#4caf50';
+                  return (
+                    <div
+                      key={nombre}
+                      className="presupuesto-card"
+                      style={{ borderLeft: `6px solid ${colorEtiqueta}` }}
+                    >
+                     
+                      {/* 🎨 NOMBRE CON COLOR DE ETIQUETA */}
+                      <h1 style={{ color: colorEtiqueta, fontSize: '1.5rem' }}>
+                        {nombre}
+                      </h1>
+                      {/* 🚦 MENSAJE DE ESTADO */}
+                      <p
+                        className="text-sm mt-1 font-medium"
+                        style={{ color: colorEstado }}
+                      >
+                        {mensaje}
+                      </p>
+
+                      <p>Gastado: $ {totalGastado.toFixed(2)}</p>
+                      <p>Presupuesto: $ {presupuesto || '—'}</p>
+
+                      <div className="barra">
+                        <div
+                          className="barra-progreso"
+                          style={{
+                            width: `${porcentaje}%`,
+                            background: excedido
+                              ? 'linear-gradient(90deg, #e53935, #ff7043)'
+                              : `linear-gradient(90deg, ${color}, ${color}aa)`
+                          }}
+                        />
+                      </div>
+
+
+
+                      {presupuesto > 0 && (
+                        <small>{porcentaje.toFixed(0)}%</small>
+                      )}
+
+                      <TextField
+                        label="Presupuesto mensual"
+                        type="number"
+                        value={presupuesto || ''}
+                        onChange={(e) =>
+                          actualizarPresupuesto(nombre, {
+                            monto: Number(e.target.value),
+                            visible: true
+                          })
+                        }
+                        fullWidth
+                        margin="dense"
+                      />
+
+                      <Button
+                        color="warning"
+                        onClick={() => ocultarEtiqueta(nombre)}
+                      >
+                        Ocultar
+                      </Button>
+                    </div>
+                  );
+                })}
+
+
+                {/* 👁️ ETIQUETAS OCULTAS */}
+                <div className="etiquetasocultas-container">
+                  <h4>Etiquetas ocultas</h4>
+
+                  {etiquetasOcultas.length === 0 && (
+                    <p className="muted">No hay etiquetas ocultas</p>
+                  )}
+
+                  {etiquetasOcultas.map(e => (
+                    <Button
+                      key={e.nombre}
+                      startIcon={<IoAddCircleOutline />}
+                      onClick={() => mostrarEtiqueta(e.nombre)}
+                      color="#ffff"
+                    >
+                      {e.nombre}
+                    </Button>
+                  ))}
+                </div>
+
+              </div>
+            )}
+
+            {confirmarBorrado && (
+              <div className="modal-confirmacion">
+                <div className="modal-box">
+                  <h3>¿Eliminar presupuesto?</h3>
+                  <p>
+                    El presupuesto de <strong>{confirmarBorrado}</strong> se ocultará,
+                    pero podrás volver a mostrarlo.
+                  </p>
+
+                  <div className="acciones">
+                    <Button
+                      onClick={() => setConfirmarBorrado(null)}
+                    >
+                      Cancelar
+                    </Button>
+
+                    <Button
+                      color="error"
+                      onClick={() => {
+                        const copia = {
+                          ...mydata.presupuestos,
+                          [confirmarBorrado]: {
+                            ...mydata.presupuestos[confirmarBorrado],
+                            visible: false
+                          }
+                        };
+
+                        setMyData({ ...mydata, presupuestos: copia });
+                        saveMyData({ ...mydata, presupuestos: copia });
+                        setConfirmarBorrado(null);
+                      }}
+                    >
+                      Ocultar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </form>
-          {modalType !== 'eliminar' && modalType !== 'reporte' && modalType !== 'eliminarEtiqueta' && !showSumInput && (
+          {modalType !== 'eliminar' && modalType !== 'reporte' && modalType !== 'presupuesto' && modalType !== 'eliminarEtiqueta' && !showSumInput && (
             <div className="alignBottom">
               <Button
                 variant="contained"
