@@ -180,8 +180,11 @@ function App() {
 
   const handleDeleteEtiqueta = () => {
 
+    const nombreEtiqueta = formData.etiqueta;
+
+    // 1️⃣ Quitar etiqueta de los gastos
     const updatedData = data.map(item =>
-      item.etiqueta === formData.etiqueta
+      item.etiqueta === nombreEtiqueta
         ? { ...item, etiqueta: '' }
         : item
     );
@@ -189,15 +192,25 @@ function App() {
     setData(updatedData);
     saveData(updatedData);
 
+    // 2️⃣ Quitar etiqueta y su presupuesto
+    const updatedPresupuestos = { ...mydata.presupuestos };
+    delete updatedPresupuestos[nombreEtiqueta];
+
     const updatedMyData = {
       ...mydata,
-      etiquetas: mydata.etiquetas.filter(etiqueta => etiqueta.nombre !== formData.etiqueta)
+      etiquetas: mydata.etiquetas.filter(
+        etiqueta => etiqueta.nombre !== nombreEtiqueta
+      ),
+      presupuestos: updatedPresupuestos
     };
 
     setMyData(updatedMyData);
     saveMyData(updatedMyData);
+
+    // 3️⃣ Cerrar modal
     setModalVisible(false);
   };
+
   const handleEdit = () => {
     const updatedData = data.map(item =>
       item.id === formData.id

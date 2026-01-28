@@ -13,6 +13,8 @@ import { SiAmericanexpress, SiMastercard, SiVisa } from "react-icons/si";
 import { CirclePicker } from 'react-color';
 import { IoAddCircleOutline } from "react-icons/io5";
 import { calcularCuotasRestantesCredito, calcularCuotasRestantes } from './Table';
+import { IoEyeOffOutline } from "react-icons/io5";
+
 function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, handleSubmit, handleDelete, handleDeleteEtiqueta, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
   const [showSumInput, setShowSumInput] = useState(false);
   const [additionalFunds, setAdditionalFunds] = useState('');
@@ -43,7 +45,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
     }
 
     // 🟡 CERCA DEL LÍMITE
-    if (porcentajeReal >= 80) {
+    if (porcentaje >= 80 && porcentaje < 100) {
       return {
         porcentaje,
         color: '#f59e0b', // amarillo
@@ -65,59 +67,33 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
     const mesActual = hoy.getMonth();
     const anioActual = hoy.getFullYear();
 
-    const moneda = item.moneda && item.moneda.trim() !== '' ? item.moneda : 'ARS';
+    const moneda = item.moneda?.trim() || 'ARS';
     const precio = parsePrecio(item.precio);
-
     if (isNaN(precio)) return null;
 
-    // 🟢 GASTOS FIJOS
+    // 🟢 CUOTAS RESTANTES
+    const cuotasRestantes = calcularCuotasRestantesCredito(
+      item.fecha,
+      item.cuotas,
+      mydata?.vencimiento,
+      mydata?.cierre,
+      mydata?.vencimientoAnterior,
+      mydata?.cierreAnterior
+    );
+
+    // 🟢 GASTOS FIJOS (NO se dividen)
     if (item.isFijo) {
-      return { moneda, monto: precio };
+      if (cuotasRestantes > 0) {
+        return { moneda, monto: precio };
+      }
+      return null;
     }
 
-    // 🟢 CRÉDITO EN CUOTAS
+    // 🟢 CRÉDITO
     if (item.tipo === 'credito' && item.cuotas > 0) {
-      const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
-      const cierreAnterior = new Date(mydata?.cierreAnterior);
-
-      if (fechaCompra <= cierreAnterior) {
-        const cuotas = parseInt(item.cuotas, 10) || 1;
-        const precioPorCuota = precio / cuotas;
-        const cierreDay = cierreAnterior.getDate();
-
-        const firstStatementMonth = new Date(
-          fechaCompra.getFullYear(),
-          fechaCompra.getMonth() + (fechaCompra.getDate() > cierreDay ? 1 : 0),
-          1
-        );
-
-        for (let i = 0; i < cuotas; i++) {
-          const mesCuota = new Date(
-            firstStatementMonth.getFullYear(),
-            firstStatementMonth.getMonth() + i,
-            1
-          );
-
-          if (
-            mesCuota.getMonth() === mesActual &&
-            mesCuota.getFullYear() === anioActual
-          ) {
-            const cuotasRestantes = calcularCuotasRestantesCredito(
-              item.fecha,
-              item.cuotas,
-              mydata?.vencimiento,
-              mydata?.cierre,
-              mydata?.vencimientoAnterior,
-              mydata?.cierreAnterior
-            );
-
-            if (cuotasRestantes > 0) {
-              return { moneda, monto: precioPorCuota };
-            }
-          }
-        }
+      if (cuotasRestantes > 0) {
+        return { moneda, monto: precio / item.cuotas };
       }
-
       return null;
     }
 
@@ -132,6 +108,7 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
 
     return null;
   };
+
 
 
   const handleColorChange = (color) => {
@@ -241,13 +218,8 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
     });
 
     return totales;
-  }, [
-    data,
-    mydata.cierre,
-    mydata.cierreAnterior,
-    mydata.vencimiento,
-    mydata.vencimientoAnterior
-  ]);
+  }, [data, mydata]);
+
 
 
 
@@ -1094,56 +1066,105 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
             )}
             {modalType === 'presupuesto' && (
               <div className="presupuesto-container">
+                {/* ================================================= */}
+                {/* 📊 RESUMEN + PRESUPUESTO MENSUAL (FULL WIDTH) */}
+                {/* ================================================= */}
 
-                {mydata.etiquetas.map(et => {
-                  const nombre = et.nombre;
-
-                  const presupuestoData = mydata.presupuestos?.[nombre] || {};
-                  const visible = presupuestoData.visible !== false;
-                  if (!visible) return null;
-
-                  const gastos = gastosPorEtiqueta[nombre] || {};
-                  const totalGastado = Number(gastos.ARS || 0);
-                  const presupuesto = Number(presupuestoData.monto || 0);
-
-                  const gastado = Number(
-                    gastosPorEtiqueta?.[nombre]?.ARS || 0
+                {(() => {
+                  const totalGastadoMes = Object.values(gastosPorEtiqueta || {}).reduce(
+                    (acc, porEtiqueta) => acc + Number(porEtiqueta?.ARS || 0),
+                    0
                   );
 
-                  const excedido = presupuesto > 0 && gastado > presupuesto;
+                  const totalPresupuestado = Object.entries(mydata.presupuestos || {}).reduce(
+                    (acc, [_, data]) => {
+                      if (data?.visible === false) return acc;
+                      return acc + Number(data?.monto || 0);
+                    },
+                    0
+                  );
 
-                  const colorEtiqueta = et.color || '#000000';
+                  const presupuestoMax = Number(mydata.presupuestoMensualMax || 0);
 
-        
-                  const {
-                    porcentaje,
-                    color,
-                    mensaje
-                  } = getEstadoPresupuesto(gastado, presupuesto);
-                    const colorEstado = excedido ? '#ff4d4d' : porcentaje >= 80 ? '#ffb300' : '#4caf50';
+                  const { porcentaje, color, mensaje } =
+                    getEstadoPresupuesto(totalGastadoMes, presupuestoMax);
+
+                  const excedido =
+                    presupuestoMax > 0 && totalGastadoMes > presupuestoMax;
+
                   return (
                     <div
-                      key={nombre}
                       className="presupuesto-card"
-                      style={{ borderLeft: `6px solid ${colorEtiqueta}` }}
+                      style={{
+                        borderLeft: '6px solid #ffffff',
+                        width: '100%',
+                        marginBottom: 10,
+                        padding: 15
+                      }}
                     >
-                     
-                      {/* 🎨 NOMBRE CON COLOR DE ETIQUETA */}
-                      <h1 style={{ color: colorEtiqueta, fontSize: '1.5rem' }}>
-                        {nombre}
-                      </h1>
-                      {/* 🚦 MENSAJE DE ESTADO */}
+                      {/* 🧠 HEADER */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 12,
+                          flexWrap: 'wrap'
+                        }}
+                      >
+                        <h1 style={{ fontSize: '1.5rem', margin: 0 }}>
+                          📊 Presupuesto mensual
+                        </h1>
+
+                        <TextField
+                          label="Máximo mensual"
+                          type="number"
+                          size="small"
+                          value={presupuestoMax || ''}
+                          onChange={(e) => {
+                            const updated = {
+                              ...mydata,
+                              presupuestoMensualMax: Number(e.target.value)
+                            };
+                            setMyData(updated);
+                            saveMyData(updated);
+                          }}
+                        />
+                      </div>
+
+                      {/* 🚦 ESTADO */}
                       <p
-                        className="text-sm mt-1 font-medium"
-                        style={{ color: colorEstado }}
+                        className="text-sm font-medium"
+                        style={{ color, marginTop: 6 }}
                       >
                         {mensaje}
                       </p>
 
-                      <p>Gastado: $ {totalGastado.toFixed(2)}</p>
-                      <p>Presupuesto: $ {presupuesto || '—'}</p>
+                      {/* 💸 RESUMEN */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          flexWrap: 'wrap',
+                          marginTop: 6
+                        }}
+                      >
+                        <p style={{ margin: 0 }}>
+                          💸 Gastado: <strong>$ {totalGastadoMes.toFixed(2)}</strong>
+                        </p>
 
-                      <div className="barra">
+                        <p style={{ margin: 0 }}>
+                          {'🏦 Presupuesto Máximo:'} <strong>$ {presupuestoMax > 0 ? presupuestoMax.toFixed(2) : totalPresupuestado.toFixed(2)}</strong>
+                        </p>
+
+                        <p style={{ margin: 0 }}>
+                          🎯 Presupuestado: <strong>$ {totalPresupuestado.toFixed(2)}</strong>
+                        </p>
+                      </div>
+
+                      {/* 📊 BARRA */}
+                      <div className="barra" style={{ marginTop: 8 }}>
                         <div
                           className="barra-progreso"
                           style={{
@@ -1155,15 +1176,137 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
                         />
                       </div>
 
-
-
-                      {presupuesto > 0 && (
+                      {presupuestoMax > 0 && (
                         <small>{porcentaje.toFixed(0)}%</small>
                       )}
 
+                      {/* 👁️ ETIQUETAS OCULTAS (EN FILA) */}
+                      {etiquetasOcultas.length > 0 && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            gap: 8,
+                            marginTop: 10,
+                            alignItems: 'center'
+                          }}
+                        >
+                          {etiquetasOcultas.map(e => (
+                            <Button
+                              key={e.nombre}
+                              size="small"
+                              startIcon={<IoAddCircleOutline />}
+                              onClick={() => mostrarEtiqueta(e.nombre)}
+                              color="#ffffff"
+                              sx={{
+                                whiteSpace: 'nowrap',
+                                minWidth: 'auto'
+                              }}
+                            >
+                              {e.nombre}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                })()}
+
+                {/* ================================================= */}
+                {/* 📌 PRESUPUESTOS POR ETIQUETA */}
+                {/* ================================================= */}
+
+                {mydata.etiquetas.map(et => {
+                  const nombre = et.nombre;
+                  const colorEtiqueta = et.color || '#ffffff';
+
+                  const presupuestoData = mydata.presupuestos?.[nombre] || {};
+                  const visible = presupuestoData.visible !== false;
+                  if (!visible) return null;
+
+                  const gastado = Number(gastosPorEtiqueta?.[nombre]?.ARS || 0);
+                  const presupuesto = Number(presupuestoData.monto || 0);
+
+                  const excedido = presupuesto > 0 && gastado > presupuesto;
+
+                  const { porcentaje, color, mensaje } =
+                    getEstadoPresupuesto(gastado, presupuesto);
+
+                  return (
+                    <div
+                      key={nombre}
+                      className={`presupuesto-card ${excedido ? 'excedido' : ''}`}
+                      style={{ borderLeft: `5px solid ${colorEtiqueta}` }}
+                    >
+                      {/* 🏷️ NOMBRE */}
+                      <h3
+                        style={{
+                          color: colorEtiqueta,
+                          fontSize: '1.05rem',
+                          marginBottom: 2
+                        }}
+                      >
+                        {nombre}
+                      </h3>
+
+                      {/* 🚦 ESTADO */}
+                      <p
+                        style={{
+                          color,
+                          fontSize: '0.75rem',
+                          margin: '2px 0 6px',
+                          fontWeight: 600
+                        }}
+                      >
+                        {mensaje}
+                      </p>
+
+                      {/* 💸 DATOS */}
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          flexWrap: 'wrap',
+                          marginTop: 6
+
+                        }}
+                      >
+                        <p style={{ margin: 0, fontSize: '1rem' }}>
+                          💸 Gastado: <strong>$ {gastado.toFixed(2)}</strong>
+                        </p>
+
+                        <p style={{ margin: 0, fontSize: '1rem' }}>
+                          🎯 Presupuestado: <strong>$ {presupuesto || '—'}</strong>
+                        </p>
+                      </div>
+                      {/* 📊 BARRA */}
+                      <div className="barra" style={{ height: 6, marginBottom: 6 }}>
+                        <div
+                          className="barra-progreso"
+                          style={{
+                            width: `${porcentaje}%`,
+                            background: excedido
+                              ? 'linear-gradient(90deg, #e53935, #ff7043)'
+                              : `linear-gradient(90deg, ${color}, ${color}aa)`
+                          }}
+                        />
+                      </div>
+
+                      {/* % */}
+                      {presupuesto > 0 && (
+                        <small style={{ fontSize: '0.7rem' }}>
+                          {porcentaje.toFixed(0)}%
+                        </small>
+                      )}
+
+                      {/* ✏️ INPUT */}
                       <TextField
-                        label="Presupuesto mensual"
+                        label="Presupuesto"
                         type="number"
+                        size="small"
                         value={presupuesto || ''}
                         onChange={(e) =>
                           actualizarPresupuesto(nombre, {
@@ -1175,9 +1318,12 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
                         margin="dense"
                       />
 
+                      {/* 👁️ OCULTAR */}
                       <Button
-                        color="warning"
+                        size="small"
+                        color="#ffffff"
                         onClick={() => ocultarEtiqueta(nombre)}
+                        startIcon={<IoEyeOffOutline />}
                       >
                         Ocultar
                       </Button>
@@ -1185,68 +1331,9 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
                   );
                 })}
 
-
-                {/* 👁️ ETIQUETAS OCULTAS */}
-                <div className="etiquetasocultas-container">
-                  <h4>Etiquetas ocultas</h4>
-
-                  {etiquetasOcultas.length === 0 && (
-                    <p className="muted">No hay etiquetas ocultas</p>
-                  )}
-
-                  {etiquetasOcultas.map(e => (
-                    <Button
-                      key={e.nombre}
-                      startIcon={<IoAddCircleOutline />}
-                      onClick={() => mostrarEtiqueta(e.nombre)}
-                      color="#ffff"
-                    >
-                      {e.nombre}
-                    </Button>
-                  ))}
-                </div>
-
               </div>
             )}
 
-            {confirmarBorrado && (
-              <div className="modal-confirmacion">
-                <div className="modal-box">
-                  <h3>¿Eliminar presupuesto?</h3>
-                  <p>
-                    El presupuesto de <strong>{confirmarBorrado}</strong> se ocultará,
-                    pero podrás volver a mostrarlo.
-                  </p>
-
-                  <div className="acciones">
-                    <Button
-                      onClick={() => setConfirmarBorrado(null)}
-                    >
-                      Cancelar
-                    </Button>
-
-                    <Button
-                      color="error"
-                      onClick={() => {
-                        const copia = {
-                          ...mydata.presupuestos,
-                          [confirmarBorrado]: {
-                            ...mydata.presupuestos[confirmarBorrado],
-                            visible: false
-                          }
-                        };
-
-                        setMyData({ ...mydata, presupuestos: copia });
-                        saveMyData({ ...mydata, presupuestos: copia });
-                        setConfirmarBorrado(null);
-                      }}
-                    >
-                      Ocultar
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
 
           </form>
           {modalType !== 'eliminar' && modalType !== 'reporte' && modalType !== 'presupuesto' && modalType !== 'eliminarEtiqueta' && !showSumInput && (

@@ -459,14 +459,6 @@ a {
   border-radius: 12px;
 } 
 
-.etiquetasocultas-container {
-  margin-top: 20px;
-  padding-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  color: #ffffffc9;
-}
 
 .agregar-btns {
   display: flex;
