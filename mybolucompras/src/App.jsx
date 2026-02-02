@@ -502,6 +502,7 @@ function App() {
                     handleChangeCierre={handleChangeCierre}
                     handleAgregarFondos={handleAgregarFondos}
                     handleCreateEtiqueta={handleCreateEtiqueta}
+                    totalGastado={totalGastado()}
                     modalType={modalType}
                   />
                   {modalType !== 'vencimiento' && modalType !== 'fondos' && modalType !== 'crearEtiqueta' && modalType !== 'reporte' && modalType !== 'eliminarEtiqueta' && modalType !== 'eliminar' && (

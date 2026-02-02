@@ -15,13 +15,23 @@ import { IoAddCircleOutline } from "react-icons/io5";
 import { calcularCuotasRestantesCredito, calcularCuotasRestantes } from './Table';
 import { IoEyeOffOutline } from "react-icons/io5";
 
-function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, handleSubmit, handleDelete, handleDeleteEtiqueta, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
+function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, saveMyData, handleSubmit, handleDelete, handleDeleteEtiqueta, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
   const [showSumInput, setShowSumInput] = useState(false);
   const [additionalFunds, setAdditionalFunds] = useState('');
   const [tempCierre, setTempCierre] = useState(mydata.cierre || '');
   const [showHelperText, setShowHelperText] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#fff');
   const [confirmarBorrado, setConfirmarBorrado] = useState(null);
+
+  const formatARS = (value) => {
+    if (value === null || value === undefined || isNaN(value)) return '0,00';
+
+    return new Intl.NumberFormat('es-AR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(value));
+  };
+
 
   const getEstadoPresupuesto = (gastado, presupuesto) => {
     if (!presupuesto || presupuesto <= 0) {
@@ -1087,10 +1097,10 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
                   const presupuestoMax = Number(mydata.presupuestoMensualMax || 0);
 
                   const { porcentaje, color, mensaje } =
-                    getEstadoPresupuesto(totalGastadoMes, presupuestoMax);
+                    getEstadoPresupuesto(totalGastado.ARS, presupuestoMax);
 
                   const excedido =
-                    presupuestoMax > 0 && totalGastadoMes > presupuestoMax;
+                    presupuestoMax > 0 && totalGastado.ARS > presupuestoMax;
 
                   return (
                     <div
@@ -1151,16 +1161,31 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
                         }}
                       >
                         <p style={{ margin: 0 }}>
-                          💸 Gastado: <strong>$ {totalGastadoMes.toFixed(2)}</strong>
+                          💸 Gastado: <strong>$ {formatARS(totalGastado.ARS)}</strong>
                         </p>
 
                         <p style={{ margin: 0 }}>
-                          {'🏦 Presupuesto Máximo:'} <strong>$ {presupuestoMax > 0 ? presupuestoMax.toFixed(2) : totalPresupuestado.toFixed(2)}</strong>
+                          🏦 Presupuesto Máximo:{' '}
+                          <strong>
+                            $ {formatARS(presupuestoMax > 0 ? presupuestoMax : totalPresupuestado)}
+                          </strong>
                         </p>
 
                         <p style={{ margin: 0 }}>
-                          🎯 Presupuestado: <strong>$ {totalPresupuestado.toFixed(2)}</strong>
+                          🎯 Presupuestado: <strong>$ {formatARS(totalPresupuestado)}</strong>
                         </p>
+
+                        <p style={{ margin: 0 }}>
+                          ✅ Disponible:{' '}
+                          <strong>
+                            $ {formatARS(
+                              presupuestoMax > 0
+                                ? presupuestoMax - totalGastado.ARS
+                                : totalPresupuestado - totalGastado.ARS
+                            )}
+                          </strong>
+                        </p>
+
                       </div>
 
                       {/* 📊 BARRA */}
@@ -1275,11 +1300,11 @@ function Modal({ data, formData, setFormData, mydata, setMyData, saveMyData, han
                         }}
                       >
                         <p style={{ margin: 0, fontSize: '1rem' }}>
-                          💸 Gastado: <strong>$ {gastado.toFixed(2)}</strong>
+                          💸 Gastado: <strong>$ {formatARS(gastado.toFixed(2))}</strong>
                         </p>
 
                         <p style={{ margin: 0, fontSize: '1rem' }}>
-                          🎯 Presupuestado: <strong>$ {presupuesto || '—'}</strong>
+                          🎯 Presupuestado: <strong>$ {formatARS(presupuesto || 0)}</strong>
                         </p>
                       </div>
                       {/* 📊 BARRA */}
