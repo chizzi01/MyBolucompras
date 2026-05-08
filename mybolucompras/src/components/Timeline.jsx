@@ -28,4 +28,4 @@ const Timeline = ({ pagosFuturos }) => {
   );
 };
 
-export default Timeline;
+export default React.memo(Timeline);

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import '../App.css';
+import { parseFecha, parsePrecio } from '../utils/formatters';
 import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdornment, IconButton, ListItemText } from '@mui/material';
 import Papa from 'papaparse';
 import { FaCheck, FaClosedCaptioning, FaEdit } from "react-icons/fa";
@@ -28,47 +29,8 @@ import { BsCreditCard2Front } from "react-icons/bs";
 import DeleteIcon from '@mui/icons-material/Delete';
 
 
-export const calcularCuotasRestantesCredito = (fecha, cuotas, fechaVencimiento, fechaCierre, fechaVencimientoAnterior, fechaCierreAnterior) => {
-    // Convertir la fecha de compra (DD/MM/YYYY) en un objeto Date
-    const [dia, mes, anio] = fecha.split('/');
-    const fechaCompra = new Date(`${anio}-${mes}-${dia}`);
-
-    // Convertir las otras fechas (vencimiento, cierre, cierre anterior) en objetos Date
-    const fechaVenc = new Date(fechaVencimiento);
-    const fechaCierreDate = new Date(fechaCierre);
-    const fechaCierreAnteriorDate = fechaCierreAnterior ? new Date(fechaCierreAnterior) : null;
-
-    // Verificar que todas las fechas se han parseado correctamente
-    if (isNaN(fechaCompra) || isNaN(fechaVenc) || isNaN(fechaCierreDate) || isNaN(fechaCierreAnteriorDate)) {
-        console.error('Fecha inválida:', { fechaCompra, fechaVenc, fechaCierreDate, fechaCierreAnteriorDate });
-        return 'N/A';
-    }
-
-    let cuotasRestantes;
-
-    // Si la fecha de compra está entre el cierre anterior y el cierre actual, asignamos 0 cuotas momentáneamente
-    if (fechaCompra > fechaCierreAnteriorDate && fechaCompra <= fechaCierreDate) {
-        cuotasRestantes = 0;  // Se asignan 0 cuotas momentáneamente, ya que se pagará en el próximo ciclo
-    } else {
-        // Si la compra se realizó fuera de ese rango, calculamos las cuotas restantes
-        const diferenciaMeses = (fechaVenc.getFullYear() - fechaCompra.getFullYear()) * 12 + (fechaVenc.getMonth() - fechaCompra.getMonth());
-        cuotasRestantes = parseInt(cuotas, 10) - diferenciaMeses;
-    }
-
-    // Asegurarse de que no haya cuotas negativas
-    return cuotasRestantes < 0 ? 0 : cuotasRestantes + 1;
-};
-
-
-export const calcularCuotasRestantes = (fecha, cuotas) => {
-    const fechaActual = new Date();
-    const [dia, mes, anio] = fecha.split('/');
-    const fechaCompra = new Date(`${anio}-${mes}-${dia}`);
-    const diferenciaMeses = (fechaActual.getFullYear() - fechaCompra.getFullYear()) * 12 + (fechaActual.getMonth() - fechaCompra.getMonth());
-    const cuotasRestantes = parseInt(cuotas, 10) - diferenciaMeses;
-
-    return cuotasRestantes < 0 ? 0 : cuotasRestantes;
-};
+import { calcularCuotasRestantesCredito, calcularCuotasRestantes } from '../utils/cuotas';
+export { calcularCuotasRestantesCredito, calcularCuotasRestantes };
 
 
 function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMedios, uniqueEtiquetas, saveItem, uniqueMonedas }) {
@@ -167,34 +129,23 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     };
 
     const sortedData = useMemo(() => {
-        let sortableData = [...data];
-        if (sortConfig.key !== null && sortConfig.direction !== 'default') {
-            sortableData.sort((a, b) => {
-                let aValue = a[sortConfig.key];
-                let bValue = b[sortConfig.key];
+        if (sortConfig.key === null || sortConfig.direction === 'default') return [...data];
 
-                // Convertir fechas a objetos Date
-                if (sortConfig.key === 'fecha') {
-                    aValue = new Date(aValue.split('/').reverse().join('-'));
-                    bValue = new Date(bValue.split('/').reverse().join('-'));
-                }
+        // Pre-procesar la clave de ordenamiento una sola vez por fila — O(n)
+        const parsed = data.map(item => {
+            let key = item[sortConfig.key];
+            if (sortConfig.key === 'fecha') key = parseFecha(item.fecha).getTime();
+            if (sortConfig.key === 'precio') key = parsePrecio(item.precio);
+            return { item, key };
+        });
 
-                // Convertir precios a números
-                if (sortConfig.key === 'precio') {
-                    aValue = parseFloat(aValue.replace('$', ''));
-                    bValue = parseFloat(bValue.replace('$', ''));
-                }
+        parsed.sort((a, b) => {
+            if (a.key < b.key) return sortConfig.direction === 'ascending' ? -1 : 1;
+            if (a.key > b.key) return sortConfig.direction === 'ascending' ? 1 : -1;
+            return 0;
+        });
 
-                if (aValue < bValue) {
-                    return sortConfig.direction === 'ascending' ? -1 : 1;
-                }
-                if (aValue > bValue) {
-                    return sortConfig.direction === 'ascending' ? 1 : -1;
-                }
-                return 0;
-            });
-        }
-        return sortableData;
+        return parsed.map(p => p.item);
     }, [data, sortConfig]);
 
     // const calcularCuotasRestantes = (fecha, cuotas) => {
@@ -226,43 +177,33 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     // });
 
     const exportToExcel = () => {
-        const table = document.getElementById('tabla');
-        const rows = table.querySelectorAll('tr');
-        const data = [];
-
-        // Obtener encabezados
-        const headers = [];
-        const headerCols = rows[0].querySelectorAll('th');
-        for (let j = 0; j < headerCols.length; j++) {
-            headers.push(headerCols[j].innerText);
-        }
-
-        // Obtener datos de las filas
-        for (let i = 1; i < rows.length; i++) {
-            const row = {};
-            const cols = rows[i].querySelectorAll('td');
-            for (let j = 0; j < cols.length; j++) {
-                row[headers[j]] = cols[j].innerText;
-            }
-            data.push(row);
-        }
-
-        // Convertir a CSV con PapaParse y usar un delimitador adecuado
-        const csv = Papa.unparse(data, {
-            header: true,
-            delimiter: ';', // Cambia ',' por ';' si tu Excel usa punto y coma como separador.
+        const rows = sortedData.map(item => {
+            const cr = calcularCuotas(item);
+            return {
+                Objeto: item.objeto,
+                Fecha: item.fecha,
+                Tipo: item.isFijo ? 'Repetitivo' : item.tipo,
+                Medio: item.medio,
+                Banco: item.banco || '',
+                Cuotas: item.cuotas,
+                'Cuotas restantes': isNaN(cr) ? 'N/A' : cr,
+                Cantidad: item.cantidad,
+                Precio: parsePrecio(item.precio).toFixed(2),
+                Moneda: item.moneda || 'ARS',
+                Etiqueta: item.etiqueta || '',
+            };
         });
 
-        // Crear un Blob y forzar la descarga
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        // BOM (﻿) para que Excel en Windows abra correctamente acentos y ñ
+        const csv = Papa.unparse(rows, { header: true, delimiter: ';' });
+        const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        a.href = url;
+        a.href = URL.createObjectURL(blob);
         a.download = 'Bolucompras.csv';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url); // Liberar memoria
+        URL.revokeObjectURL(a.href);
     };
 
     const isAfterCierre = (fechaCompra, fechaCierreDate, fechaCierreAnterior, medio, tipo) => {

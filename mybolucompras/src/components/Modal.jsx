@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { IoArrowBackCircle } from "react-icons/io5";
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { IoArrowBackCircle, IoSaveOutline, IoAddCircleOutline, IoEyeOffOutline } from "react-icons/io5";
 import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdornment, FormHelperText } from '@mui/material';
 import "../App.css";
 import Dashboard from './Dashboard';
-import { IoSaveOutline } from "react-icons/io5";
 import { FaCreditCard } from "react-icons/fa6";
 import { FaMoneyBill1Wave } from "react-icons/fa6";
 import { FaMoneyBillTransfer } from "react-icons/fa6";
@@ -11,9 +10,43 @@ import { BsCreditCard2Front } from "react-icons/bs";
 import { CiBank } from "react-icons/ci";
 import { SiAmericanexpress, SiMastercard, SiVisa } from "react-icons/si";
 import { CirclePicker } from 'react-color';
-import { IoAddCircleOutline } from "react-icons/io5";
-import { calcularCuotasRestantesCredito, calcularCuotasRestantes } from './Table';
-import { IoEyeOffOutline } from "react-icons/io5";
+import { calcularCuotasRestantesCredito } from '../utils/cuotas';
+import { parsePrecio, formatARS, parseFecha, getCurrencySymbol } from '../utils/formatters';
+import { BANCOS, MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
+
+/* Estilos MUI — usan CSS variables para respetar dark/light mode */
+const _fieldBase = {
+  '& .MuiInputLabel-root': { color: 'var(--color-text-muted)' },
+  '& .MuiInputLabel-root.Mui-focused': { color: 'var(--color-primary)' },
+  '& .MuiFormHelperText-root': { color: 'var(--color-error)', fontSize: '12px' },
+  '& .MuiOutlinedInput-root': {
+    color: 'var(--color-text-primary)',
+    '&.Mui-focused fieldset': { borderColor: 'var(--color-primary)', borderWidth: '2px' },
+    '& input, & textarea': { color: 'var(--color-text-primary)', caretColor: 'var(--color-primary)' },
+    '& .MuiSelect-select': { color: 'var(--color-text-primary)' },
+    '& .MuiSvgIcon-root': { color: 'var(--color-text-muted)' },
+  },
+  '& .MuiInputAdornment-root .MuiTypography-root': { color: 'var(--color-text-muted)' },
+};
+const fieldSxEmpty = {
+  ..._fieldBase,
+  '& .MuiOutlinedInput-root': {
+    ..._fieldBase['& .MuiOutlinedInput-root'],
+    backgroundColor: 'var(--color-surface)',
+    '& fieldset': { borderColor: 'var(--color-border)' },
+    '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+  },
+};
+const fieldSxFilled = {
+  ..._fieldBase,
+  '& .MuiOutlinedInput-root': {
+    ..._fieldBase['& .MuiOutlinedInput-root'],
+    backgroundColor: 'var(--color-primary-light)',
+    '& fieldset': { borderColor: 'var(--color-primary)' },
+    '&:hover fieldset': { borderColor: 'var(--color-primary)' },
+  },
+};
+const fieldSx = (hasValue) => hasValue ? fieldSxFilled : fieldSxEmpty;
 
 function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, saveMyData, handleSubmit, handleDelete, handleDeleteEtiqueta, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
   const [showSumInput, setShowSumInput] = useState(false);
@@ -22,16 +55,48 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
   const [showHelperText, setShowHelperText] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#fff');
   const [confirmarBorrado, setConfirmarBorrado] = useState(null);
+  const isDirty = useRef(false);
+  const dialogRef = useRef(null);
 
-  const formatARS = (value) => {
-    if (value === null || value === undefined || isNaN(value)) return '0,00';
+  /* Bloquear scroll del body mientras el modal está abierto */
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
-    return new Intl.NumberFormat('es-AR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(Number(value));
+  /* Focus inicial al abrir el modal — solo una vez al montar */
+  useEffect(() => {
+    dialogRef.current?.focus();
+  }, []);
+
+  /* Cerrar con Escape */
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        if (isDirty.current) {
+          if (window.confirm('Hay cambios sin guardar. ¿Salir de todos modos?')) handleCloseModal();
+        } else {
+          handleCloseModal();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [handleCloseModal]);
+
+  /* Marcar formulario como modificado cuando cambia formData */
+  useEffect(() => {
+    const isFormModal = ['nuevo', 'repetitivo', 'editar', 'crearEtiqueta'].includes(modalType);
+    if (isFormModal) isDirty.current = true;
+  }, [formData, modalType]);
+
+  const handleCloseWithConfirm = () => {
+    if (isDirty.current && ['nuevo', 'repetitivo', 'editar', 'crearEtiqueta'].includes(modalType)) {
+      if (!window.confirm('Hay cambios sin guardar. ¿Salir de todos modos?')) return;
+    }
+    handleCloseModal();
   };
-
 
   const getEstadoPresupuesto = (gastado, presupuesto) => {
     if (!presupuesto || presupuesto <= 0) {
@@ -108,7 +173,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
     }
 
     // 🟢 DÉBITO / EFECTIVO / TRANSFERENCIA
-    const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
+    const fechaCompra = parseFecha(item.fecha);
     if (
       fechaCompra.getMonth() === mesActual &&
       fechaCompra.getFullYear() === anioActual
@@ -175,25 +240,6 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
     setMyData(nuevoMyData);
     saveMyData(nuevoMyData);
   };
-  const parsePrecio = (valor) => {
-    if (typeof valor === 'number') return valor;
-
-    if (!valor) return 0;
-
-    const limpio = String(valor).trim();
-
-    // Caso: "1234.56" → decimal punto
-    if (/^\d+(\.\d+)?$/.test(limpio)) {
-      return Number(limpio);
-    }
-
-    // Caso: "1.234,56" o "$1.234"
-    return Number(
-      limpio
-        .replace(/\$/g, '')
-    ) || 0;
-  };
-
   const validateForm = () => {
     if (modalType === 'nuevo' || modalType === 'repetitivo' || modalType === 'editar') {
       return formData.objeto && formData.fecha && formData.medio && formData.precio;
@@ -228,7 +274,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
     });
 
     return totales;
-  }, [data, mydata]);
+  }, [data, mydata.cierre, mydata.cierreAnterior, mydata.vencimiento, mydata.vencimientoAnterior]);
 
 
 
@@ -236,8 +282,9 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
 
 
 
-  const coloresPorEtiqueta = Object.fromEntries(
-    (mydata.etiquetas || []).map(e => [e.nombre, e.color])
+  const coloresPorEtiqueta = useMemo(
+    () => Object.fromEntries((mydata.etiquetas || []).map(e => [e.nombre, e.color])),
+    [mydata.etiquetas]
   );
 
 
@@ -296,31 +343,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
         fullWidth={false}
         margin="normal"
         helperText={showHelperText && !formData.objeto ? "Ingrese el item comprado" : ""}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            backgroundColor: formData.objeto ? '#b0ffc3' : 'white',
-            '& fieldset': {
-              borderColor: formData.objeto ? '#bfffce' : '#777777',
-              color: '#777777',
-            },
-            '&:hover fieldset': {
-              borderColor: formData.objeto ? '#bfffce' : '#777777',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: formData.objeto ? '#bfffce' : '#777777',
-            },
-          },
-          '& .MuiInputLabel-root': {
-            color: 'black',
-          },
-          '& .MuiInputLabel-root.Mui-focused': {
-            color: 'black',
-          },
-          '& .MuiFormHelperText-root': {
-            color: '#c30000',
-            fontSize: '12px',
-          },
-        }}
+        sx={fieldSx(formData.objeto)}
       />
       <TextField
         label="Fecha de compra"
@@ -332,189 +355,49 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
         fullWidth={false}
         helperText={showHelperText && !formData.fecha ? "Ingrese la fecha de compra" : ""}
         margin="normal"
-        InputLabelProps={{
-          shrink: true,
-        }}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            backgroundColor: formData.fecha ? '#b0ffc3' : 'white',
-            '& fieldset': {
-              borderColor: formData.fecha ? '#bfffce' : '#777777',
-              color: '#777777',
-            },
-            '&:hover fieldset': {
-              borderColor: formData.fecha ? '#bfffce' : '#777777',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: formData.fecha ? '#bfffce' : '#777777',
-            },
-          },
-          '& .MuiInputLabel-root': {
-            color: 'black',
-          },
-          '& .MuiInputLabel-root.Mui-focused': {
-            color: 'black',
-          },
-          '& .MuiFormHelperText-root': {
-            color: '#c30000',
-            fontSize: '12px',
-          },
-        }}
+        InputLabelProps={{ shrink: true }}
+        sx={fieldSx(formData.fecha)}
       />
-      <FormControl variant="outlined" fullWidth={false} margin="normal" sx={{
-        '& .MuiOutlinedInput-root': {
-          backgroundColor: formData.medio ? '#b0ffc3' : 'white',
-          '& fieldset': {
-            borderColor: formData.medio ? '#bfffce' : '#777777',
-            color: '#777777',
-          },
-          '&:hover fieldset': {
-            borderColor: formData.medio ? '#bfffce' : '#777777',
-          },
-          '&.Mui-focused fieldset': {
-            borderColor: formData.medio ? '#bfffce' : '#777777',
-          },
-        },
-        '& .MuiInputLabel-root': {
-          color: 'black',
-        },
-        '& .MuiInputLabel-root.Mui-focused': {
-          color: 'black',
-        },
-      }}>
+      <FormControl variant="outlined" fullWidth={false} margin="normal" sx={fieldSx(formData.medio)}>
         <InputLabel>Medio de pago</InputLabel>
         <Select
           value={formData.medio}
           onChange={(e) => setFormData({ ...formData, medio: e.target.value })}
           label="Medio de pago"
           required
-          startAdornment={formData.medio == 'Visa' ? <SiVisa size={25} style={{ marginRight: '5px' }} color='#575757' /> : formData.medio == 'MasterCard' ? <SiMastercard size={25} style={{ marginRight: '5px' }} color='#575757' /> : formData.medio == 'American Express' ? <SiAmericanexpress size={25} style={{ marginRight: '5px' }} color='#575757' /> : formData.medio == 'Efectivo' ? <FaMoneyBill1Wave size={25} style={{ marginRight: '5px' }} color='#575757' /> : formData.medio == 'Transferencia' ? <FaMoneyBillTransfer size={25} style={{ marginRight: '5px' }} color='#575757' /> : null}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: formData.medio ? '#b0ffc3' : 'white',
-              '& fieldset': {
-                borderColor: formData.medio ? '#bfffce' : '#777777',
-                color: '#777777',
-              },
-              '&:hover fieldset': {
-                borderColor: formData.medio ? '#bfffce' : '#777777',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: formData.medio ? '#bfffce' : '#777777',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'black',
-            },
-            '& .MuiInputLabel-root.Mui-focused': {
-              color: 'black',
-            },
-            '& .MuiFormHelperText-root': {
-              color: '#c30000',
-              fontSize: '12px',
-            },
-          }}
+          startAdornment={
+            formData.medio === 'Visa'             ? <SiVisa size={22} style={{ marginRight: 6 }} color='#575757' />
+            : formData.medio === 'MasterCard'     ? <SiMastercard size={22} style={{ marginRight: 6 }} color='#575757' />
+            : formData.medio === 'American Express' ? <SiAmericanexpress size={22} style={{ marginRight: 6 }} color='#575757' />
+            : formData.medio === 'Efectivo'       ? <FaMoneyBill1Wave size={22} style={{ marginRight: 6 }} color='#575757' />
+            : formData.medio === 'Transferencia'  ? <FaMoneyBillTransfer size={22} style={{ marginRight: 6 }} color='#575757' />
+            : null
+          }
         >
-          <MenuItem value="Visa">Visa</MenuItem>
-          <MenuItem value="MasterCard">MasterCard</MenuItem>
-          <MenuItem value="American Express">American Express</MenuItem>
-          <MenuItem value="Efectivo">Efectivo</MenuItem>
-          <MenuItem value="Transferencia">Transferencia</MenuItem>
+          {MEDIOS_DE_PAGO.map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)}
         </Select>
         {showHelperText && !formData.medio && (
-          <FormHelperText style={{ color: '#c30000', fontSize: '12px' }}>Ingrese el medio</FormHelperText>
+          <FormHelperText error>Ingrese el medio</FormHelperText>
         )}
       </FormControl>
-      <FormControl variant="outlined" fullWidth={false} margin="normal" sx={{
-        '& .MuiOutlinedInput-root': {
-          backgroundColor: formData.banco ? '#b0ffc3' : 'white',
-          '& fieldset': {
-            borderColor: formData.banco ? '#bfffce' : '#777777',
-            color: '#777777',
-          },
-          '&:hover fieldset': {
-            borderColor: formData.banco ? '#bfffce' : '#777777',
-          },
-          '&.Mui-focused fieldset': {
-            borderColor: formData.banco ? '#bfffce' : '#777777',
-          },
-        },
-        '& .MuiInputLabel-root': {
-          color: 'black',
-        },
-        '& .MuiInputLabel-root.Mui-focused': {
-          color: 'black',
-        },
-      }}>
+      <FormControl variant="outlined" fullWidth={false} margin="normal" sx={fieldSx(formData.banco)}>
         <InputLabel>Banco</InputLabel>
         <Select
           value={formData.banco}
           onChange={(e) => setFormData({ ...formData, banco: e.target.value })}
           label="Banco"
           required
-          startAdornment={formData.banco != '' ? <CiBank size={25} style={{ marginRight: '5px' }} color='#575757' /> : null}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: formData.banco ? '#b0ffc3' : 'white',
-              '& fieldset': {
-                borderColor: formData.banco ? '#bfffce' : '#777777',
-                color: '#777777',
-              },
-              '&:hover fieldset': {
-                borderColor: formData.banco ? '#bfffce' : '#777777',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: formData.banco ? '#bfffce' : '#777777',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'black',
-            },
-            '& .MuiInputLabel-root.Mui-focused': {
-              color: 'black',
-            },
-            '& .MuiFormHelperText-root': {
-              color: '#c30000',
-              fontSize: '12px',
-            },
-          }}
+          startAdornment={formData.banco ? <CiBank size={22} style={{ marginRight: 6 }} color='#575757' /> : null}
         >
-          <MenuItem value="Santander">Santander</MenuItem>
-          <MenuItem value="Nacion">Nacion</MenuItem>
-          <MenuItem value="Galicia">Galicia</MenuItem>
-          <MenuItem value="BBVA">BBVA</MenuItem>
-          <MenuItem value="Galicia Más">Galicia Más</MenuItem>
-          <MenuItem value="Credicoop">Credicoop</MenuItem>
-          <MenuItem value="Patagonia">Patagonia</MenuItem>
-          <MenuItem value="Supervielle">Supervielle</MenuItem>
-          <MenuItem value="Hipotecario">Hipotecario</MenuItem>
-          <MenuItem value="Citibank">Citibank</MenuItem>
-          <MenuItem value="Itaú">Itaú</MenuItem>
-          <MenuItem value="ICBC">ICBC</MenuItem>
-          <MenuItem value="Banco Provincia">Banco Provincia</MenuItem>
-          <MenuItem value="Banco Ciudad">Banco Ciudad</MenuItem>
-          <MenuItem value="Ninguno">Ninguno</MenuItem>
+          {BANCOS.map(b => <MenuItem key={b} value={b}>{b}</MenuItem>)}
         </Select>
         {showHelperText && !formData.banco && (
-          <FormHelperText style={{ color: '#c30000', fontSize: '12px' }}>Ingrese el banco</FormHelperText>
+          <FormHelperText error>Ingrese el banco</FormHelperText>
         )}
       </FormControl>
     </>
   );
 
-  // Lista de monedas y símbolos
-  const currencies = [
-    { code: 'ARS', symbol: '$', label: 'Peso Argentino' },
-    { code: 'USD', symbol: 'US$', label: 'Dólar Estadounidense' },
-    { code: 'EUR', symbol: '€', label: 'Euro' },
-    { code: 'BRL', symbol: 'R$', label: 'Real Brasileño' },
-    { code: 'CLP', symbol: 'CLP$', label: 'Peso Chileno' },
-    { code: 'UYU', symbol: 'UY$', label: 'Peso Uruguayo' },
-    { code: 'GBP', symbol: '£', label: 'Libra Esterlina' },
-    { code: 'JPY', symbol: '¥', label: 'Yen Japonés' },
-  ];
-
-  // Estado para la moneda seleccionada
   const [selectedCurrency, setSelectedCurrency] = useState(formData.moneda || 'ARS');
 
   // Actualiza la moneda en el formData y el estado local
@@ -523,17 +406,31 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
     setFormData({ ...formData, moneda: e.target.value });
   };
 
-  // Obtiene el símbolo de la moneda seleccionada
-  const getCurrencySymbol = (code) => {
-    const found = currencies.find(c => c.code === code);
-    return found ? found.symbol : '$';
-  };
-
   return (
-    <div className="modal-overlay">
+    <div
+      className="modal-overlay"
+      role="presentation"
+      onClick={(e) => { if (e.target === e.currentTarget) handleCloseWithConfirm(); }}
+    >
       <div
+        ref={dialogRef}
         id="modal-agregar"
         className="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-label={
+          modalType === 'nuevo' ? 'Agregar Nuevo Gasto'
+          : modalType === 'repetitivo' ? 'Agregar Gasto Repetitivo'
+          : modalType === 'fondos' ? 'Administrar Fondos'
+          : modalType === 'vencimiento' ? 'Fecha de Cierre de Tarjeta'
+          : modalType === 'eliminar' ? 'Confirmar Eliminación'
+          : modalType === 'editar' ? 'Editar Registro'
+          : modalType === 'crearEtiqueta' ? 'Crear Grupo'
+          : modalType === 'presupuesto' ? 'Presupuestos'
+          : modalType === 'reporte' ? 'Reporte'
+          : 'Modal'
+        }
+        tabIndex={-1}
         style={{
           height:
             modalType === "vencimiento"
@@ -576,15 +473,31 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
           borderRadius: "20px",
           border: "1px solid rgba(255, 255, 255, 0.25)",
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.15)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
         }}
       >
 
         <div className="eliminar-align">
-          <span id="eliminar" className="close" onClick={() => handleCloseModal()}>
+          <button
+            id="eliminar"
+            className="close"
+            onClick={handleCloseWithConfirm}
+            aria-label="Cerrar modal"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+          >
             <IoArrowBackCircle size={30} />
-          </span>
+          </button>
         </div>
-        <div className="modal-align">
+        <div
+          className="modal-align"
+          style={
+            (modalType === 'presupuesto' || modalType === 'reporte')
+              ? { flex: 1, overflowY: 'auto', justifyContent: 'flex-start', alignItems: 'flex-start', paddingBottom: 16 }
+              : {}
+          }
+        >
           <h2>
             {modalType === 'nuevo' && 'Agregar Nuevo'}
             {modalType === 'repetitivo' && 'Agregar Repetitivo'}
@@ -602,44 +515,24 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                 {(modalType === 'nuevo' || modalType === 'editar') && (
                   <>
                     {formData.medio != 'Efectivo' && formData.medio != 'Transferencia' && !(modalType === 'editar' && formData.isFijo) && (
-                      <FormControl variant="outlined" fullWidth={false} margin="normal" sx={{
-                        '& .MuiOutlinedInput-root': {
-                          backgroundColor: formData.tipo ? '#b0ffc3' : 'white',
-                          '& fieldset': {
-                            borderColor: formData.tipo ? '#bfffce' : '#777777',
-                            color: '#777777',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: formData.tipo ? '#bfffce' : '#777777',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: formData.tipo ? '#bfffce' : '#777777',
-                          },
-                        },
-                        '& .MuiInputLabel-root': {
-                          color: 'black',
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: 'black',
-                        },
-                        '& .MuiFormHelperText-root': {
-                          color: '#c30000',
-                          fontSize: '12px',
-                        },
-                      }}>
+                      <FormControl variant="outlined" fullWidth={false} margin="normal" sx={fieldSx(formData.tipo)}>
                         <InputLabel>Tipo</InputLabel>
                         <Select
                           value={formData.tipo}
                           onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                           label="Tipo"
                           required
-                          startAdornment={formData.tipo == 'debito' ? <BsCreditCard2Front size={25} style={{ marginRight: '5px' }} color='#575757' /> : formData.tipo == 'credito' ? <FaCreditCard size={25} style={{ marginRight: '5px' }} color='#575757' /> : null}
+                          startAdornment={
+                            formData.tipo === 'debito'  ? <BsCreditCard2Front size={22} style={{ marginRight: 6 }} color='#575757' />
+                            : formData.tipo === 'credito' ? <FaCreditCard size={22} style={{ marginRight: 6 }} color='#575757' />
+                            : null
+                          }
                         >
                           <MenuItem value="debito">Débito</MenuItem>
                           <MenuItem value="credito">Crédito</MenuItem>
                         </Select>
                         {showHelperText && !formData.tipo && (
-                          <FormHelperText style={{ color: '#c30000', fontSize: '12px' }}>Ingrese el tipo</FormHelperText>
+                          <FormHelperText error>Ingrese el tipo</FormHelperText>
                         )}
                       </FormControl>
                     )}
@@ -654,32 +547,8 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                         required
                         fullWidth={false}
                         margin="normal"
-                        helperText={showHelperText && !formData.cuotas ? "Inngrese las cuotas" : ""}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            backgroundColor: formData.cuotas ? '#b0ffc3' : 'white',
-                            '& fieldset': {
-                              borderColor: formData.cuotas ? '#bfffce' : '#777777',
-                              color: '#777777',
-                            },
-                            '&:hover fieldset': {
-                              borderColor: formData.cuotas ? '#bfffce' : '#777777',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: formData.cuotas ? '#bfffce' : '#777777',
-                            },
-                          },
-                          '& .MuiInputLabel-root': {
-                            color: 'black',
-                          },
-                          '& .MuiInputLabel-root.Mui-focused': {
-                            color: 'black',
-                          },
-                          '& .MuiFormHelperText-root': {
-                            color: '#c30000',
-                            fontSize: '12px',
-                          },
-                        }}
+                        helperText={showHelperText && !formData.cuotas ? "Ingrese las cuotas" : ""}
+                        sx={fieldSx(formData.cuotas)}
                       />
                     )}
                   </>
@@ -697,31 +566,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                       fullWidth={false}
                       margin="normal"
                       helperText={showHelperText && !formData.cantidad ? "Ingrese las repeticiones en el mes" : ""}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          backgroundColor: formData.cantidad ? '#b0ffc3' : 'white',
-                          '& fieldset': {
-                            borderColor: formData.cantidad ? '#bfffce' : '#777777',
-                            color: '#777777',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: formData.cantidad ? '#bfffce' : '#777777',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: formData.cantidad ? '#bfffce' : '#777777',
-                          },
-                        },
-                        '& .MuiInputLabel-root': {
-                          color: 'black',
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: 'black',
-                        },
-                        '& .MuiFormHelperText-root': {
-                          color: '#c30000',
-                          fontSize: '12px',
-                        },
-                      }}
+                      sx={fieldSx(formData.cantidad)}
                     />
                     <TextField
                       label="Periodo en meses"
@@ -734,59 +579,11 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                       helperText={showHelperText && !formData.cuotas ? "Ingrese la cantidad de meses" : ""}
                       fullWidth={false}
                       margin="normal"
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          backgroundColor: formData.cuotas ? '#b0ffc3' : 'white',
-                          '& fieldset': {
-                            borderColor: formData.cuotas ? '#bfffce' : '#777777',
-                            color: '#777777',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: formData.cuotas ? '#bfffce' : '#777777',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: formData.cuotas ? '#bfffce' : '#777777',
-                          },
-                        },
-                        '& .MuiInputLabel-root': {
-                          color: 'black',
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: 'black',
-                        },
-                        '& .MuiFormHelperText-root': {
-                          color: '#c30000',
-                          fontSize: '12px',
-                        },
-                      }}
+                      sx={fieldSx(formData.cuotas)}
                     />
                   </>
                 )}
-                <FormControl variant="outlined" fullWidth={false} margin="normal" sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: selectedCurrency ? '#b0ffc3' : 'white',
-                    '& fieldset': {
-                      borderColor: selectedCurrency ? '#bfffce' : '#777777',
-                      color: '#777777',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: selectedCurrency ? '#bfffce' : '#777777',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: selectedCurrency ? '#bfffce' : '#777777',
-                    },
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'black',
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: 'black',
-                  },
-                  '& .MuiFormHelperText-root': {
-                    color: '#c30000',
-                    fontSize: '12px',
-                  },
-                }}>
+                <FormControl variant="outlined" fullWidth={false} margin="normal" sx={fieldSx(selectedCurrency)}>
                   <InputLabel id="currency-label">Moneda</InputLabel>
                   <Select
                     labelId="currency-label"
@@ -794,7 +591,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                     onChange={handleCurrencyChange}
                     label="Moneda"
                   >
-                    {currencies.map((c) => (
+                    {MONEDAS.map((c) => (
                       <MenuItem key={c.code} value={c.code}>
                         {c.symbol} - {c.label}
                       </MenuItem>
@@ -815,36 +612,10 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                   helperText={showHelperText && !formData.precio ? "Ingrese el precio" : ""}
                   InputProps={{
                     startAdornment: (
-                      <InputAdornment position="start">
-                        {getCurrencySymbol(selectedCurrency)}
-                      </InputAdornment>
+                      <InputAdornment position="start">{getCurrencySymbol(selectedCurrency)}</InputAdornment>
                     ),
                   }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: formData.precio ? '#b0ffc3' : 'white',
-                      '& fieldset': {
-                        borderColor: formData.precio ? '#bfffce' : '#777777',
-                        color: '#777777',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: formData.precio ? '#bfffce' : '#777777',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: formData.precio ? '#bfffce' : '#777777',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'black',
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: 'black',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#c30000',
-                      fontSize: '12px',
-                    },
-                  }}
+                  sx={fieldSx(formData.precio)}
                 />
               </>
             )}
@@ -862,25 +633,8 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                   fullWidth
                   margin="normal"
                   helperText={showHelperText && !mydata.fondos ? "Ingrese fondos" : ""}
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: mydata.fondos ? '#b0efff' : 'white',
-                      '& fieldset': {
-                        borderColor: '#777777',
-                        color: '#777777',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#555555',
-                      },
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#c30000',
-                      fontSize: '12px',
-                    },
-                  }}
+                  InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
+                  sx={fieldSx(mydata.fondos)}
                 />
                 {!showSumInput && (
                   <Button
@@ -907,25 +661,8 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                       fullWidth
                       margin="normal"
                       helperText={showHelperText && !additionalFunds ? "Ingrese los fondos a sumar" : ""}
-                      InputProps={{
-                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          backgroundColor: additionalFunds ? '#b0ffc3' : 'white',
-                          '& fieldset': {
-                            borderColor: '#777777',
-                            color: '#777777',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: '#555555',
-                          },
-                        },
-                        '& .MuiFormHelperText-root': {
-                          color: '#c30000',
-                          fontSize: '12px',
-                        },
-                      }}
+                      InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
+                      sx={fieldSx(additionalFunds)}
                     />
                     <Button
                       variant="contained"
@@ -962,40 +699,14 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                   label="Fecha de cierre"
                   type="date"
                   variant="outlined"
-                  value={tempCierre || mydata.cierre} // Usar el estado temporal o el valor actual de cierre
-                  onChange={(e) => setTempCierre(e.target.value)} // Actualizar solo el estado temporal
+                  value={tempCierre || mydata.cierre}
+                  onChange={(e) => setTempCierre(e.target.value)}
                   required
                   fullWidth
                   helperText={showHelperText && !tempCierre ? "Ingrese la fecha de cierre" : ""}
                   margin="normal"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: tempCierre && tempCierre < new Date().toISOString().split('T')[0] ? '#ffcccc' : tempCierre ? '#b0ffc3' : 'white',
-                      '& fieldset': {
-                        borderColor: '#777777',
-                        color: '#777777',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#777777',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#777777',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'black',
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: 'black',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#c30000',
-                      fontSize: '12px',
-                    },
-                  }}
+                  InputLabelProps={{ shrink: true }}
+                  sx={fieldSx(tempCierre)}
                 />
               </div>
             )}
@@ -1010,31 +721,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                   fullWidth={false}
                   margin="normal"
                   helperText={showHelperText && !formData.etiqueta ? "Ingrese el nombre de la etiqueta" : ""}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: formData.etiqueta ? '#b0ffc3' : 'white',
-                      '& fieldset': {
-                        borderColor: formData.etiqueta ? '#bfffce' : '#777777',
-                        color: '#777777',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: formData.etiqueta ? '#bfffce' : '#777777',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: formData.etiqueta ? '#bfffce' : '#777777',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'black',
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: 'black',
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#c30000',
-                      fontSize: '12px',
-                    },
-                  }}
+                  sx={fieldSx(formData.etiqueta)}
                 />
                 <h3 style={{ color: '#FFFFFF' }}>Color del Grupo</h3>
                 <CirclePicker
@@ -1107,7 +794,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                       className="presupuesto-card"
                       style={{
                         borderLeft: '6px solid #ffffff',
-                        width: '100%',
+                        flexBasis: '100%',
                         marginBottom: 10,
                         padding: 15
                       }}

@@ -1,16 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
+/* Variables legacy mantenidas para compatibilidad con Modal.jsx y Table.jsx */
 :root {
-  --primary-color: #8C52FF;
-  --secondary-color: #6417ffcb;
-  --tertiary-color: #55f2f798;
-  --quaternary-color: #3b3b3b;
-  --quinary-color: #3ddb57;
-  --senary-color: #55f1f7;
-  --septenary-color: #3d67db;
-  --octonary-color: #3ddb57;
-  --nonary-color: #e773d4;
-  --denary-color: #3ddb57;
+  --primary-color: #6366F1;
+  --secondary-color: #4338CA;
+  --tertiary-color: #EEF2FF;
+  --quaternary-color: #1E293B;
+  --quinary-color: #10B981;
+  --senary-color: #6366F1;
+  --septenary-color: #3B82F6;
+  --octonary-color: #10B981;
+  --nonary-color: #8B5CF6;
+  --denary-color: #10B981;
 }
 
 .buttonsActionsAlign {
@@ -50,7 +49,8 @@ body::-webkit-scrollbar-thumb {
 }
 
 body {
-  background-color: #8C52FF;
+  background-color: var(--color-bg, #F1F5F9);
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
 a {
@@ -61,81 +61,14 @@ a {
   width: 100%;
 }
 
-.navbar {
-  height: 80px;
-  width: 100%;
-  position: fixed;
-  z-index: 100;
-  /* background-color: #6417ffcb; */
-  background: linear-gradient(135deg, rgb(89 1 255 / 72%), rgba(255, 210, 255, 0.25));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-.navbar ul {
-  list-style-type: none;
-  text-decoration: none;
-  display: flex;
-  flex-direction: row;
-  justify-content: right;
-  margin-top: 5px;
-}
-
-.navbar a {
-  color: white;
-  text-decoration: none;
-  font-size: 20px;
-  margin-right: 40px;
-}
-
-.navbar a:hover {
-  color: rgb(255, 255, 255);
-  font-weight: bold;
-  text-decoration: none;
-  transition: 0.2s;
-  cursor: pointer;
-}
-
-.navbar a::before {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 2px;
-  bottom: 0;
-  left: 0;
-  background-color: white;
-  transition: width 0.2s;
-}
-
-.nav-items a:focus,
-.nav-items a:active {
-  outline: none;
-  /* Elimina el contorno predeterminado */
-}
+/* Navbar legacy — reemplazado por src/styles/navbar.css */
 
 #gastos {
-  padding-top: 80px;
+  padding-top: var(--navbar-height, 64px);
 }
 
 .flex-grow {
   flex-grow: 1;
-}
-
-.navbar a:hover::before {
-  width: 100%;
-}
-
-.navbar a span {
-  display: block;
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  border-bottom: 2px solid black;
-}
-
-.navbar a:hover span {
-  display: block;
 }
 
 .nav-items {
@@ -269,6 +202,7 @@ a {
   /* Color dorado futurista */
   background: linear-gradient(90deg, #ffc86a, #ffb63f, #ffd88a);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 
   /* Glow dorado */
@@ -365,7 +299,9 @@ a {
 .presupuesto-container {
   display: flex;
   flex-flow: row wrap;
-  gap: 20px;
+  gap: 16px;
+  width: 100%;
+  padding: 4px 2px;
 }
 
 .presupuesto-card {
@@ -375,6 +311,8 @@ a {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   position: relative;
+  flex: 1 1 260px;
+  min-width: 0;
 }
 
 .presupuesto-card:hover {
@@ -747,12 +685,9 @@ button,
 
 
 .componentContainer {
-  background-image: url("../img/back2.png");
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
+  background-attachment: fixed;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   padding-top: 10px;
 }
 
@@ -1204,19 +1139,16 @@ a {
 
 
 .backProblemas {
-  background-image: url("../img/backVioleta.jpg");
-  background-size: cover;
-  background-repeat: no-repeat;
+  background: linear-gradient(160deg, #1E293B 0%, #312E81 55%, #4C1D95 100%);
+  background-attachment: fixed;
   width: 100%;
   height: 100%;
 }
 
 .backPreguntas {
-  background-image: url("../img/faq.png");
-  background-size: cover;
-  background-repeat: no-repeat;
+  background: linear-gradient(160deg, #F8FAFC 0%, #EEF2FF 45%, #E0E7FF 100%);
+  background-attachment: fixed;
   width: 100%;
-  height: 100%;
   min-height: 100vh;
 }
 
@@ -1326,6 +1258,7 @@ a {
 #mesBolucompras .highlight {
   background: linear-gradient(90deg, #5500df 0%, #792cff 40%, #0094d3 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 
   text-shadow:
@@ -1359,6 +1292,7 @@ a {
 
   background: linear-gradient(90deg, #6ee6ff, #b288ff);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 
   text-shadow:
@@ -2236,16 +2170,25 @@ input:checked+.slider:before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: transparent;
-  backdrop-filter: blur(5px);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 16px;
+  overflow-y: auto;
 }
 
 .modal-content {
-  animation: slideInUp 0.3s ease-out;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  margin: auto !important;
+  animation: modalFadeIn 0.2s ease-out;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
 }
 
 .dashboard {
@@ -2567,4 +2510,430 @@ input:checked+.slider:before {
     max-width: 100px;
   }
 
-} */
+/* ================================================================
+   MODERNIZATION OVERRIDES
+   Aplica encima de los estilos legacy. No modificar lo anterior.
+   ================================================================ */
+
+/* Transición selectiva: evita animar layout props (costoso) */
+*, *::before, *::after {
+  transition-property: background-color, color, border-color, box-shadow, opacity, transform;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+/* Deshabilitar transición donde no aporta valor */
+input, select, textarea { transition: border-color 0.15s, box-shadow 0.15s; }
+
+/* Links con el color del design system */
+a { color: #6366F1; }
+
+/* ---- TÍTULO PRINCIPAL ---- */
+#mesBolucompras {
+  background: #fff !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 6px 20px rgba(99,102,241,0.09) !important;
+  color: #1E293B !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 18px 36px !important;
+  font-size: 26px !important;
+  margin: 16px auto !important;
+  max-width: 520px;
+}
+#mesBolucompras:hover {
+  box-shadow: 0 4px 22px rgba(99,102,241,0.15) !important;
+  transform: translateY(-1px) !important;
+}
+#mesBolucompras .highlight {
+  background: linear-gradient(90deg, #6366F1, #8B5CF6) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
+}
+.mes-actual {
+  background: linear-gradient(90deg, #6366F1, #3B82F6) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
+  font-size: 28px !important;
+}
+.mes-actual:hover { filter: none !important; }
+.highlight:hover  { filter: none !important; text-shadow: none !important; }
+
+/* ---- TABLA: header limpio, alto contraste ---- */
+.demo {
+  font-family: 'Inter','Segoe UI',system-ui,sans-serif !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  color: #1E293B !important;
+}
+.demo thead {
+  background: #F1F5F9 !important;
+}
+.demo th {
+  color: #475569 !important;
+  font-family: 'Inter','Segoe UI',system-ui,sans-serif !important;
+  border-bottom: 2px solid #E2E8F0 !important;
+  letter-spacing: 0.4px !important;
+}
+.demo td {
+  background: #fff !important;
+  color: #1E293B !important;
+  font-family: 'Inter','Segoe UI',system-ui,sans-serif !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+}
+.demo tr:nth-child(even) td { background: #FAFBFC !important; }
+.demo tr:hover td {
+  background: #EEF2FF !important;
+  transform: none !important;
+  cursor: default !important;
+}
+
+/* ---- TABLA CONTAINER ---- */
+.tabla {
+  height: auto !important;
+  max-height: 60vh !important;
+  background: #fff !important;
+  border-radius: 16px !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+  padding: 0 !important;
+  margin: 12px 20px !important;
+  overflow: hidden !important;
+  overflow-y: auto !important;
+}
+.tabla::-webkit-scrollbar       { width: 5px; }
+.tabla::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+.tabla::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ---- TEXTOS QUE ERAN BLANCOS (ahora fondo claro) ---- */
+/* fondosAlign se mueve al navbar chip — ocultamos el original */
+.fondosAlign {
+  display: none !important;
+}
+.fondosTitulo {
+  color: #64748B !important;
+  text-shadow: none !important;
+}
+.fondosMonto {
+  background: linear-gradient(90deg, #6366F1, #8B5CF6) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
+}
+.verticalBtnSwitch-text          { color: #64748B !important; filter: none !important; }
+.verticalBtnSwitch-text.iluminate{ color: #6366F1 !important; font-weight: 700; }
+.buttonSwitch-text               { color: #64748B !important; }
+.button-text                     { color: #64748B !important; font-size: 10px; }
+.iluminate { color: #6366F1 !important; filter: none !important; font-weight: 700; }
+
+/* ---- DROPDOWN BOTÓN PRINCIPAL (+) ---- */
+.dropbtn {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.35) !important;
+  border: none !important;
+  transition: transform 0.15s, box-shadow 0.15s !important;
+}
+.dropbtn:hover {
+  background: linear-gradient(135deg, #4338CA, #7C3AED) !important;
+  box-shadow: 0 6px 20px rgba(99,102,241,0.45) !important;
+  transform: translateY(-2px) scale(1.05) !important;
+}
+.dropdown:hover .dropbtn { transform: none !important; }
+
+/* Sub-botones del dropdown */
+#agregar-btn {
+  background: linear-gradient(135deg,#10B981,#059669) !important;
+  box-shadow: 0 4px 12px rgba(16,185,129,0.35) !important;
+  border: none !important;
+}
+#agregar-btn:hover    { background: linear-gradient(135deg,#059669,#047857) !important; transform: translateY(-2px) !important; }
+#agregarFijo-btn      { background: linear-gradient(135deg,#F59E0B,#D97706) !important; box-shadow: 0 4px 12px rgba(245,158,11,0.35) !important; border: none !important; }
+#agregarFijo-btn:hover{ background: linear-gradient(135deg,#D97706,#B45309) !important; transform: translateY(-2px) !important; }
+#vencimientoTarjeta-btn      { background: linear-gradient(135deg,#EC4899,#DB2777) !important; box-shadow: 0 4px 12px rgba(236,72,153,0.35) !important; border: none !important; }
+#vencimientoTarjeta-btn:hover{ background: linear-gradient(135deg,#DB2777,#BE185D) !important; transform: translateY(-2px) !important; }
+#agregarFondos-btn      { background: linear-gradient(135deg,#3B82F6,#2563EB) !important; box-shadow: 0 4px 12px rgba(59,130,246,0.35) !important; border: none !important; }
+#agregarFondos-btn:hover{ background: linear-gradient(135deg,#2563EB,#1D4ED8) !important; transform: translateY(-2px) !important; }
+
+/* ---- BOTÓN FILTRO ---- */
+.dropbtnFilter {
+  background: linear-gradient(135deg,#6366F1,#4338CA) !important;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.35) !important;
+  border: none !important;
+}
+.dropbtnFilter:hover { background: linear-gradient(135deg,#4338CA,#3730A3) !important; transform: scale(1.08) !important; }
+
+/* ---- PANEL DE FILTROS ---- */
+.filter-container {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  padding: 14px 18px !important;
+}
+.glass-filter-input {
+  background: #F8FAFC !important;
+  border: 1.5px solid #E2E8F0 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+.glass-filter-input:hover {
+  border-color: #6366F1 !important;
+  transform: none !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1) !important;
+}
+
+/* ---- BOTONES REPORTE / PRESUPUESTO ---- */
+#report-btn {
+  background: linear-gradient(135deg,#6366F1,#8B5CF6) !important;
+  box-shadow: 0 4px 14px rgba(99,102,241,0.30) !important;
+  border: 1px solid rgba(99,102,241,0.15) !important;
+}
+#report-btn:hover { background: linear-gradient(135deg,#4338CA,#7C3AED) !important; box-shadow: 0 6px 20px rgba(99,102,241,0.45) !important; transform: translateY(-2px) !important; }
+#presupuesto-btn {
+  background: linear-gradient(135deg,#3B82F6,#6366F1) !important;
+  box-shadow: 0 4px 14px rgba(59,130,246,0.30) !important;
+  border: 1px solid rgba(59,130,246,0.15) !important;
+}
+#presupuesto-btn:hover { background: linear-gradient(135deg,#2563EB,#4338CA) !important; box-shadow: 0 6px 20px rgba(59,130,246,0.45) !important; transform: translateY(-2px) !important; }
+#export-btn {
+  background: linear-gradient(135deg,#10B981,#059669) !important;
+  box-shadow: 0 4px 14px rgba(16,185,129,0.30) !important;
+  border: 1px solid rgba(16,185,129,0.15) !important;
+}
+
+/* ---- SWITCH ---- */
+.slider {
+  background: linear-gradient(135deg,#CBD5E1,#E2E8F0) !important;
+  border: 1px solid #CBD5E1 !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06) !important;
+  backdrop-filter: none !important;
+}
+input:checked + .slider {
+  background: linear-gradient(135deg,#6366F1,#8B5CF6) !important;
+  border-color: #6366F1 !important;
+}
+
+/* ---- CALCULADORA FAB ---- */
+.calculadora-align {
+  background: linear-gradient(135deg,#6366F1,#8B5CF6) !important;
+  border: 2px solid rgba(255,255,255,0.5) !important;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.45) !important;
+  animation: none !important;
+}
+.calculadora-align:hover {
+  background: linear-gradient(135deg,#4338CA,#7C3AED) !important;
+  color: #fff !important;
+  border: 2px solid rgba(255,255,255,0.5) !important;
+}
+
+/* ---- QUITAR SOMBRA GLOBAL EN button:hover ---- */
+button:hover { box-shadow: none; }
+
+/* ---- MODALES: anular position:fixed legacy para que el overlay flex los centre ---- */
+#modal-agregar,
+#modal-agregarFijo,
+#modal-editar,
+#modal-eliminar,
+#modal-vencimiento,
+#modalAgregarFondos,
+#modalEnviado,
+#modal-alertaVencimiento,
+#datosIncompletos {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  margin: 0 !important;
+}
+
+/* ---- ANIMACIÓN DE ENTRADA DE MODAL ---- */
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* ---- PRESUPUESTO CARD: usa variables de tema ---- */
+.presupuesto-card {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+.presupuesto-card h3 { color: inherit !important; }
+.presupuesto-card p  { color: var(--color-text-secondary) !important; }
+.barra { background: var(--color-border) !important; }
+
+/* ================================================================
+   MUI DARK MODE — overrides globales para componentes MUI
+   Activa solo cuando data-theme="dark" en <html>
+   ================================================================ */
+
+/* ---- Modal card en dark mode: anular fondo pastel brillante ---- */
+[data-theme="dark"] #modal-agregar.modal-content {
+  background: linear-gradient(135deg,
+    rgba(30, 27, 75, 0.95),
+    rgba(15, 23, 42, 0.98)
+  ) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+[data-theme="dark"] #modal-agregar.modal-content h2 {
+  color: var(--color-text-primary) !important;
+}
+
+/* Paper / Menú desplegable */
+[data-theme="dark"] .MuiPaper-root,
+[data-theme="dark"] .MuiMenu-paper,
+[data-theme="dark"] .MuiPopover-paper,
+[data-theme="dark"] .MuiAutocomplete-paper {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4) !important;
+}
+
+/* Items del menú */
+[data-theme="dark"] .MuiMenuItem-root {
+  color: var(--color-text-primary) !important;
+}
+[data-theme="dark"] .MuiMenuItem-root:hover,
+[data-theme="dark"] .MuiMenuItem-root.Mui-selected {
+  background-color: var(--color-surface-hover) !important;
+}
+[data-theme="dark"] .MuiMenuItem-root.Mui-selected:hover {
+  background-color: var(--color-primary-light) !important;
+}
+
+/* Input base (texto escrito) */
+[data-theme="dark"] .MuiInputBase-input,
+[data-theme="dark"] .MuiSelect-select {
+  color: var(--color-text-primary) !important;
+}
+
+/* Ícono flecha del Select */
+[data-theme="dark"] .MuiSelect-icon {
+  color: var(--color-text-muted) !important;
+}
+
+/* Adornos ($ al inicio del precio) */
+[data-theme="dark"] .MuiInputAdornment-root .MuiTypography-root,
+[data-theme="dark"] .MuiInputAdornment-root svg {
+  color: var(--color-text-muted) !important;
+}
+
+/* Botones MUI en dark mode */
+[data-theme="dark"] .MuiButton-contained {
+  background-color: var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+}
+[data-theme="dark"] .MuiButton-containedError {
+  background-color: var(--color-error) !important;
+}
+
+/* Scroll del Paper del menú */
+[data-theme="dark"] .MuiMenu-list {
+  padding: 4px 0;
+}
+
+/* Divider */
+[data-theme="dark"] .MuiDivider-root {
+  border-color: var(--color-border) !important;
+}
+
+/* ---- Tabla demo en dark mode ---- */
+[data-theme="dark"] .demo {
+  background: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+}
+[data-theme="dark"] .demo thead {
+  background: var(--color-bg-secondary) !important;
+}
+[data-theme="dark"] .demo th {
+  color: var(--color-text-secondary) !important;
+  border-bottom-color: var(--color-border) !important;
+}
+[data-theme="dark"] .demo td {
+  background: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  border-bottom-color: var(--color-border) !important;
+}
+[data-theme="dark"] .demo tr:nth-child(even) td {
+  background: var(--color-bg-secondary) !important;
+}
+[data-theme="dark"] .demo tr:hover td {
+  background: var(--color-surface-hover) !important;
+}
+
+/* ---- Tabla container en dark mode ---- */
+[data-theme="dark"] .tabla {
+  background: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* ---- Título mes en dark mode ---- */
+[data-theme="dark"] #mesBolucompras {
+  background: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* ---- Filtros en dark mode ---- */
+[data-theme="dark"] .glass-filter-input {
+  background: var(--color-bg-secondary) !important;
+  border-color: var(--color-border) !important;
+}
+[data-theme="dark"] .glass-filter-input:hover {
+  border-color: var(--color-primary) !important;
+}
+
+/* ---- background-clip: compatibilidad estándar ---- */
+#mesBolucompras .highlight,
+.mes-actual,
+.fondosMonto {
+  background-clip: text;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 1024px) {
+  .reportesAlign  { right: 16px !important; }
+  .presupuestoAlign { right: 16px !important; }
+  .demo th, .demo td { font-size: 12px !important; padding: 8px 10px !important; }
+}
+
+@media (max-width: 768px) {
+  #mesBolucompras { font-size: 18px !important; padding: 14px 20px !important; margin: 10px !important; }
+  .mes-actual     { font-size: 20px !important; }
+
+  .fondosAlign    { margin-top: 8px !important; margin-left: 8px !important; margin-right: 0 !important; }
+  .fondosTitulo   { font-size: 14px !important; }
+  .fondosMonto    { font-size: 16px !important; }
+
+  .reportesAlign  { right: 8px !important; top: 195px !important; }
+  .presupuestoAlign { right: 8px !important; top: 248px !important; }
+  #report-btn, #presupuesto-btn { width: 150px !important; height: 38px !important; font-size: 12px !important; }
+
+  .tabla  { margin: 8px !important; max-height: 52vh !important; }
+  .demo th, .demo td { font-size: 11px !important; padding: 7px 8px !important; }
+
+  .dropbtn, .dropbtnFilter { width: 42px !important; height: 42px !important; margin: 10px !important; }
+
+  .verticalBtnSwitch-text { margin-left: 12px !important; margin-right: 12px !important; font-size: 22px !important; }
+  .switch-align { margin-top: 10px !important; }
+
+  .filter-container { width: 300px !important; }
+}
+
+@media (max-width: 480px) {
+  .fondosAlign    { position: static !important; justify-content: center !important; margin: 4px 0 0 !important; }
+  .reportesAlign  { position: static !important; display: flex !important; justify-content: center !important; margin: 6px 0 2px !important; }
+  .presupuestoAlign { position: static !important; display: flex !important; justify-content: center !important; margin: 0 0 6px !important; }
+  #report-btn, #presupuesto-btn { width: 175px !important; }
+  .tabla { margin: 6px !important; }
+  .filter-container { width: 260px !important; }
+}

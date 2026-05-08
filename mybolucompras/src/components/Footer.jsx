@@ -1,5 +1,5 @@
 import React from 'react';
-import '../App.css';
+import '../styles/dashboard.css';
 
 function Footer({ totalGastado, tarjetaUsada, bancoUsado }) {
   const formatNumber = (number) => {
@@ -7,46 +7,51 @@ function Footer({ totalGastado, tarjetaUsada, bancoUsado }) {
     return num.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  const renderTotalesPorMoneda = () => {
-    if (
-      totalGastado &&
-      typeof totalGastado === 'object' &&
-      !Array.isArray(totalGastado)
-    ) {
+  const renderTotales = () => {
+    if (totalGastado && typeof totalGastado === 'object' && !Array.isArray(totalGastado)) {
       return Object.entries(totalGastado).map(([moneda, total]) => (
-        <p key={moneda}>
+        <span key={moneda} className="footer-stat-value primary">
           {moneda}: ${formatNumber(total)}
-        </p>
+        </span>
       ));
     }
-
-    return <p>${formatNumber(totalGastado)}</p>;
+    return <span className="footer-stat-value primary">${formatNumber(totalGastado)}</span>;
   };
 
-
   return (
-    <div className="footer-align">
-      <div className="data-container">
-        <div className="totales">
-          <h2 id="totalGastado" >Total gastado: <span className='totalGastadoPrecio'>{renderTotalesPorMoneda()}</span></h2>
-          <h2 id="tarjetaUsada">Medio o tarjeta más usado/a: <span style={{ color: '#7BB9FF' }}>{tarjetaUsada}</span></h2>
-          <h2 id="bancoUsado">Banco más usado: <span style={{ color: '#FFB63F' }}>{bancoUsado}</span></h2>
+    <div className="footer-section">
+      <div className="footer-stats">
+        <div className="footer-stat">
+          <span className="footer-stat-label">Total gastado</span>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>{renderTotales()}</div>
+        </div>
+
+        <div className="footer-stat">
+          <span className="footer-stat-label">Medio más usado</span>
+          <span className="footer-stat-value warning">{tarjetaUsada || 'N/A'}</span>
+        </div>
+
+        <div className="footer-stat">
+          <span className="footer-stat-label">Banco más usado</span>
+          <span className="footer-stat-value success">{bancoUsado || 'N/A'}</span>
+        </div>
+
+        <div className="footer-stat">
+          <span className="footer-stat-label">Atajo</span>
+          <span className="footer-stat-value" style={{ fontSize: 12, opacity: 0.75 }}>
+            <kbd style={{ fontFamily: 'inherit', background: 'rgba(0,0,0,0.08)', borderRadius: 4, padding: '1px 5px' }}>Esc</kbd> cierra ventanas
+          </span>
+        </div>
+
+        <div className="footer-credit">
+          Powered by{' '}
+          <a href="https://chizzi01.github.io/Cv-React/" target="_blank" rel="noreferrer">
+            Agustin Chizzini Melo
+          </a>
         </div>
       </div>
-      <footer id="contacto">
-        <div id="footerSiro">
-          <div className="contentFooterSiro">
-            <ul className="list-textSiro">
-              <li>Powered by:</li>
-              <a href="https://chizzi01.github.io/Cv-React/" target="_blank" rel="Agustin Chizzini Melo">
-                Agustin Chizzini Melo
-              </a>
-            </ul>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
 
-export default Footer;
+export default React.memo(Footer);
