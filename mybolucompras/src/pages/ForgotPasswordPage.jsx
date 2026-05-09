@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../context/ThemeContext';
 import '../styles/auth.css';
 
 function mapResetError(message) {
@@ -16,6 +17,7 @@ function mapResetError(message) {
 }
 
 export default function ForgotPasswordPage() {
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -46,7 +48,7 @@ export default function ForgotPasswordPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src="./img/icon-bgremove.png" alt="Bolucompras" className="auth-logo-img" />
+          <img src={theme === 'light' ? "./img/icon-light.png" : "./img/icon-bgremove.png"} alt="Bolucompras" className="auth-logo-img" />
           <h1 className="auth-logo-title">Bolucompras</h1>
         </div>
 

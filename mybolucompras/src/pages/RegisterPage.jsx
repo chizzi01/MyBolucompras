@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
 import '../styles/auth.css';
 import '../styles/configuracion.css';
@@ -49,6 +50,7 @@ function mapAuthError(message) {
 }
 
 export default function RegisterPage() {
+  const { theme } = useTheme();
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ nombre: '', email: '', password: '', confirm: '' });
@@ -144,7 +146,7 @@ export default function RegisterPage() {
       <div className="auth-page" style={{ alignItems: 'flex-start', paddingTop: 40 }}>
         <div className="auth-card" style={{ maxWidth: 580 }}>
           <div className="auth-logo">
-            <img src="./img/icon-bgremove.png" alt="Bolucompras" className="auth-logo-img" />
+            <img src={theme === 'light' ? "./img/icon-light.png" : "./img/icon-bgremove.png"} alt="Bolucompras" className="auth-logo-img" />
             <h1 className="auth-logo-title">Bolucompras</h1>
           </div>
 

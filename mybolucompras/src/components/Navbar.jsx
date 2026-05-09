@@ -42,7 +42,7 @@ function Header({ totalGastado, onPresupuestoClick }) {
     <header>
       <nav className="navbar">
         <Link to="/" className="navbar-brand">
-          <img className="navbar-logo" src="./img/icon-bgremove.png" alt="Logo" />
+          <img className="navbar-logo" src={theme === 'light' ? "./img/icon-light.png" : "./img/icon-bgremove.png"} alt="Logo" />
           <span className="navbar-name">
             Bolu<span className="navbar-name-accent">compras</span>
           </span>

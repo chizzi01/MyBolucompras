@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { DEMO_CREDENTIALS } from '../lib/demoMode';
 import '../styles/auth.css';
 
@@ -35,6 +36,7 @@ function mapAuthError(message) {
 }
 
 export default function LoginPage() {
+  const { theme } = useTheme();
   const { signIn, demo } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
@@ -78,7 +80,7 @@ export default function LoginPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src="./img/icon-bgremove.png" alt="MyBolucompras" className="auth-logo-img" />
+          <img src={theme === 'light' ? "./img/icon-light.png" : "./img/icon-bgremove.png"} alt="MyBolucompras" className="auth-logo-img" />
           <h1 className="auth-logo-title">MyBolucompras</h1>
         </div>
 
