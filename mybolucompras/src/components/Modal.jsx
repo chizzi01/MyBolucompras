@@ -232,7 +232,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
       return formData.objeto && formData.fecha && formData.medio && formData.precio;
     }
     if (modalType === 'fondos') {
-      return mydata.fondos;
+      return showSumInput ? additionalFunds : mydata.fondos !== '' && mydata.fondos !== null && mydata.fondos !== undefined;
     }
     if (modalType === 'vencimiento') {
       return tempCierre;
@@ -283,7 +283,12 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
       } else if (modalType === 'editar') {
         handleEdit();
       } else if (modalType === 'fondos') {
-        handleAgregarFondos({ target: { value: mydata.fondos } });
+        if (showSumInput) {
+          const newFunds = parseFloat(mydata.fondos || 0) + parseFloat(additionalFunds);
+          handleAgregarFondos({ target: { value: newFunds } });
+        } else {
+          handleAgregarFondos({ target: { value: mydata.fondos } });
+        }
       } else if (modalType === 'vencimiento') {
         handleChangeCierre({ target: { value: tempCierre } });
       } else if (modalType === 'crearEtiqueta') {
@@ -425,7 +430,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
             modalType === "vencimiento"
               ? "300px"
               : modalType === "fondos"
-                ? "250px"
+                ? "420px"
                 : modalType === "eliminar"
                   ? "300px"
                   : modalType === "reporte"
@@ -490,7 +495,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
           <h2>
             {modalType === 'nuevo' && 'Agregar Nuevo'}
             {modalType === 'repetitivo' && 'Agregar Repetitivo'}
-            {modalType === 'fondos' && 'Agregar Fondos'}
+            {modalType === 'fondos' && 'Fondos'}
             {modalType === 'vencimiento' && 'Cierre de Tarjeta'}
             {modalType === 'eliminar' && 'Confirmar Eliminación'}
             {modalType === 'editar' && 'Editar Registro'}
@@ -610,73 +615,107 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
             )}
             {modalType === 'fondos' && (
               <>
-                <TextField
-                  label="Fondos actuales"
-                  type="number"
-                  step="0.01"
-                  variant="outlined"
-                  value={mydata.fondos}
-                  onChange={(e) => setMyData({ ...mydata, fondos: e.target.value })}
-                  min="0"
-                  required
-                  fullWidth
-                  margin="normal"
-                  helperText={showHelperText && !mydata.fondos ? "Ingrese fondos" : ""}
-                  InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
-                  sx={fieldSx(mydata.fondos)}
-                />
-                {!showSumInput && (
+                {/* Saldo actual */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(255,255,255,0.35)',
+                  borderRadius: 14,
+                  padding: '10px 20px',
+                  marginBottom: 14,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+                }}>
+                  <span style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 2 }}>
+                    Saldo actual
+                  </span>
+                  <span style={{ fontSize: 26, fontWeight: 800, color: parseFloat(mydata.fondos) < 0 ? '#c0392b' : 'rgba(0,0,0,0.72)' }}>
+                    {getCurrencySymbol('ARS')}{parseFloat(mydata.fondos || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+
+                {/* Toggle modo */}
+                <div style={{ display: 'flex', gap: 8, width: '100%', marginBottom: 4 }}>
                   <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => setShowSumInput(!showSumInput)}
+                    variant={!showSumInput ? 'contained' : 'outlined'}
+                    onClick={() => setShowSumInput(false)}
+                    fullWidth
+                    size="small"
+                    sx={{ borderRadius: 8, textTransform: 'none', fontWeight: 600, fontSize: 13 }}
+                  >
+                    Establecer total
+                  </Button>
+                  <Button
+                    variant={showSumInput ? 'contained' : 'outlined'}
+                    onClick={() => setShowSumInput(true)}
+                    fullWidth
+                    size="small"
+                    sx={{ borderRadius: 8, textTransform: 'none', fontWeight: 600, fontSize: 13 }}
+                  >
+                    Sumar monto
+                  </Button>
+                </div>
+
+                {!showSumInput ? (
+                  <TextField
+                    label="Nuevo saldo"
+                    type="number"
+                    step="0.01"
+                    variant="outlined"
+                    value={mydata.fondos}
+                    onChange={(e) => setMyData({ ...mydata, fondos: e.target.value })}
+                    min="0"
+                    required
                     fullWidth
                     margin="normal"
-                  >
-                    Sumar fondos
-                  </Button>
-                )}
-                {showSumInput && (
+                    helperText={showHelperText && (mydata.fondos === '' || mydata.fondos === null || mydata.fondos === undefined) ? "Ingrese el nuevo saldo" : "Reemplaza el saldo actual con este valor"}
+                    InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
+                    sx={fieldSx(mydata.fondos)}
+                    autoFocus
+                  />
+                ) : (
                   <>
                     <TextField
-                      label="Agregar Fondos"
+                      label="Monto a sumar"
                       type="number"
                       step="0.01"
                       variant="outlined"
                       value={additionalFunds}
                       onChange={(e) => setAdditionalFunds(e.target.value)}
-                      min="1"
+                      min="0"
                       required
                       fullWidth
                       margin="normal"
-                      helperText={showHelperText && !additionalFunds ? "Ingrese los fondos a sumar" : ""}
-                      InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
+                      helperText={showHelperText && !additionalFunds ? "Ingrese el monto a sumar" : ""}
+                      InputProps={{ startAdornment: <InputAdornment position="start">+$</InputAdornment> }}
                       sx={fieldSx(additionalFunds)}
+                      autoFocus
                     />
-                    <Button
-                      variant="contained"
-                      onClick={() => setShowSumInput(false)}
-                      fullWidth
-                      margin="normal"
-                      sx={{
-                        backgroundColor: 'grey',
-                      }}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="success"
-                      onClick={handleSumFunds}
-                      fullWidth
-                      margin="normal"
-                    >
-                      Confirmar Suma
-                    </Button>
+                    {additionalFunds !== '' && !isNaN(parseFloat(additionalFunds)) && (
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: 6,
+                        backgroundColor: 'rgba(255,255,255,0.4)',
+                        borderRadius: 10,
+                        padding: '7px 14px',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: 'rgba(0,0,0,0.65)',
+                      }}>
+                        <span>{getCurrencySymbol('ARS')}{parseFloat(mydata.fondos || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span style={{ color: '#27ae60' }}>+</span>
+                        <span style={{ color: '#27ae60' }}>{getCurrencySymbol('ARS')}{parseFloat(additionalFunds).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span>=</span>
+                        <strong style={{ color: '#155a2c', fontSize: 16 }}>
+                          {getCurrencySymbol('ARS')}{(parseFloat(mydata.fondos || 0) + parseFloat(additionalFunds)).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </strong>
+                      </div>
+                    )}
                   </>
                 )}
               </>
-
             )}
             {modalType === 'vencimiento' && (
               <div className="modal-align">
@@ -1037,7 +1076,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
 
 
           </form>
-          {modalType !== 'eliminar' && modalType !== 'reporte' && modalType !== 'presupuesto' && modalType !== 'eliminarEtiqueta' && !showSumInput && (
+          {modalType !== 'eliminar' && modalType !== 'reporte' && modalType !== 'presupuesto' && modalType !== 'eliminarEtiqueta' && (
             <div className="alignBottom">
               <Button
                 variant="contained"
