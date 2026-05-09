@@ -30,8 +30,10 @@ jobs:
 
       - name: Build frontend (Vite)
         working-directory: mybolucompras
-        run: npm run build:ui || npx vite build
-        # Si no tienes "build:ui", este comando usa npx vite build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npx vite build
 
       - name: Build & Publish (electron-builder)
         working-directory: mybolucompras
