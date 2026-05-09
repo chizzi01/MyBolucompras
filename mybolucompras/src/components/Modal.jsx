@@ -487,7 +487,9 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
         <div
           className="modal-align"
           style={
-            (modalType === 'presupuesto' || modalType === 'reporte')
+            modalType === 'reporte'
+              ? { flex: 1, overflowY: 'auto', justifyContent: 'flex-start', alignItems: 'center', paddingBottom: 16 }
+              : modalType === 'presupuesto'
               ? { flex: 1, overflowY: 'auto', justifyContent: 'flex-start', alignItems: 'flex-start', paddingBottom: 16 }
               : {}
           }

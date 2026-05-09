@@ -9,7 +9,7 @@ import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import '../styles/navbar.css';
 
-function Header({ totalGastado, onPresupuestoClick }) {
+function Header({ totalGastado, onPresupuestoClick, onFondosClick }) {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const { mydata } = useData();
@@ -118,7 +118,7 @@ function Header({ totalGastado, onPresupuestoClick }) {
           );
         })()}
         {mydata?.fondos != null && (
-          <div className="navbar-fondos-chip">
+          <button className="navbar-fondos-chip" onClick={onFondosClick}>
             <FaWallet size={13} />
             <span className="navbar-fondos-label">Fondos</span>
             <span
@@ -132,7 +132,7 @@ function Header({ totalGastado, onPresupuestoClick }) {
               ${(Number(mydata.fondos) - parseFloat(totalGastado?.ARS || 0))
                 .toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
-          </div>
+          </button>
         )}
       </div>
     </header>

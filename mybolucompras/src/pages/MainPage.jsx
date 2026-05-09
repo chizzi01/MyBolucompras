@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { configuracionService } from '../services/configuracionService';
 import { useFilters } from '../hooks/useFilters';
@@ -174,11 +174,19 @@ function MainPage() {
     setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '', moneda: mydata?.monedaPreferida || 'ARS' });
   }, [mydata?.monedaPreferida]);
 
+  useEffect(() => {
+    const cierreVencido = !mydata.cierre || mydata.cierre < new Date().toISOString().split('T')[0];
+    if (!loading && cierreVencido) {
+      setModalType('vencimiento');
+      setModalVisible(true);
+    }
+  }, [loading, mydata.cierre]);
+
   if (loading) return <PageSkeleton />;
 
   return (
     <div>
-      <Header totalGastado={totalGastado} onPresupuestoClick={() => openModal('presupuesto')} />
+      <Header totalGastado={totalGastado} onPresupuestoClick={() => openModal('presupuesto')} onFondosClick={() => openModal('fondos')} />
       <div className="main-content">
         <Table
           data={filteredData}
