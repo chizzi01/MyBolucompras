@@ -30,7 +30,11 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      setUser(prev => {
+        const next = session?.user ?? null;
+        // Si es el mismo usuario (token refresh), mantener la misma referencia
+        return prev?.id === next?.id ? prev : next;
+      });
     });
 
     return () => subscription.unsubscribe();

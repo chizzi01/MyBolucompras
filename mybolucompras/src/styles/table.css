@@ -295,20 +295,54 @@ table.modern-table {
   padding: 0 var(--space-6) var(--space-8);
 }
 
-.skeleton-row {
-  height: 44px;
-  margin-bottom: 8px;
-  border-radius: var(--radius-md);
+/* Base shimmer */
+.sk {
+  border-radius: var(--radius-sm);
   background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-to) 50%, var(--skeleton-from) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s infinite;
 }
 
-.skeleton-row:first-child { width: 100%; }
-.skeleton-row:nth-child(2) { width: 92%; }
-.skeleton-row:nth-child(3) { width: 97%; }
-.skeleton-row:nth-child(4) { width: 88%; }
-.skeleton-row:nth-child(5) { width: 95%; }
+/* Header row: título + botones */
+.sk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) 0 var(--space-6);
+}
+.sk-title {
+  height: 22px;
+  width: 280px;
+}
+.sk-header-btns {
+  display: flex;
+  gap: var(--space-3);
+}
+.sk-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
+/* Celdas de la tabla skeleton */
+.sk-th {
+  height: 13px;
+  margin: 2px auto;
+}
+.sk-td {
+  height: 15px;
+  margin: 3px auto;
+}
+
+/* Footer skeleton */
+.sk-footer-label {
+  height: 10px;
+  width: 60px;
+  margin-bottom: 5px;
+}
+.sk-footer-value {
+  height: 16px;
+}
 
 @keyframes skeleton-shimmer {
   0%   { background-position: 200% 0; }

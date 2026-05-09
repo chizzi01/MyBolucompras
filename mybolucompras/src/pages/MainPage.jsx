@@ -9,6 +9,7 @@ import Header from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useToast } from '../components/Toast';
 import { FaCalculator } from "react-icons/fa6";
+import PageSkeleton from '../components/PageSkeleton';
 
 function MainPage() {
   const addToast = useToast();
@@ -171,20 +172,7 @@ function MainPage() {
     setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '' });
   }, []);
 
-  if (loading) {
-    return (
-      <div>
-        <Header />
-        <div className="main-content">
-          <div className="table-skeleton">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="skeleton-row" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <PageSkeleton />;
 
   return (
     <div>

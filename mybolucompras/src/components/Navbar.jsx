@@ -93,33 +93,43 @@ function Header({ totalGastado, onPresupuestoClick }) {
         </div>
       </nav>
 
-      {mydata?.fondos != null && (
-        <div className="navbar-fondos-chip">
-          <FaWallet size={13} />
-          <span className="navbar-fondos-label">Fondos</span>
-          <span className="navbar-fondos-value">
-            ${Number(mydata.fondos).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-        </div>
-      )}
-      {mydata?.presupuestoMensualMax > 0 && totalGastado && onPresupuestoClick && (() => {
-        const gastadoARS = parseFloat(totalGastado['ARS'] || 0);
-        const limite = mydata.presupuestoMensualMax;
-        const pct = Math.min((gastadoARS / limite) * 100, 100);
-        const color = gastadoARS > limite ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
-        return (
-          <button
-            className="navbar-presupuesto-chip"
-            onClick={onPresupuestoClick}
-            style={{ '--chip-color': color }}
-            title="Ver presupuesto"
-          >
-            <span className="navbar-presupuesto-dot" />
-            <span className="navbar-presupuesto-label">Presupuesto</span>
-            <span className="navbar-presupuesto-pct">{Math.round(pct)}%</span>
-          </button>
-        );
-      })()}
+      <div className="navbar-chips">
+        {mydata?.presupuestoMensualMax > 0 && totalGastado && onPresupuestoClick && (() => {
+          const gastadoARS = parseFloat(totalGastado['ARS'] || 0);
+          const limite = mydata.presupuestoMensualMax;
+          const pct = Math.min((gastadoARS / limite) * 100, 100);
+          const color = gastadoARS > limite ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
+          return (
+            <button
+              className="navbar-presupuesto-chip"
+              onClick={onPresupuestoClick}
+              style={{ '--chip-color': color }}
+              title="Ver presupuesto"
+            >
+              <span className="navbar-presupuesto-dot" />
+              <span className="navbar-presupuesto-label">Presupuesto</span>
+              <span className="navbar-presupuesto-pct">{Math.round(pct)}%</span>
+            </button>
+          );
+        })()}
+        {mydata?.fondos != null && (
+          <div className="navbar-fondos-chip">
+            <FaWallet size={13} />
+            <span className="navbar-fondos-label">Fondos</span>
+            <span
+              className="navbar-fondos-value"
+              style={
+                Number(mydata.fondos) - parseFloat(totalGastado?.ARS || 0) < 0
+                  ? { background: 'none', WebkitTextFillColor: '#ef4444', color: '#ef4444' }
+                  : undefined
+              }
+            >
+              ${(Number(mydata.fondos) - parseFloat(totalGastado?.ARS || 0))
+                .toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+        )}
+      </div>
     </header>
   );
 }

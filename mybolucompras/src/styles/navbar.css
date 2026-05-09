@@ -192,13 +192,19 @@
   background: var(--color-error-light);
 }
 
-/* Chip de fondos colgando debajo del navbar */
-.navbar-fondos-chip {
+/* Contenedor de chips debajo del navbar */
+.navbar-chips {
   position: fixed;
   top: var(--navbar-height);
   right: 24px;
   z-index: 99;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
 
+/* Chip de fondos */
+.navbar-fondos-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -213,8 +219,6 @@
   font-size: 12.5px;
   font-weight: 500;
   color: var(--color-text-secondary);
-
-  /* Tiny separator line connecting to navbar */
   transition: box-shadow 0.15s;
 }
 
@@ -247,11 +251,6 @@
 
 /* Chip de presupuesto */
 .navbar-presupuesto-chip {
-  position: fixed;
-  top: var(--navbar-height);
-  right: 160px;
-  z-index: 99;
-
   display: inline-flex;
   align-items: center;
   gap: 6px;

@@ -35,7 +35,7 @@ export function DataProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [user, demo]);
+  }, [user?.id, demo]);
 
   useEffect(() => {
     cargarDatos();

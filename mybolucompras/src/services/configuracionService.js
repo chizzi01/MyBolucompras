@@ -34,6 +34,7 @@ function getDefaults() {
     fondos: 0,
     etiquetas: [],
     presupuestos: {},
+    presupuestoMensualMax: 0,
   };
 }
 
@@ -46,6 +47,7 @@ function mapFromDB(row) {
     fondos: Number(row.fondos) || 0,
     etiquetas: row.etiquetas || [],
     presupuestos: row.presupuestos || {},
+    presupuestoMensualMax: Number(row.presupuesto_mensual_max) || 0,
   };
 }
 
@@ -58,5 +60,6 @@ function mapToDB(config) {
     fondos: Number(config.fondos) || 0,
     etiquetas: config.etiquetas || [],
     presupuestos: config.presupuestos || {},
+    presupuesto_mensual_max: Number(config.presupuestoMensualMax) || 0,
   };
 }

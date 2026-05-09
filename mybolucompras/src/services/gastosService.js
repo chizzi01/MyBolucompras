@@ -12,9 +12,11 @@ export const gastosService = {
   },
 
   async crear(gasto) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
     const { data, error } = await supabase
       .from('gastos')
-      .insert([mapToDB(gasto)])
+      .insert([{ ...mapToDB(gasto), user_id: user.id }])
       .select()
       .single();
     if (error) throw error;
@@ -91,7 +93,7 @@ function mapToDB(gasto) {
     fecha: fechaISO,
     medio: gasto.medio,
     cuotas: gasto.cuotas ?? 1,
-    tipo: gasto.tipo,
+    tipo: gasto.tipo || null,
     moneda: gasto.moneda,
     banco: gasto.banco || null,
     cantidad: gasto.cantidad ?? 1,

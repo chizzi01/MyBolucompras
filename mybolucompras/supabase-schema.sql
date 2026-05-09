@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS gastos (
   fecha DATE NOT NULL,
   medio TEXT NOT NULL,
   cuotas INTEGER DEFAULT 1,
-  tipo TEXT NOT NULL CHECK (tipo IN ('debito','credito')),
+  tipo TEXT CHECK (tipo IS NULL OR tipo IN ('debito','credito')),
   moneda TEXT NOT NULL DEFAULT 'ARS',
   banco TEXT,
   cantidad INTEGER DEFAULT 1,
@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS configuracion_usuario (
   fondos DECIMAL(12,2) DEFAULT 0,
   etiquetas JSONB DEFAULT '[]'::jsonb,
   presupuestos JSONB DEFAULT '{}'::jsonb,
+  presupuesto_mensual_max DECIMAL(12,2) DEFAULT 0,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
