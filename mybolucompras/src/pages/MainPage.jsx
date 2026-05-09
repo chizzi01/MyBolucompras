@@ -50,7 +50,7 @@ function MainPage() {
     try {
       await agregarGasto(gasto);
       setModalVisible(false);
-      setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '', moneda: '' });
+      setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '', moneda: mydata?.monedaPreferida || 'ARS' });
       addToast('Gasto agregado correctamente', 'success');
     } catch {
       addToast('Error al agregar el gasto', 'error');
@@ -151,7 +151,9 @@ function MainPage() {
   };
 
   const openModal = useCallback((type, item = {}, etiqueta = '') => {
-    setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '', etiqueta: '' });
+    const defaultMoneda = mydata?.monedaPreferida || 'ARS';
+    const defaultBanco = (type === 'nuevo' && bancoMasUsado && bancoMasUsado !== 'N/A') ? bancoMasUsado : '';
+    setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: defaultBanco, cantidad: 1, precio: '', etiqueta: '', moneda: defaultMoneda });
     setModalType(type);
     if (['eliminar', 'editar', 'crearEtiqueta', 'eliminarEtiqueta'].includes(type)) {
       setFormData({
@@ -165,12 +167,12 @@ function MainPage() {
       });
     }
     setModalVisible(true);
-  }, []);
+  }, [bancoMasUsado, mydata?.monedaPreferida]);
 
   const handleCloseModal = useCallback(() => {
     setModalVisible(false);
-    setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '' });
-  }, []);
+    setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '', moneda: mydata?.monedaPreferida || 'ARS' });
+  }, [mydata?.monedaPreferida]);
 
   if (loading) return <PageSkeleton />;
 

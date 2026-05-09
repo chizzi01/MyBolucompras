@@ -108,7 +108,10 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
         countFilters();
     }, [filterObject, filterType, filterBank, filterMedio, filterEtiqueta, filterMoneda]);
 
-    const mesActual = new Date().toLocaleString('es-ES', { month: 'long' });
+    const ahora = new Date();
+    const mesActual = ahora.toLocaleString('es-ES', { month: 'long' });
+    const mesCapitalizado = mesActual.charAt(0).toUpperCase() + mesActual.slice(1);
+    const añoActual = ahora.getFullYear();
 
     // const [isSwitchOn, setIsSwitchOn] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'default' });
@@ -217,8 +220,8 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
             <div className="componentContainer">
                 <div className="tituloContainer">
                     <h1 id="mesBolucompras">
-                        Mis <span className="highlight">Bolucompras</span> de:{' '}
-                        <span className="mes-actual">{mesActual.toLocaleUpperCase()}</span>
+                        Gastos <span className="title-separator">·</span>{' '}
+                        <span className="mes-actual">{mesCapitalizado} {añoActual}</span>
                     </h1>
 
                     {/* <hr /> */}

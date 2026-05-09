@@ -35,6 +35,9 @@ function getDefaults() {
     etiquetas: [],
     presupuestos: {},
     presupuestoMensualMax: 0,
+    bancosHabilitados: [],
+    mediosHabilitados: [],
+    monedaPreferida: 'ARS',
   };
 }
 
@@ -48,6 +51,9 @@ function mapFromDB(row) {
     etiquetas: row.etiquetas || [],
     presupuestos: row.presupuestos || {},
     presupuestoMensualMax: Number(row.presupuesto_mensual_max) || 0,
+    bancosHabilitados: row.bancos_habilitados || [],
+    mediosHabilitados: row.medios_habilitados || [],
+    monedaPreferida: row.moneda_preferida || 'ARS',
   };
 }
 
@@ -61,5 +67,8 @@ function mapToDB(config) {
     etiquetas: config.etiquetas || [],
     presupuestos: config.presupuestos || {},
     presupuesto_mensual_max: Number(config.presupuestoMensualMax) || 0,
+    bancos_habilitados: config.bancosHabilitados || [],
+    medios_habilitados: config.mediosHabilitados || [],
+    moneda_preferida: config.monedaPreferida || 'ARS',
   };
 }

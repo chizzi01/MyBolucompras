@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { HiHome } from "react-icons/hi2";
 import { FaCircleQuestion } from "react-icons/fa6";
-import { FiLogOut, FiSun, FiMoon } from "react-icons/fi";
+import { FiLogOut, FiSun, FiMoon, FiSettings } from "react-icons/fi";
 import { FaWallet } from "react-icons/fa";
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -43,7 +43,9 @@ function Header({ totalGastado, onPresupuestoClick }) {
       <nav className="navbar">
         <Link to="/" className="navbar-brand">
           <img className="navbar-logo" src="./img/icon-bgremove.png" alt="Logo" />
-          <span className="navbar-name">MyBolucompras</span>
+          <span className="navbar-name">
+            Bolu<span className="navbar-name-accent">compras</span>
+          </span>
         </Link>
 
         <ul className="navbar-nav">
@@ -84,6 +86,9 @@ function Header({ totalGastado, onPresupuestoClick }) {
                   <div className="navbar-avatar-menu-name">{nombre}</div>
                   <div className="navbar-avatar-menu-email">{user?.email}</div>
                 </div>
+                <Link to="/configuracion" className="navbar-avatar-menu-item" onClick={() => setMenuOpen(false)}>
+                  <FiSettings size={15} /> Configuración
+                </Link>
                 <button className="navbar-avatar-menu-item danger" onClick={handleSignOut}>
                   <FiLogOut size={15} /> Cerrar sesión
                 </button>

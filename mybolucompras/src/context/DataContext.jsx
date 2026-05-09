@@ -16,6 +16,7 @@ export function DataProvider({ children }) {
   const [mydata, setMydata] = useState(demo ? DEMO_MYDATA : {
     cierre: '', vencimiento: '', cierreAnterior: '', vencimientoAnterior: '',
     fondos: 0, etiquetas: [], presupuestos: {},
+    bancosHabilitados: [], mediosHabilitados: [], monedaPreferida: 'ARS',
   });
   const [loading, setLoading] = useState(!demo);
   const [error, setError] = useState(null);
@@ -29,7 +30,23 @@ export function DataProvider({ children }) {
         configuracionService.get(),
       ]);
       setGastos(gastosData);
-      if (configData) setMydata(configData);
+      if (configData) {
+        const pendingKey = `pendingConfig_${user.email}`;
+        const pending = localStorage.getItem(pendingKey);
+        if (pending) {
+          try {
+            const pendingConfig = JSON.parse(pending);
+            const merged = { ...configData, ...pendingConfig };
+            await configuracionService.actualizar(merged);
+            setMydata(merged);
+            localStorage.removeItem(pendingKey);
+          } catch {
+            setMydata(configData);
+          }
+        } else {
+          setMydata(configData);
+        }
+      }
     } catch (err) {
       setError(err.message);
     } finally {

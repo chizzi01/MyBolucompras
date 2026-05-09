@@ -13,6 +13,7 @@ import { CirclePicker } from 'react-color';
 import { calcularCuotasRestantesCredito } from '../utils/cuotas';
 import { parsePrecio, formatARS, parseFecha, getCurrencySymbol } from '../utils/formatters';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
+import { useTheme } from '../context/ThemeContext';
 
 /* Estilos MUI — usan CSS variables para respetar dark/light mode */
 const _fieldBase = {
@@ -49,13 +50,14 @@ const fieldSxFilled = {
 const fieldSx = (hasValue) => hasValue ? fieldSxFilled : fieldSxEmpty;
 
 function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, saveMyData, handleSubmit, handleDelete, handleDeleteEtiqueta, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
+  const { theme } = useTheme();
+  const iconColor = theme === 'dark' ? '#ffffff' : '#575757';
   const [showSumInput, setShowSumInput] = useState(false);
   const [additionalFunds, setAdditionalFunds] = useState('');
   const [tempCierre, setTempCierre] = useState(mydata.cierre || '');
   const [showHelperText, setShowHelperText] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#fff');
   const [confirmarBorrado, setConfirmarBorrado] = useState(null);
-  const isDirty = useRef(false);
   const dialogRef = useRef(null);
 
   /* Bloquear scroll del body mientras el modal está abierto */
@@ -73,28 +75,13 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
   /* Cerrar con Escape */
   useEffect(() => {
     const handleKey = (e) => {
-      if (e.key === 'Escape') {
-        if (isDirty.current) {
-          if (window.confirm('Hay cambios sin guardar. ¿Salir de todos modos?')) handleCloseModal();
-        } else {
-          handleCloseModal();
-        }
-      }
+      if (e.key === 'Escape') handleCloseModal();
     };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [handleCloseModal]);
 
-  /* Marcar formulario como modificado cuando cambia formData */
-  useEffect(() => {
-    const isFormModal = ['nuevo', 'repetitivo', 'editar', 'crearEtiqueta'].includes(modalType);
-    if (isFormModal) isDirty.current = true;
-  }, [formData, modalType]);
-
   const handleCloseWithConfirm = () => {
-    if (isDirty.current && ['nuevo', 'repetitivo', 'editar', 'crearEtiqueta'].includes(modalType)) {
-      if (!window.confirm('Hay cambios sin guardar. ¿Salir de todos modos?')) return;
-    }
     handleCloseModal();
   };
 
@@ -366,15 +353,15 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
           label="Medio de pago"
           required
           startAdornment={
-            formData.medio === 'Visa'             ? <SiVisa size={22} style={{ marginRight: 6 }} color='#575757' />
-            : formData.medio === 'MasterCard'     ? <SiMastercard size={22} style={{ marginRight: 6 }} color='#575757' />
-            : formData.medio === 'American Express' ? <SiAmericanexpress size={22} style={{ marginRight: 6 }} color='#575757' />
-            : formData.medio === 'Efectivo'       ? <FaMoneyBill1Wave size={22} style={{ marginRight: 6 }} color='#575757' />
-            : formData.medio === 'Transferencia'  ? <FaMoneyBillTransfer size={22} style={{ marginRight: 6 }} color='#575757' />
+            formData.medio === 'Visa'             ? <SiVisa size={22} style={{ marginRight: 6 }} color={iconColor} />
+            : formData.medio === 'MasterCard'     ? <SiMastercard size={22} style={{ marginRight: 6 }} color={iconColor} />
+            : formData.medio === 'American Express' ? <SiAmericanexpress size={22} style={{ marginRight: 6 }} color={iconColor} />
+            : formData.medio === 'Efectivo'       ? <FaMoneyBill1Wave size={22} style={{ marginRight: 6 }} color={iconColor} />
+            : formData.medio === 'Transferencia'  ? <FaMoneyBillTransfer size={22} style={{ marginRight: 6 }} color={iconColor} />
             : null
           }
         >
-          {MEDIOS_DE_PAGO.map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)}
+          {mediosDisponibles.map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)}
         </Select>
         {showHelperText && !formData.medio && (
           <FormHelperText error>Ingrese el medio</FormHelperText>
@@ -387,9 +374,9 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
           onChange={(e) => setFormData({ ...formData, banco: e.target.value })}
           label="Banco"
           required
-          startAdornment={formData.banco ? <CiBank size={22} style={{ marginRight: 6 }} color='#575757' /> : null}
+          startAdornment={formData.banco ? <CiBank size={22} style={{ marginRight: 6 }} color={iconColor} /> : null}
         >
-          {BANCOS.map(b => <MenuItem key={b} value={b}>{b}</MenuItem>)}
+          {bancosDisponibles.map(b => <MenuItem key={b} value={b}>{b}</MenuItem>)}
         </Select>
         {showHelperText && !formData.banco && (
           <FormHelperText error>Ingrese el banco</FormHelperText>
@@ -398,7 +385,9 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
     </>
   );
 
-  const [selectedCurrency, setSelectedCurrency] = useState(formData.moneda || 'ARS');
+  const bancosDisponibles = mydata?.bancosHabilitados?.length > 0 ? mydata.bancosHabilitados : BANCOS;
+  const mediosDisponibles = mydata?.mediosHabilitados?.length > 0 ? mydata.mediosHabilitados : MEDIOS_DE_PAGO;
+  const [selectedCurrency, setSelectedCurrency] = useState(formData.moneda || mydata?.monedaPreferida || 'ARS');
 
   // Actualiza la moneda en el formData y el estado local
   const handleCurrencyChange = (e) => {
@@ -523,8 +512,8 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                           label="Tipo"
                           required
                           startAdornment={
-                            formData.tipo === 'debito'  ? <BsCreditCard2Front size={22} style={{ marginRight: 6 }} color='#575757' />
-                            : formData.tipo === 'credito' ? <FaCreditCard size={22} style={{ marginRight: 6 }} color='#575757' />
+                            formData.tipo === 'debito'  ? <BsCreditCard2Front size={22} style={{ marginRight: 6 }} color={iconColor} />
+                            : formData.tipo === 'credito' ? <FaCreditCard size={22} style={{ marginRight: 6 }} color={iconColor} />
                             : null
                           }
                         >

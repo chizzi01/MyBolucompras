@@ -717,9 +717,6 @@ button,
   background-color: #8C52FF;
 }
 
-#tabla {
-  margin-top: 10px;
-}
 
 table {
   border-radius: 12px;
@@ -1146,7 +1143,7 @@ a {
 }
 
 .backPreguntas {
-  background: linear-gradient(160deg, #F8FAFC 0%, #EEF2FF 45%, #E0E7FF 100%);
+  background: var(--body-bg);
   background-attachment: fixed;
   width: 100%;
   min-height: 100vh;
@@ -2128,7 +2125,7 @@ input:checked+.slider:before {
   margin-bottom: 40px;
   margin-top: 100px;
   font-size: 2em;
-  color: #ac2fff;
+  color: var(--color-primary);
   animation: fadeIn 2s;
 }
 
@@ -2136,9 +2133,10 @@ input:checked+.slider:before {
   margin-bottom: 20px;
   padding: 20px;
   border-radius: 10px;
-  background-color: #f5f5f5;
-  transition: transform 0.3s ease;
-  color: slateblue;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: transform 0.3s ease, background-color 0.2s ease;
+  color: var(--color-text-secondary);
 }
 
 .faq-item:hover {
@@ -2148,11 +2146,12 @@ input:checked+.slider:before {
 .faq-item h3 {
   font-size: 1.5em;
   margin-bottom: 10px;
+  color: var(--color-text-primary);
   transition: color 0.3s ease;
 }
 
 .faq-item h3:hover {
-  color: #8C52FF;
+  color: var(--color-primary);
 }
 
 .faq-item p {
@@ -2161,7 +2160,7 @@ input:checked+.slider:before {
 }
 
 .faq-item p:hover {
-  color: #8C52FF;
+  color: var(--color-primary);
 }
 
 .modal-overlay {
@@ -2529,35 +2528,34 @@ a { color: #6366F1; }
 
 /* ---- TÍTULO PRINCIPAL ---- */
 #mesBolucompras {
-  background: #fff !important;
-  border: 1px solid #E2E8F0 !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 6px 20px rgba(99,102,241,0.09) !important;
-  color: #1E293B !important;
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: var(--shadow-sm), 0 6px 20px rgba(99,102,241,0.08) !important;
+  color: var(--color-text-primary) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  padding: 18px 36px !important;
-  font-size: 26px !important;
+  padding: 16px 36px !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
   margin: 16px auto !important;
-  max-width: 520px;
+  max-width: 460px;
+  letter-spacing: -0.2px !important;
 }
 #mesBolucompras:hover {
-  box-shadow: 0 4px 22px rgba(99,102,241,0.15) !important;
+  box-shadow: var(--shadow-md), 0 6px 24px rgba(99,102,241,0.14) !important;
   transform: translateY(-1px) !important;
 }
-#mesBolucompras .highlight {
-  background: linear-gradient(90deg, #6366F1, #8B5CF6) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  text-shadow: none !important;
+.title-separator {
+  color: var(--color-text-muted) !important;
+  font-weight: 400 !important;
 }
 .mes-actual {
-  background: linear-gradient(90deg, #6366F1, #3B82F6) !important;
+  background: linear-gradient(90deg, var(--color-primary), #8B5CF6) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   text-shadow: none !important;
-  font-size: 28px !important;
+  font-size: 22px !important;
 }
 .mes-actual:hover { filter: none !important; }
 .highlight:hover  { filter: none !important; text-shadow: none !important; }
@@ -2571,12 +2569,12 @@ a { color: #6366F1; }
   color: #1E293B !important;
 }
 .demo thead {
-  background: #F1F5F9 !important;
+  background: var(--color-primary-dark) !important;
 }
 .demo th {
-  color: #475569 !important;
+  color: #fff !important;
   font-family: 'Inter','Segoe UI',system-ui,sans-serif !important;
-  border-bottom: 2px solid #E2E8F0 !important;
+  border-bottom: 2px solid rgba(255,255,255,0.15) !important;
   letter-spacing: 0.4px !important;
 }
 .demo td {
@@ -2625,11 +2623,19 @@ a { color: #6366F1; }
   -webkit-text-fill-color: transparent !important;
   text-shadow: none !important;
 }
-.verticalBtnSwitch-text          { color: #64748B !important; filter: none !important; }
-.verticalBtnSwitch-text.iluminate{ color: #6366F1 !important; font-weight: 700; }
+.verticalBtnSwitch-text          { color: #64748B !important; filter: none !important; transition: color 0.2s, filter 0.2s; }
+.verticalBtnSwitch-text.iluminate{
+  color: #6366F1 !important;
+  font-weight: 700;
+  filter: drop-shadow(0 0 6px rgba(99,102,241,0.7)) drop-shadow(0 0 14px rgba(139,92,246,0.45)) !important;
+}
 .buttonSwitch-text               { color: #64748B !important; }
 .button-text                     { color: #64748B !important; font-size: 10px; }
-.iluminate { color: #6366F1 !important; filter: none !important; font-weight: 700; }
+.iluminate {
+  color: #6366F1 !important;
+  font-weight: 700;
+  filter: drop-shadow(0 0 6px rgba(99,102,241,0.7)) drop-shadow(0 0 14px rgba(139,92,246,0.45)) !important;
+}
 
 /* ---- DROPDOWN BOTÓN PRINCIPAL (+) ---- */
 .dropbtn {
@@ -2850,11 +2856,11 @@ button:hover { box-shadow: none; }
   color: var(--color-text-primary) !important;
 }
 [data-theme="dark"] .demo thead {
-  background: var(--color-bg-secondary) !important;
+  background: var(--color-primary-dark) !important;
 }
 [data-theme="dark"] .demo th {
-  color: var(--color-text-secondary) !important;
-  border-bottom-color: var(--color-border) !important;
+  color: #fff !important;
+  border-bottom-color: rgba(255,255,255,0.15) !important;
 }
 [data-theme="dark"] .demo td {
   background: var(--color-surface) !important;
@@ -2874,12 +2880,7 @@ button:hover { box-shadow: none; }
   border-color: var(--color-border) !important;
 }
 
-/* ---- Título mes en dark mode ---- */
-[data-theme="dark"] #mesBolucompras {
-  background: var(--color-surface) !important;
-  border-color: var(--color-border) !important;
-  color: var(--color-text-primary) !important;
-}
+/* ---- Título mes en dark mode — heredado de CSS vars, sin override necesario ---- */
 
 /* ---- Filtros en dark mode ---- */
 [data-theme="dark"] .glass-filter-input {

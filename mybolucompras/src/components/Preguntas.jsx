@@ -1,14 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import '../App.css'; // Asegúrate de que la ruta sea correcta
-import { TextField, Button } from '@mui/material';
-// import emailjs from 'emailjs-com';
+import React from 'react';
+import '../App.css';
+import Header from './Navbar';
 
 const Preguntas = () => {
-  const [nombre, setNombre] = useState('');
-  const [email, setEmail] = useState('');
-  const [mensaje, setMensaje] = useState('');
-
   return (
+    <div>
+    <Header totalGastado={{}} />
     <div className="backPreguntas">
 
       <div className="faq-section">
@@ -38,6 +35,7 @@ const Preguntas = () => {
           <p>Para agregar un gasto, clickea en el botón superior izquierdo "+" y elige el tipo de gasto</p>
         </div>
       </div>
+    </div>
     </div>
   );
 };

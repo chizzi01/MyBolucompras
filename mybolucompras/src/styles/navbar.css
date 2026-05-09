@@ -28,10 +28,15 @@
 }
 
 .navbar-name {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.5px;
+}
+
+.navbar-name-accent {
   color: var(--color-primary);
-  letter-spacing: -0.3px;
+  font-weight: 600;
 }
 
 .navbar-nav {
@@ -177,6 +182,7 @@
   background: transparent;
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
   transition: background 0.1s;
 }
 

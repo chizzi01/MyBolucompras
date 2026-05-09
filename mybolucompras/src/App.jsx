@@ -7,11 +7,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 import UpdateNotification from './components/UpdateNotification';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
+import BackgroundIcons from './components/BackgroundIcons';
 
-const LoginPage    = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
-const MainPage     = lazy(() => import('./pages/MainPage'));
-const Preguntas    = lazy(() => import('./components/Preguntas'));
+const LoginPage           = lazy(() => import('./pages/LoginPage'));
+const RegisterPage        = lazy(() => import('./pages/RegisterPage'));
+const ForgotPasswordPage  = lazy(() => import('./pages/ForgotPasswordPage'));
+const MainPage            = lazy(() => import('./pages/MainPage'));
+const Preguntas          = lazy(() => import('./components/Preguntas'));
+const ConfiguracionPage  = lazy(() => import('./pages/ConfiguracionPage'));
 
 function AppFallback() {
   return (
@@ -49,13 +52,15 @@ function App() {
   return (
     <MuiThemeProvider theme={muiTheme}>
       <ToastProvider>
+      <BackgroundIcons />
       <Router>
         <UpdateNotification />
         <ErrorBoundary>
         <Suspense fallback={<AppFallback />}>
           <Routes>
-            <Route path="/login"    element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login"            element={<LoginPage />} />
+            <Route path="/register"         element={<RegisterPage />} />
+            <Route path="/forgot-password"  element={<ForgotPasswordPage />} />
             <Route
               path="/preguntas"
               element={
@@ -72,6 +77,16 @@ function App() {
                 <ProtectedRoute>
                   <DataProvider>
                     <MainPage />
+                  </DataProvider>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracion"
+              element={
+                <ProtectedRoute>
+                  <DataProvider>
+                    <ConfiguracionPage />
                   </DataProvider>
                 </ProtectedRoute>
               }

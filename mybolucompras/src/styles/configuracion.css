@@ -1,0 +1,120 @@
+.config-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.config-page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.config-page-subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.config-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.config-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.config-card-desc {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-4);
+}
+
+.config-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.config-chip {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  line-height: 1.4;
+}
+
+.config-chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.config-chip.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.config-save-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  margin-top: var(--space-2);
+}
+
+.config-save-btn:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.config-save-btn:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.config-save-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Step 2 in registration */
+.setup-section {
+  margin-bottom: var(--space-5);
+}
+
+.setup-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: var(--space-3);
+}
+
+@media (max-width: 600px) {
+  .config-page {
+    padding: var(--space-5) var(--space-4);
+  }
+}

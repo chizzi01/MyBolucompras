@@ -125,7 +125,7 @@ table.modern-table {
 }
 
 .modern-table thead {
-  background: var(--color-primary-light);
+  background: #3B0764;
 }
 
 .modern-table thead th {
@@ -133,18 +133,17 @@ table.modern-table {
   text-align: left;
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-primary-dark);
+  color: #E9D5FF;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
   user-select: none;
 }
 
 .modern-table thead th:hover {
-  background: var(--color-primary-light);
-  opacity: 0.85;
+  background: #4C0F87;
 }
 
 .modern-table tbody tr {

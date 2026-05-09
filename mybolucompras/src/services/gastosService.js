@@ -94,7 +94,7 @@ function mapToDB(gasto) {
     medio: gasto.medio,
     cuotas: gasto.cuotas ?? 1,
     tipo: gasto.tipo || null,
-    moneda: gasto.moneda,
+    moneda: gasto.moneda || 'ARS',
     banco: gasto.banco || null,
     cantidad: gasto.cantidad ?? 1,
     precio: isNaN(precioNumerico) ? 0 : precioNumerico,
