@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Bolucompras",
+    "slug": "mybolucompras-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/MyBolucompras.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/MyBolucompras.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0E0B2E"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.chizzi.mybolucomprasmobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/MyBolucompras.png",
+        "backgroundColor": "#0E0B2E"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.chizzi.mybolucomprasmobile"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
