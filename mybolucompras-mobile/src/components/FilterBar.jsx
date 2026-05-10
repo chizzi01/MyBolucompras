@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { useTheme } from '../context/ThemeContext';
 
-export default function FilterBar({ search, onSearchChange, soloActivos, onToggleSoloActivos }) {
+export default function FilterBar({ search, onSearchChange, soloEsteMes, onToggleSoloEsteMes }) {
   const { dark } = useTheme();
   const s = styles(dark);
 
@@ -28,13 +28,13 @@ export default function FilterBar({ search, onSearchChange, soloActivos, onToggl
         )}
       </View>
 
-      <TouchableOpacity style={[s.chip, soloActivos && s.chipActive]} onPress={onToggleSoloActivos} activeOpacity={0.7}>
+      <TouchableOpacity style={[s.chip, soloEsteMes && s.chipActive]} onPress={onToggleSoloEsteMes} activeOpacity={0.7}>
         <Ionicons
-          name={soloActivos ? 'checkmark-circle' : 'ellipse-outline'}
+          name={soloEsteMes ? 'calendar' : 'calendar-outline'}
           size={14}
-          color={soloActivos ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+          color={soloEsteMes ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
         />
-        <Text style={[s.chipText, soloActivos && s.chipTextActive]}>Solo activos</Text>
+        <Text style={[s.chipText, soloEsteMes && s.chipTextActive]}>Este mes</Text>
       </TouchableOpacity>
     </View>
   );

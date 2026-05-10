@@ -4,7 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -24,6 +24,7 @@ const Stack = createNativeStackNavigator();
 
 function TabNavigator() {
   const { dark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -33,8 +34,8 @@ function TabNavigator() {
           backgroundColor: dark ? colors.tabBar.dark : colors.tabBar.light,
           borderTopColor: dark ? colors.border.dark : colors.border.light,
           borderTopWidth: 1,
-          paddingBottom: 4,
-          height: 60,
+          paddingBottom: insets.bottom + 4,
+          height: 56 + insets.bottom,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: dark ? '#475569' : '#94A3B8',

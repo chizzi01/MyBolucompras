@@ -5,8 +5,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '../context/DataContext';
-import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes } from '../utils/cuotas';
+import { useTheme } from '../context/ThemeContext';
 import GastoCard from '../components/GastoCard';
 import FilterBar from '../components/FilterBar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -19,7 +19,7 @@ export default function GastosScreen() {
   const s = styles(dark);
 
   const [search, setSearch] = useState('');
-  const [soloActivos, setSoloActivos] = useState(false);
+  const [soloEsteMes, setSoloEsteMes] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [gastoEditando, setGastoEditando] = useState(null);
 
@@ -35,7 +35,7 @@ export default function GastosScreen() {
       const q = search.toLowerCase();
       lista = lista.filter(g => g.objeto.toLowerCase().includes(q));
     }
-    if (soloActivos) {
+    if (soloEsteMes) {
       lista = lista.filter(g => {
         if (g.isFijo) return true;
         const rest = getCuotasRestantes(g, mydata);
@@ -43,7 +43,7 @@ export default function GastosScreen() {
       });
     }
     return lista;
-  }, [gastos, search, soloActivos, mydata]);
+  }, [gastos, search, soloEsteMes, mydata]);
 
   const handleDelete = (gasto) => {
     Alert.alert(
@@ -75,8 +75,8 @@ export default function GastosScreen() {
       <FilterBar
         search={search}
         onSearchChange={setSearch}
-        soloActivos={soloActivos}
-        onToggleSoloActivos={() => setSoloActivos(v => !v)}
+        soloEsteMes={soloEsteMes}
+        onToggleSoloEsteMes={() => setSoloEsteMes(v => !v)}
       />
 
       {loading ? (

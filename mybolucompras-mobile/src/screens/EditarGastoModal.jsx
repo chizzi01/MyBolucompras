@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Alert, Switch, Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
@@ -70,7 +71,7 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={s.root}>
+      <SafeAreaView style={s.root} edges={['top']}>
         <View style={s.header}>
           <Text style={s.title}>Editar gasto</Text>
           <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -128,7 +129,7 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
             {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Guardar cambios</Text>}
           </TouchableOpacity>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -250,7 +251,7 @@ function MiniSelect({ options, value, onChange, dark, inputStyle, placeholder })
 
 const styles = (dark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.md, paddingTop: spacing.lg, borderBottomWidth: 1, borderBottomColor: dark ? colors.border.dark : colors.border.light },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.md, borderBottomWidth: 1, borderBottomColor: dark ? colors.border.dark : colors.border.light },
   title: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light },
   scroll: { padding: spacing.md, paddingBottom: spacing.xl },
   input: { backgroundColor: dark ? '#0F172A' : '#F8FAFC', borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 12, ...typography.body, color: dark ? colors.text.dark : colors.text.light },
