@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, Switch,
+  ScrollView, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
 import { formatFecha } from '../utils/formatters';
+import { useModal } from '../hooks/useModal';
 
 const INITIAL = {
   objeto: '', fecha: formatFecha(new Date()),
@@ -22,6 +24,8 @@ export default function AgregarScreen() {
   const { agregarGasto, mydata, actualizarConfig } = useData();
   const { dark } = useTheme();
   const s = styles(dark);
+  const navigation = useNavigation();
+  const { showModal, modal } = useModal();
 
   // Medios y bancos disponibles según configuración
   const mediosDisponibles = mydata.mediosHabilitados?.length > 0
@@ -41,13 +45,17 @@ export default function AgregarScreen() {
   const set = (key, val) => setForm(prev => {
     const next = { ...prev, [key]: val };
     if (key === 'tipo' && val === 'debito') next.cuotas = '1';
-    if (key === 'isFijo' && val) next.cuotas = '1';
+    if (key === 'isFijo' && val) { next.cuotas = '1'; next.cantidad = '1'; }
     return next;
   });
 
   const handleGuardar = async () => {
-    if (!form.objeto.trim()) return Alert.alert('Campo requerido', 'Ingresá el objeto del gasto.');
-    if (!form.precio || isNaN(Number(form.precio))) return Alert.alert('Campo requerido', 'Ingresá un precio válido.');
+    if (!form.objeto.trim()) {
+      return showModal({ type: 'warning', title: 'Campo requerido', message: 'Ingresá el objeto del gasto.' });
+    }
+    if (!form.precio || isNaN(Number(form.precio))) {
+      return showModal({ type: 'warning', title: 'Campo requerido', message: 'Ingresá un precio válido.' });
+    }
 
     setLoading(true);
     try {
@@ -62,9 +70,14 @@ export default function AgregarScreen() {
         medio: mediosDisponibles[0] || '',
         moneda: mydata.monedaPreferida || 'ARS',
       });
-      Alert.alert('Guardado', 'El gasto fue agregado correctamente.');
+      showModal({
+        type: 'success',
+        title: '¡Guardado!',
+        message: 'El gasto fue agregado correctamente.',
+        onClose: () => navigation.navigate('Gastos'),
+      });
     } catch (err) {
-      Alert.alert('Error', err.message);
+      showModal({ type: 'error', title: 'Error al guardar', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -82,41 +95,54 @@ export default function AgregarScreen() {
       <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text style={s.title}>Nuevo gasto</Text>
 
-        <Field label="Objeto" dark={dark}>
-          <TextInput style={s.input} value={form.objeto} onChangeText={v => set('objeto', v)} placeholder="Ej: Zapatillas Adidas" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+        <Field label="Tipo de gasto" dark={dark}>
+          <FijoSelector value={form.isFijo} onChange={v => set('isFijo', v)} dark={dark} s={s} />
         </Field>
 
-        <Field label="Precio" dark={dark}>
-          <TextInput style={s.input} value={form.precio} onChangeText={v => set('precio', v)} placeholder="0.00" placeholderTextColor={dark ? '#475569' : '#94A3B8'} keyboardType="decimal-pad" />
-        </Field>
+        <Row>
+          <Field label="Objeto" dark={dark} flex>
+            <TextInput style={s.input} value={form.objeto} onChangeText={v => set('objeto', v)} placeholder="Ej: Zapatillas" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+          </Field>
+          <Field label="Fecha (DD/MM/AAAA)" dark={dark} flex>
+            <TextInput style={s.input} value={form.fecha} onChangeText={v => set('fecha', v)} placeholder="DD/MM/AAAA" placeholderTextColor={dark ? '#475569' : '#94A3B8'} keyboardType="numeric" />
+          </Field>
+        </Row>
+
+        <Row>
+          <Field label="Medio de pago" dark={dark} flex>
+            <SelectRow options={mediosDisponibles} value={form.medio} onChange={v => set('medio', v)} dark={dark} style={s.input} />
+          </Field>
+          <Field label="Banco" dark={dark} flex>
+            <SelectRow options={['', ...bancosDisponibles]} value={form.banco} onChange={v => set('banco', v)} dark={dark} style={s.input} placeholder="Sin banco" />
+          </Field>
+        </Row>
 
         <Row>
           <Field label="Moneda" dark={dark} flex>
             <SelectRow options={MONEDAS.map(m => m.codigo)} value={form.moneda} onChange={v => set('moneda', v)} dark={dark} style={s.input} />
           </Field>
-          <Field label="Cantidad" dark={dark} flex>
-            <TextInput style={s.input} value={form.cantidad} onChangeText={v => set('cantidad', v)} keyboardType="number-pad" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+          <Field label="Precio" dark={dark} flex>
+            <TextInput style={s.input} value={form.precio} onChangeText={v => set('precio', v)} placeholder="0.00" placeholderTextColor={dark ? '#475569' : '#94A3B8'} keyboardType="decimal-pad" />
           </Field>
         </Row>
 
-        <Field label="Fecha (DD/MM/AAAA)" dark={dark}>
-          <TextInput style={s.input} value={form.fecha} onChangeText={v => set('fecha', v)} placeholder="DD/MM/AAAA" placeholderTextColor={dark ? '#475569' : '#94A3B8'} keyboardType="numeric" />
-        </Field>
+        {form.isFijo && (
+          <Row>
+            <Field label="Rep en el mes" dark={dark} flex>
+              <TextInput style={s.input} value={form.cantidad} onChangeText={v => set('cantidad', v)} keyboardType="number-pad" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+            </Field>
+            <Field label="Periodo en meses" dark={dark} flex>
+              <TextInput style={s.input} value={form.cuotas} onChangeText={v => set('cuotas', v)} keyboardType="number-pad" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+            </Field>
+          </Row>
+        )}
 
-        <Field label="Medio de pago" dark={dark}>
-          <SelectRow options={mediosDisponibles} value={form.medio} onChange={v => set('medio', v)} dark={dark} style={s.input} />
-        </Field>
+        {!form.isFijo && (
+          <Field label="Tipo de pago" dark={dark}>
+            <TipoSelector value={form.tipo} onChange={v => set('tipo', v)} dark={dark} s={s} />
+          </Field>
+        )}
 
-        <Field label="Banco" dark={dark}>
-          <SelectRow options={['', ...bancosDisponibles]} value={form.banco} onChange={v => set('banco', v)} dark={dark} style={s.input} placeholder="Sin banco" />
-        </Field>
-
-        {/* Tipo: dropdown Débito / Crédito */}
-        <Field label="Tipo de pago" dark={dark}>
-          <TipoSelector value={form.tipo} onChange={v => set('tipo', v)} dark={dark} s={s} />
-        </Field>
-
-        {/* Cuotas solo si es crédito */}
         {esCuotasHabilitado && (
           <Field label="Cuotas" dark={dark}>
             <TextInput
@@ -139,27 +165,18 @@ export default function AgregarScreen() {
           />
         </Field>
 
-        <View style={s.toggleRow}>
-          <Text style={s.toggleLabel}>Gasto fijo / recurrente</Text>
-          <Switch
-            value={form.isFijo}
-            onValueChange={v => set('isFijo', v)}
-            trackColor={{ false: dark ? '#334155' : '#CBD5E1', true: colors.primary }}
-            thumbColor="#fff"
-          />
-        </View>
-
         <TouchableOpacity style={s.btn} onPress={handleGuardar} disabled={loading} activeOpacity={0.85}>
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <Ionicons name="add-circle-outline" size={20} color="#fff" />
+              <Ionicons name="save-outline" size={20} color="#fff" />
               <Text style={s.btnText}>Guardar gasto</Text>
             </>
           )}
         </TouchableOpacity>
       </ScrollView>
+      {modal}
     </SafeAreaView>
   );
 }
@@ -176,6 +193,35 @@ function TipoSelector({ value, onChange, dark, s }) {
         return (
           <TouchableOpacity
             key={op.key}
+            style={[s.tipoBtn, activo && s.tipoBtnActive]}
+            onPress={() => onChange(op.key)}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={op.icon}
+              size={18}
+              color={activo ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+            />
+            <Text style={[s.tipoBtnText, activo && s.tipoBtnTextActive]}>{op.label}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+function FijoSelector({ value, onChange, dark, s }) {
+  const opciones = [
+    { key: false, label: 'Normal', icon: 'flash-outline' },
+    { key: true, label: 'Fijo', icon: 'repeat-outline' },
+  ];
+  return (
+    <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+      {opciones.map(op => {
+        const activo = value === op.key;
+        return (
+          <TouchableOpacity
+            key={String(op.key)}
             style={[s.tipoBtn, activo && s.tipoBtnActive]}
             onPress={() => onChange(op.key)}
             activeOpacity={0.7}
@@ -385,17 +431,6 @@ const styles = (dark) => StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: dark ? colors.border.dark : colors.border.light,
-  },
-  toggleLabel: { ...typography.bodyMed, color: dark ? colors.text.dark : colors.text.light },
   btn: {
     backgroundColor: colors.primary,
     borderRadius: radius.md,

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert, Switch, Modal,
+  ScrollView, ActivityIndicator, Switch, Modal,
 } from 'react-native';
+import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useData } from '../context/DataContext';
@@ -37,6 +38,7 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
     isFijo: gasto.isFijo || false,
   });
   const [loading, setLoading] = useState(false);
+  const { showModal, modal } = useModal();
 
   const set = (key, val) => setForm(prev => {
     const next = { ...prev, [key]: val };
@@ -45,7 +47,9 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
   });
 
   const handleGuardar = async () => {
-    if (!form.objeto.trim()) return Alert.alert('Campo requerido', 'Ingresá el objeto del gasto.');
+    if (!form.objeto.trim()) {
+      return showModal({ type: 'warning', title: 'Campo requerido', message: 'Ingresá el objeto del gasto.' });
+    }
     setLoading(true);
     try {
       await editarGasto(gasto.id, {
@@ -56,7 +60,7 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
       });
       onClose();
     } catch (err) {
-      Alert.alert('Error', err.message);
+      showModal({ type: 'error', title: 'Error al guardar', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -95,8 +99,25 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
           <Label text="Banco" dark={dark} />
           <MiniSelect options={['', ...bancosDisponibles]} value={form.banco} onChange={v => set('banco', v)} dark={dark} inputStyle={s.input} placeholder="Sin banco" />
 
-          <Label text="Tipo de pago" dark={dark} />
-          <TipoSelector value={form.tipo} onChange={v => set('tipo', v)} dark={dark} s={s} />
+          {form.isFijo && (
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <View style={{ flex: 1 }}>
+                <Label text="Rep en el mes" dark={dark} />
+                <TextInput style={s.input} value={form.cantidad} onChangeText={v => set('cantidad', v)} keyboardType="number-pad" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Label text="Periodo en meses" dark={dark} />
+                <TextInput style={s.input} value={form.cuotas} onChangeText={v => set('cuotas', v)} keyboardType="number-pad" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+              </View>
+            </View>
+          )}
+
+          {!form.isFijo && (
+            <>
+              <Label text="Tipo de pago" dark={dark} />
+              <TipoSelector value={form.tipo} onChange={v => set('tipo', v)} dark={dark} s={s} />
+            </>
+          )}
 
           {esCuotasHabilitado && (
             <>
@@ -129,6 +150,7 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
             {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Guardar cambios</Text>}
           </TouchableOpacity>
         </ScrollView>
+        {modal}
       </SafeAreaView>
     </Modal>
   );

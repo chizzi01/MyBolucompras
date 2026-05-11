@@ -1,4 +1,3 @@
-import 'react-native-url-polyfill/auto';
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -14,6 +13,7 @@ import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { colors } from './src/constants/theme';
 
 import LoginScreen from './src/screens/LoginScreen';
+import BiometricLockScreen from './src/screens/BiometricLockScreen';
 import GastosScreen from './src/screens/GastosScreen';
 import AgregarScreen from './src/screens/AgregarScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
@@ -64,7 +64,7 @@ function TabNavigator() {
 }
 
 function RootNavigator() {
-  const { user, loading } = useAuth();
+  const { user, loading, appLocked } = useAuth();
   const { dark } = useTheme();
 
   if (loading) {
@@ -77,7 +77,11 @@ function RootNavigator() {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {user ? (
+      {!user ? (
+        <Stack.Screen name="Login" component={LoginScreen} />
+      ) : appLocked ? (
+        <Stack.Screen name="Lock" component={BiometricLockScreen} />
+      ) : (
         <Stack.Screen name="Main">
           {() => (
             <DataProvider>
@@ -85,8 +89,6 @@ function RootNavigator() {
             </DataProvider>
           )}
         </Stack.Screen>
-      ) : (
-        <Stack.Screen name="Login" component={LoginScreen} />
       )}
     </Stack.Navigator>
   );

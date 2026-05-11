@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { useTheme } from '../context/ThemeContext';
-import { getCuotasRestantes } from '../utils/cuotas';
+import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 import { formatPrecio } from '../utils/formatters';
 
 export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
@@ -13,10 +13,11 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
   const cuotasRest = getCuotasRestantes(gasto, mydata);
   const cuotasColor = getCuotasColor(cuotasRest, dark);
   const precioDisplay = formatPrecio(gasto.precio, gasto.moneda);
+  const entraEsteMes = gastoEntraEsteMes(gasto, mydata);
 
   return (
     <TouchableOpacity style={s.card} onPress={onPress} activeOpacity={0.75}>
-      <View style={s.left}>
+      <View style={[s.left, !entraEsteMes && s.dimmed]}>
         <Text style={s.objeto} numberOfLines={1}>{gasto.objeto}</Text>
         <View style={s.meta}>
           <Text style={s.metaText}>{gasto.medio}</Text>
@@ -28,8 +29,10 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
         </View>
       </View>
 
-      <View style={s.right}>
-        <Text style={s.precio}>{precioDisplay}</Text>
+      <View style={[s.right, !entraEsteMes && s.dimmed]}>
+        {!gasto.isFijo && (
+          <Text style={s.precio}>{precioDisplay}</Text>
+        )}
         <View style={[s.cuotasBadge, { backgroundColor: cuotasColor.bg }]}>
           <Text style={[s.cuotasText, { color: cuotasColor.text }]}>
             {gasto.isFijo ? '∞' : `${cuotasRest}/${gasto.cuotas}`}
@@ -37,9 +40,16 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
         </View>
       </View>
 
-      <TouchableOpacity style={s.deleteBtn} onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+      <TouchableOpacity style={[s.deleteBtn, !entraEsteMes && s.dimmed]} onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
         <Ionicons name="trash-outline" size={16} color={colors.error} />
       </TouchableOpacity>
+
+      {!entraEsteMes && (
+        <View pointerEvents="none" style={s.nextMonthOverlay}>
+          <Ionicons name="time-outline" size={13} color={dark ? '#94A3B8' : '#64748B'} />
+          <Text style={s.nextMonthText}>Entra el próximo mes</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -81,4 +91,20 @@ const styles = (dark) => StyleSheet.create({
   cuotasBadge: { borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 2, minWidth: 44, alignItems: 'center' },
   cuotasText: { ...typography.captionMed, fontWeight: '600' },
   deleteBtn: { padding: 4 },
+  dimmed: { opacity: 0.3 },
+  nextMonthOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: dark ? 'rgba(2, 6, 23, 0.62)' : 'rgba(248, 250, 252, 0.70)',
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 5,
+  },
+  nextMonthText: {
+    ...typography.caption,
+    color: dark ? '#94A3B8' : '#475569',
+    fontStyle: 'italic',
+  },
 });

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Alert,
+  ScrollView, ActivityIndicator, Switch,
 } from 'react-native';
+import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -13,10 +14,11 @@ import { formatARS } from '../utils/formatters';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
 
 export default function ConfiguracionScreen() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, biometricEnabled, biometricAvailable, enableBiometric } = useAuth();
   const { mydata, actualizarFondos, actualizarCierre, actualizarConfig } = useData();
   const { dark, mode, setTheme } = useTheme();
   const s = styles(dark);
+  const { showModal, modal } = useModal();
 
   const nombre = user?.user_metadata?.nombre || user?.email?.split('@')[0] || 'Usuario';
 
@@ -62,9 +64,9 @@ export default function ConfiguracionScreen() {
     setLoadingFondos(true);
     try {
       await actualizarFondos(Number(fondos));
-      Alert.alert('Guardado', 'Fondos actualizados.');
+      showModal({ type: 'success', title: 'Fondos actualizados', message: 'Los fondos disponibles fueron guardados.' });
     } catch (err) {
-      Alert.alert('Error', err.message);
+      showModal({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoadingFondos(false);
     }
@@ -74,9 +76,9 @@ export default function ConfiguracionScreen() {
     setLoadingFechas(true);
     try {
       await actualizarCierre(cierre, vencimiento, cierreAnterior, vencimientoAnterior);
-      Alert.alert('Guardado', 'Fechas actualizadas.');
+      showModal({ type: 'success', title: 'Fechas actualizadas', message: 'Las fechas de tarjeta fueron guardadas.' });
     } catch (err) {
-      Alert.alert('Error', err.message);
+      showModal({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoadingFechas(false);
     }
@@ -108,7 +110,7 @@ export default function ConfiguracionScreen() {
     const trimmed = nuevaEtiqueta.trim();
     if (!trimmed) return;
     if (etiquetas.includes(trimmed)) {
-      Alert.alert('Ya existe', 'Esa etiqueta ya está en la lista.');
+      showModal({ type: 'warning', title: 'Ya existe', message: 'Esa etiqueta ya está en la lista.' });
       return;
     }
     setSavingEtiq(true);
@@ -118,7 +120,7 @@ export default function ConfiguracionScreen() {
       setEtiquetas(next);
       setNuevaEtiqueta('');
     } catch (err) {
-      Alert.alert('Error', err.message);
+      showModal({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setSavingEtiq(false);
     }
@@ -131,14 +133,18 @@ export default function ConfiguracionScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert('Cerrar sesión', '¿Seguro que querés cerrar sesión?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Salir', style: 'destructive', onPress: signOut },
-    ]);
+    showModal({
+      type: 'confirm',
+      title: 'Cerrar sesión',
+      message: '¿Seguro que querés cerrar sesión?',
+      confirmText: 'Salir',
+      onConfirm: signOut,
+    });
   };
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
+      {modal}
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <Text style={s.pageTitle}>Configuración</Text>
 
@@ -318,6 +324,31 @@ export default function ConfiguracionScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Seguridad */}
+        <SectionLabel text="Seguridad" dark={dark} s={s} />
+        <View style={s.card}>
+          <View style={s.bioRow}>
+            <View style={s.bioInfo}>
+              <Ionicons name="finger-print" size={22} color={biometricEnabled ? colors.primary : (dark ? '#475569' : '#94A3B8')} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.bioTitle}>Huella / Face ID</Text>
+                <Text style={s.bioSub}>
+                  {biometricAvailable
+                    ? 'Desbloquear la app con biometría'
+                    : 'No disponible en este dispositivo'}
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={biometricEnabled}
+              onValueChange={biometricAvailable ? enableBiometric : undefined}
+              disabled={!biometricAvailable}
+              trackColor={{ false: dark ? '#334155' : '#CBD5E1', true: colors.primary }}
+              thumbColor="#fff"
+            />
+          </View>
+        </View>
+
         {/* Cerrar sesión */}
         <TouchableOpacity style={s.logoutBtn} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
@@ -380,6 +411,11 @@ const styles = (dark) => StyleSheet.create({
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   tagChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: dark ? '#1a2740' : '#EEF2FF', borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 6 },
   tagChipText: { ...typography.captionMed, color: dark ? colors.primaryLight : colors.primary },
+  // Biometric
+  bioRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  bioInfo: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
+  bioTitle: { ...typography.bodyMed, color: dark ? colors.text.dark : colors.text.light },
+  bioSub: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginTop: 2 },
   // Logout
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.lg, paddingVertical: 14, borderRadius: radius.md, borderWidth: 1, borderColor: colors.error },
   logoutText: { ...typography.bodyMed, color: colors.error },

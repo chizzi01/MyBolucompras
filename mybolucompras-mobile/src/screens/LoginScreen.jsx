@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert, Image,
+  KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Image,
 } from 'react-native';
+import { useModal } from '../hooks/useModal';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -19,21 +20,31 @@ export default function LoginScreen() {
   const [nombre, setNombre] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const { showModal, modal } = useModal();
 
   const handleSubmit = async () => {
-    if (!email || !password) return Alert.alert('Campos requeridos', 'Completá email y contraseña.');
+    if (!email || !password) {
+      return showModal({ type: 'warning', title: 'Campos requeridos', message: 'Completá email y contraseña.' });
+    }
     setLoading(true);
     try {
       if (mode === 'login') {
         await signIn(email.trim(), password);
       } else {
-        if (!nombre) return Alert.alert('Campo requerido', 'Ingresá tu nombre.');
+        if (!nombre) {
+          setLoading(false);
+          return showModal({ type: 'warning', title: 'Campo requerido', message: 'Ingresá tu nombre.' });
+        }
         await signUp(email.trim(), password, nombre.trim());
-        Alert.alert('Cuenta creada', 'Revisá tu email para confirmar tu cuenta.');
-        setMode('login');
+        showModal({
+          type: 'success',
+          title: 'Cuenta creada',
+          message: 'Revisá tu email para confirmar tu cuenta.',
+          onClose: () => setMode('login'),
+        });
       }
     } catch (err) {
-      Alert.alert('Error', err.message);
+      showModal({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -41,6 +52,7 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.root}>
+      {modal}
       <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
         <View style={s.header}>
           <Image

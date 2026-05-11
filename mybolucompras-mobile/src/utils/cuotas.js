@@ -58,3 +58,18 @@ export function getCuotasRestantes(gasto, mydata) {
   }
   return calcularCuotasRestantes(gasto.fecha, gasto.cuotas);
 }
+
+// Returns false when a credit expense was purchased after the last closing date
+// and hasn't been charged yet (first charge will appear next month)
+export function gastoEntraEsteMes(gasto, mydata) {
+  if (gasto.isFijo) return true;
+  if (gasto.tipo !== 'credito') return true;
+  const fechaCompra = parseFecha(gasto.fecha);
+  if (!fechaCompra || isNaN(fechaCompra)) return true;
+  const fechaCierreDate = mydata?.cierre ? new Date(mydata.cierre) : null;
+  const fechaCierreAnteriorDate = mydata?.cierreAnterior ? new Date(mydata.cierreAnterior) : null;
+  const cierreOk = fechaCierreDate && !isNaN(fechaCierreDate);
+  const cierreAntOk = fechaCierreAnteriorDate && !isNaN(fechaCierreAnteriorDate);
+  if (!cierreOk || !cierreAntOk) return true;
+  return !(fechaCompra > fechaCierreAnteriorDate && fechaCompra <= fechaCierreDate);
+}

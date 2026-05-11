@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   View, Text, FlatList, StyleSheet, RefreshControl,
-  Alert, TouchableOpacity,
+  TouchableOpacity,
 } from 'react-native';
+import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '../context/DataContext';
 import { getCuotasRestantes } from '../utils/cuotas';
@@ -11,7 +12,7 @@ import GastoCard from '../components/GastoCard';
 import FilterBar from '../components/FilterBar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import EditarGastoModal from './EditarGastoModal';
-import { colors, spacing, typography } from '../constants/theme';
+import { colors, spacing, radius, typography } from '../constants/theme';
 
 export default function GastosScreen() {
   const { gastos, mydata, loading, cargarDatos, eliminarGasto } = useData();
@@ -22,6 +23,8 @@ export default function GastosScreen() {
   const [soloEsteMes, setSoloEsteMes] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [gastoEditando, setGastoEditando] = useState(null);
+  const [tabActivo, setTabActivo] = useState('normales');
+  const { showModal, modal } = useModal();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -30,30 +33,32 @@ export default function GastosScreen() {
   }, [cargarDatos]);
 
   const gastosFiltrados = useMemo(() => {
-    let lista = gastos;
+    let lista = gastos.filter(g => tabActivo === 'fijos' ? g.isFijo : !g.isFijo);
     if (search.trim()) {
       const q = search.toLowerCase();
       lista = lista.filter(g => g.objeto.toLowerCase().includes(q));
     }
-    if (soloEsteMes) {
+    if (soloEsteMes && tabActivo === 'normales') {
       lista = lista.filter(g => {
-        if (g.isFijo) return true;
         const rest = getCuotasRestantes(g, mydata);
         return rest === 'N/A' || rest > 0;
       });
     }
     return lista;
-  }, [gastos, search, soloEsteMes, mydata]);
+  }, [gastos, search, soloEsteMes, mydata, tabActivo]);
 
   const handleDelete = (gasto) => {
-    Alert.alert(
-      'Eliminar gasto',
-      `¿Eliminar "${gasto.objeto}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: () => eliminarGasto(gasto.id) },
-      ]
-    );
+    showModal({
+      type: 'danger',
+      title: 'Eliminar gasto',
+      message: `¿Eliminar "${gasto.objeto}"?`,
+      onConfirm: () => eliminarGasto(gasto.id),
+    });
+  };
+
+  const handleTabChange = (tab) => {
+    setTabActivo(tab);
+    setSearch('');
   };
 
   const renderItem = ({ item }) => (
@@ -72,11 +77,29 @@ export default function GastosScreen() {
         <Text style={s.count}>{gastosFiltrados.length}</Text>
       </View>
 
+      <View style={s.tabsRow}>
+        <TouchableOpacity
+          style={[s.tabBtn, tabActivo === 'normales' && s.tabBtnActive]}
+          onPress={() => handleTabChange('normales')}
+          activeOpacity={0.7}
+        >
+          <Text style={[s.tabBtnText, tabActivo === 'normales' && s.tabBtnTextActive]}>Normales</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.tabBtn, tabActivo === 'fijos' && s.tabBtnActive]}
+          onPress={() => handleTabChange('fijos')}
+          activeOpacity={0.7}
+        >
+          <Text style={[s.tabBtnText, tabActivo === 'fijos' && s.tabBtnTextActive]}>Fijos</Text>
+        </TouchableOpacity>
+      </View>
+
       <FilterBar
         search={search}
         onSearchChange={setSearch}
         soloEsteMes={soloEsteMes}
         onToggleSoloEsteMes={() => setSoloEsteMes(v => !v)}
+        mostrarFiltroMes={tabActivo === 'normales'}
       />
 
       {loading ? (
@@ -114,6 +137,7 @@ export default function GastosScreen() {
           onClose={() => setGastoEditando(null)}
         />
       )}
+      {modal}
     </SafeAreaView>
   );
 }
@@ -123,6 +147,30 @@ const styles = (dark) => StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.xs, gap: spacing.sm },
   title: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light },
   count: { ...typography.captionMed, backgroundColor: dark ? '#1e3a5f' : '#EEF2FF', color: dark ? colors.primaryLight : colors.primary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99, overflow: 'hidden' },
+  tabsRow: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.xs,
+    backgroundColor: dark ? '#1e293b' : '#F1F5F9',
+    borderRadius: radius.md,
+    padding: 3,
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: radius.md - 1,
+  },
+  tabBtnActive: {
+    backgroundColor: dark ? colors.surface.dark : '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabBtnText: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
+  tabBtnTextActive: { color: dark ? colors.text.dark : colors.text.light, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: spacing.xl * 2 },
   emptyIcon: { fontSize: 48, marginBottom: spacing.md },
   emptyText: { ...typography.body, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textAlign: 'center' },
