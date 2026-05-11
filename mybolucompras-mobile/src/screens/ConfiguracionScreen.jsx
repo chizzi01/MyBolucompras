@@ -11,7 +11,7 @@ import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { formatARS } from '../utils/formatters';
-import { BANCOS, MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
+import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
 
 export default function ConfiguracionScreen() {
   const { user, signOut, biometricEnabled, biometricAvailable, enableBiometric } = useAuth();
@@ -46,6 +46,7 @@ export default function ConfiguracionScreen() {
   // Etiquetas
   const [etiquetas, setEtiquetas] = useState(mydata.etiquetas || []);
   const [nuevaEtiqueta, setNuevaEtiqueta] = useState('');
+  const [colorEtiqueta, setColorEtiqueta] = useState(ETIQUETA_COLORS[0]);
   const [savingEtiq, setSavingEtiq] = useState(false);
 
   useEffect(() => {
@@ -109,13 +110,14 @@ export default function ConfiguracionScreen() {
   const handleAgregarEtiqueta = async () => {
     const trimmed = nuevaEtiqueta.trim();
     if (!trimmed) return;
-    if (etiquetas.includes(trimmed)) {
+    const nombres = etiquetas.map(e => typeof e === 'string' ? e : e.nombre);
+    if (nombres.includes(trimmed)) {
       showModal({ type: 'warning', title: 'Ya existe', message: 'Esa etiqueta ya está en la lista.' });
       return;
     }
     setSavingEtiq(true);
     try {
-      const next = [...etiquetas, trimmed];
+      const next = [...etiquetas, { nombre: trimmed, color: colorEtiqueta }];
       await actualizarConfig({ etiquetas: next });
       setEtiquetas(next);
       setNuevaEtiqueta('');
@@ -126,8 +128,8 @@ export default function ConfiguracionScreen() {
     }
   };
 
-  const handleEliminarEtiqueta = async (tag) => {
-    const next = etiquetas.filter(e => e !== tag);
+  const handleEliminarEtiqueta = async (nombre) => {
+    const next = etiquetas.filter(e => (typeof e === 'string' ? e : e.nombre) !== nombre);
     await actualizarConfig({ etiquetas: next });
     setEtiquetas(next);
   };
@@ -255,33 +257,46 @@ export default function ConfiguracionScreen() {
         <SectionLabel text="Etiquetas" dark={dark} s={s} />
         <View style={s.card}>
           <View style={s.tagsWrap}>
-            {etiquetas.map(tag => (
-              <View key={tag} style={s.tagChip}>
-                <Text style={s.tagChipText}>{tag}</Text>
-                <TouchableOpacity
-                  onPress={() => handleEliminarEtiqueta(tag)}
-                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                >
-                  <Ionicons name="close-circle" size={16} color={dark ? '#94A3B8' : '#64748B'} />
-                </TouchableOpacity>
-              </View>
-            ))}
+            {etiquetas.map(tag => {
+              const nombre = typeof tag === 'string' ? tag : tag.nombre;
+              const color = typeof tag === 'string' ? colors.primary : tag.color;
+              return (
+                <View key={nombre} style={[s.tagChip, { backgroundColor: color + '25', borderColor: color }]}>
+                  <Text style={[s.tagChipText, { color }]}>{nombre}</Text>
+                  <TouchableOpacity
+                    onPress={() => handleEliminarEtiqueta(nombre)}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  >
+                    <Ionicons name="close-circle" size={16} color={color} />
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
           </View>
-          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
+          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
             <TextInput
-              style={[s.input, { flex: 1 }]}
+              style={[s.input, { flex: 1, marginBottom: 0 }]}
               value={nuevaEtiqueta}
               onChangeText={setNuevaEtiqueta}
               placeholder="Nueva etiqueta..."
               placeholderTextColor={dark ? '#475569' : '#94A3B8'}
               onSubmitEditing={handleAgregarEtiqueta}
             />
-            <TouchableOpacity style={s.saveBtn} onPress={handleAgregarEtiqueta} disabled={savingEtiq}>
+            <TouchableOpacity style={[s.saveBtn, { paddingHorizontal: spacing.md, backgroundColor: colorEtiqueta, marginTop: 0 }]} onPress={handleAgregarEtiqueta} disabled={savingEtiq}>
               {savingEtiq
                 ? <ActivityIndicator color="#fff" size="small" />
                 : <Ionicons name="add" size={20} color="#fff" />
               }
             </TouchableOpacity>
+          </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.sm }}>
+            {ETIQUETA_COLORS.map(c => (
+              <TouchableOpacity
+                key={c}
+                style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: c, borderWidth: colorEtiqueta === c ? 3 : 1, borderColor: colorEtiqueta === c ? (dark ? '#fff' : '#1E293B') : c }}
+                onPress={() => setColorEtiqueta(c)}
+              />
+            ))}
           </View>
         </View>
 
@@ -409,8 +424,8 @@ const styles = (dark) => StyleSheet.create({
   dropdownItemTextActive: { color: colors.primary, fontWeight: '600' },
   // Etiquetas
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  tagChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: dark ? '#1a2740' : '#EEF2FF', borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 6 },
-  tagChipText: { ...typography.captionMed, color: dark ? colors.primaryLight : colors.primary },
+  tagChip: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderRadius: radius.full, paddingHorizontal: 10, paddingVertical: 6 },
+  tagChipText: { ...typography.captionMed },
   // Biometric
   bioRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   bioInfo: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },

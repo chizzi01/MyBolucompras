@@ -40,7 +40,7 @@ function mapFromDB(row) {
     cierreAnterior: row.cierre_anterior || '',
     vencimientoAnterior: row.vencimiento_anterior || '',
     fondos: Number(row.fondos) || 0,
-    etiquetas: (row.etiquetas || []).map(e => typeof e === 'string' ? e : (e?.nombre || '')).filter(Boolean),
+    etiquetas: (row.etiquetas || []).map(e => typeof e === 'string' ? { nombre: e, color: '#6366F1' } : e).filter(e => e?.nombre),
     presupuestos: row.presupuestos || {},
     presupuestoMensualMax: Number(row.presupuesto_mensual_max) || 0,
     bancosHabilitados: row.bancos_habilitados || [],

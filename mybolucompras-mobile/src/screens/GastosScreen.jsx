@@ -79,14 +79,14 @@ export default function GastosScreen() {
 
       <View style={s.tabsRow}>
         <TouchableOpacity
-          style={[s.tabBtn, tabActivo === 'normales' && s.tabBtnActive]}
+          style={[s.tabBtn, tabActivo === 'normales' && s.tabBtnActiveNormales]}
           onPress={() => handleTabChange('normales')}
           activeOpacity={0.7}
         >
           <Text style={[s.tabBtnText, tabActivo === 'normales' && s.tabBtnTextActive]}>Normales</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[s.tabBtn, tabActivo === 'fijos' && s.tabBtnActive]}
+          style={[s.tabBtn, tabActivo === 'fijos' && s.tabBtnActiveFijos]}
           onPress={() => handleTabChange('fijos')}
           activeOpacity={0.7}
         >
@@ -161,16 +161,24 @@ const styles = (dark) => StyleSheet.create({
     alignItems: 'center',
     borderRadius: radius.md - 1,
   },
-  tabBtnActive: {
-    backgroundColor: dark ? colors.surface.dark : '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 2,
-    elevation: 2,
+  tabBtnActiveNormales: {
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tabBtnActiveFijos: {
+    backgroundColor: colors.accent,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tabBtnText: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
-  tabBtnTextActive: { color: dark ? colors.text.dark : colors.text.light, fontWeight: '600' },
+  tabBtnTextActive: { color: '#fff', fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: spacing.xl * 2 },
   emptyIcon: { fontSize: 48, marginBottom: spacing.md },
   emptyText: { ...typography.body, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textAlign: 'center' },

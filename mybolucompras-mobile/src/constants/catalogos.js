@@ -1,3 +1,8 @@
+export const ETIQUETA_COLORS = [
+  '#6366F1', '#10B981', '#F59E0B', '#EF4444', '#3B82F6',
+  '#EC4899', '#8B5CF6', '#F97316', '#14B8A6', '#64748B',
+];
+
 export const BANCOS = [
   'Santander', 'Nacion', 'Galicia', 'BBVA', 'Credicoop',
   'Patagonia', 'Supervielle', 'Hipotecario', 'Citibank',
