@@ -1,32 +1,47 @@
-import React, { useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes } from '../utils/cuotas';
 import { parsePrecio, getCurrencySymbol, formatARS } from '../utils/formatters';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
+const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
 export default function DashboardScreen() {
   const { gastos, mydata } = useData();
   const { dark } = useTheme();
   const s = styles(dark);
 
-  const stats = useMemo(() => {
-    const hoy = new Date();
-    const mesActual = hoy.getMonth();
-    const anioActual = hoy.getFullYear();
+  const hoy = new Date();
+  const [mesSel, setMesSel] = useState({ mes: hoy.getMonth(), anio: hoy.getFullYear() });
 
+  const isHoy = mesSel.mes === hoy.getMonth() && mesSel.anio === hoy.getFullYear();
+
+  const prevMes = () => setMesSel(p =>
+    p.mes === 0 ? { mes: 11, anio: p.anio - 1 } : { mes: p.mes - 1, anio: p.anio }
+  );
+  const nextMes = () => {
+    if (!isHoy) setMesSel(p =>
+      p.mes === 11 ? { mes: 0, anio: p.anio + 1 } : { mes: p.mes + 1, anio: p.anio }
+    );
+  };
+
+  const stats = useMemo(() => {
     const gastosMes = gastos.filter(g => {
-      const [d, m, y] = (g.fecha || '').split('/');
-      return Number(m) - 1 === mesActual && Number(y) === anioActual;
+      const [, m, y] = (g.fecha || '').split('/');
+      return Number(m) - 1 === mesSel.mes && Number(y) === mesSel.anio;
     });
 
     const totalesPorMoneda = {};
     gastosMes.forEach(g => {
       const moneda = g.moneda || 'ARS';
-      const precio = parsePrecio(g.precio);
-      totalesPorMoneda[moneda] = (totalesPorMoneda[moneda] || 0) + precio;
+      totalesPorMoneda[moneda] = (totalesPorMoneda[moneda] || 0) + parsePrecio(g.precio);
     });
 
     const cuotasActivas = gastos.filter(g => {
@@ -41,7 +56,7 @@ export default function DashboardScreen() {
     }, null);
 
     const porEtiqueta = {};
-    gastos.forEach(g => {
+    gastosMes.forEach(g => {
       if (g.moneda !== 'ARS') return;
       const etiq = g.etiqueta || 'Sin etiqueta';
       porEtiqueta[etiq] = (porEtiqueta[etiq] || 0) + parsePrecio(g.precio);
@@ -50,44 +65,102 @@ export default function DashboardScreen() {
     const maxEtiqueta = Math.max(...Object.values(porEtiqueta), 1);
 
     return { totalesPorMoneda, cuotasActivas, masCaro, porEtiqueta, maxEtiqueta, gastosMes };
-  }, [gastos, mydata]);
+  }, [gastos, mydata, mesSel]);
+
+  const hayTotal = Object.keys(stats.totalesPorMoneda).length > 0;
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={s.pageTitle}>Dashboard</Text>
 
-        <Text style={s.section}>Este mes</Text>
-        <View style={s.kpiRow}>
-          <KPICard label="Gastos registrados" value={stats.gastosMes.length} dark={dark} accent={colors.primary} />
-          <KPICard label="Cuotas activas" value={stats.cuotasActivas} dark={dark} accent={colors.accent} />
+        {/* Header con navegación de mes */}
+        <View style={s.headerRow}>
+          <Text style={s.pageTitle}>Dashboard</Text>
+          <View style={s.monthNav}>
+            <TouchableOpacity
+              onPress={prevMes}
+              style={s.monthNavBtn}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={18}
+                color={dark ? colors.textSecondary.dark : colors.textSecondary.light}
+              />
+            </TouchableOpacity>
+            <Text style={s.monthLabel}>{MESES[mesSel.mes]} {mesSel.anio}</Text>
+            <TouchableOpacity
+              onPress={nextMes}
+              style={s.monthNavBtn}
+              disabled={isHoy}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={isHoy ? 'transparent' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <Text style={s.section}>Total por moneda (mes actual)</Text>
-        {Object.entries(stats.totalesPorMoneda).length === 0 ? (
-          <Text style={s.empty}>Sin gastos este mes</Text>
-        ) : (
-          Object.entries(stats.totalesPorMoneda).map(([moneda, total]) => (
-            <View key={moneda} style={s.totalRow}>
-              <Text style={s.monedaLabel}>{moneda}</Text>
-              <Text style={s.monedaValue}>{getCurrencySymbol(moneda)} {formatARS(total)}</Text>
-            </View>
-          ))
-        )}
+        {/* Total del mes — H1 hero */}
+        <View style={s.totalHero}>
+          {hayTotal ? (
+            <>
+              {Object.entries(stats.totalesPorMoneda).map(([moneda, total]) => (
+                <View key={moneda} style={s.totalHeroRow}>
+                  <Text style={s.totalHeroAmount}>
+                    {getCurrencySymbol(moneda)} {formatARS(total)}
+                  </Text>
+                  {Object.keys(stats.totalesPorMoneda).length > 1 && (
+                    <Text style={s.totalHeroMoneda}>{moneda}</Text>
+                  )}
+                </View>
+              ))}
+              <Text style={s.totalHeroLabel}>gastado en {MESES[mesSel.mes].toLowerCase()}</Text>
+            </>
+          ) : (
+            <>
+              <Text style={s.totalHeroEmpty}>$ 0</Text>
+              <Text style={s.totalHeroLabel}>sin gastos este mes</Text>
+            </>
+          )}
+        </View>
 
+        {/* KPI cards */}
+        <View style={s.kpiRow}>
+          <KPICard
+            label="Gastos del mes"
+            value={stats.gastosMes.length}
+            dark={dark}
+            accent={colors.primary}
+          />
+          <KPICard
+            label="Cuotas activas"
+            value={stats.cuotasActivas}
+            dark={dark}
+            accent={colors.accent}
+          />
+        </View>
+
+        {/* Gasto más caro */}
         {stats.masCaro && (
           <>
-            <Text style={s.section}>Gasto más caro del mes</Text>
+            <Text style={s.section}>Gasto más caro</Text>
             <View style={s.destacado}>
               <Text style={s.destacadoObj} numberOfLines={1}>{stats.masCaro.objeto}</Text>
-              <Text style={s.destacadoVal}>{getCurrencySymbol(stats.masCaro.moneda)} {formatARS(stats.masCaro.precio)}</Text>
+              <Text style={s.destacadoVal}>
+                {getCurrencySymbol(stats.masCaro.moneda)} {formatARS(stats.masCaro.precio)}
+              </Text>
             </View>
           </>
         )}
 
+        {/* Distribución por etiqueta */}
         {Object.keys(stats.porEtiqueta).length > 0 && (
           <>
-            <Text style={s.section}>Por etiqueta (ARS)</Text>
+            <Text style={s.section}>Por etiqueta — ARS</Text>
             {Object.entries(stats.porEtiqueta)
               .sort((a, b) => b[1] - a[1])
               .slice(0, 8)
@@ -111,7 +184,15 @@ export default function DashboardScreen() {
 
 function KPICard({ label, value, dark, accent }) {
   const s = StyleSheet.create({
-    card: { flex: 1, backgroundColor: dark ? colors.surface.dark : colors.surface.light, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, alignItems: 'center' },
+    card: {
+      flex: 1,
+      backgroundColor: dark ? colors.surface.dark : colors.surface.light,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: dark ? colors.border.dark : colors.border.light,
+      alignItems: 'center',
+    },
     val: { fontSize: 32, fontWeight: '800', color: accent, marginBottom: 4 },
     lbl: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textAlign: 'center' },
   });
@@ -126,19 +207,96 @@ function KPICard({ label, value, dark, accent }) {
 const styles = (dark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light },
   scroll: { padding: spacing.md },
-  pageTitle: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light, marginBottom: spacing.md },
-  section: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: spacing.lg, marginBottom: spacing.sm },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  pageTitle: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light },
+  monthNav: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  monthNavBtn: { padding: 4 },
+  monthLabel: {
+    ...typography.bodyMed,
+    color: dark ? colors.text.dark : colors.text.light,
+    minWidth: 130,
+    textAlign: 'center',
+  },
+  totalHero: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg + 4,
+    marginBottom: spacing.md,
+    backgroundColor: dark ? colors.surface.dark : colors.surface.light,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  totalHeroRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs },
+  totalHeroAmount: {
+    fontSize: 42,
+    fontWeight: '800',
+    color: colors.primary,
+    letterSpacing: -1,
+  },
+  totalHeroMoneda: {
+    ...typography.captionMed,
+    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+  },
+  totalHeroLabel: {
+    ...typography.caption,
+    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+    marginTop: 6,
+  },
+  totalHeroEmpty: {
+    fontSize: 42,
+    fontWeight: '800',
+    color: dark ? '#334155' : '#CBD5E1',
+    letterSpacing: -1,
+  },
+  section: {
+    ...typography.captionMed,
+    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
   kpiRow: { flexDirection: 'row', gap: spacing.sm },
-  empty: { ...typography.body, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: dark ? colors.border.dark : colors.border.light },
-  monedaLabel: { ...typography.bodyMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
-  monedaValue: { ...typography.bodyBold, color: dark ? colors.text.dark : colors.text.light },
-  destacado: { backgroundColor: dark ? colors.surface.dark : colors.surface.light, borderRadius: radius.md, padding: spacing.md, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light },
+  destacado: {
+    backgroundColor: dark ? colors.surface.dark : colors.surface.light,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+  },
   destacadoObj: { ...typography.bodyMed, color: dark ? colors.text.dark : colors.text.light, flex: 1, marginRight: spacing.sm },
   destacadoVal: { ...typography.bodyBold, color: colors.primary },
   barRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: spacing.sm },
-  barLabel: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, width: 90 },
-  barTrack: { flex: 1, height: 8, backgroundColor: dark ? '#334155' : '#E2E8F0', borderRadius: 4, overflow: 'hidden' },
+  barLabel: {
+    ...typography.caption,
+    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+    width: 90,
+  },
+  barTrack: {
+    flex: 1,
+    height: 8,
+    backgroundColor: dark ? '#334155' : '#E2E8F0',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
   barFill: { height: 8, backgroundColor: colors.primary, borderRadius: 4 },
-  barVal: { ...typography.caption, color: dark ? colors.text.dark : colors.text.light, width: 80, textAlign: 'right' },
+  barVal: {
+    ...typography.caption,
+    color: dark ? colors.text.dark : colors.text.light,
+    width: 80,
+    textAlign: 'right',
+  },
 });

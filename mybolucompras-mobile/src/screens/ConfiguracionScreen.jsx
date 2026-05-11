@@ -13,6 +13,39 @@ import { colors, spacing, radius, typography } from '../constants/theme';
 import { formatARS } from '../utils/formatters';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
 
+function AccordionSection({ title, children, dark, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const s = StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: spacing.lg,
+      marginBottom: open ? spacing.sm : 0,
+      paddingVertical: 2,
+    },
+    label: {
+      ...typography.captionMed,
+      color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+  });
+  return (
+    <>
+      <TouchableOpacity style={s.header} onPress={() => setOpen(v => !v)} activeOpacity={0.7}>
+        <Text style={s.label}>{title}</Text>
+        <Ionicons
+          name={open ? 'chevron-up' : 'chevron-down'}
+          size={15}
+          color={dark ? colors.textSecondary.dark : colors.textSecondary.light}
+        />
+      </TouchableOpacity>
+      {open && children}
+    </>
+  );
+}
+
 export default function ConfiguracionScreen() {
   const { user, signOut, biometricEnabled, biometricAvailable, enableBiometric } = useAuth();
   const { mydata, actualizarFondos, actualizarCierre, actualizarConfig } = useData();
@@ -30,20 +63,16 @@ export default function ConfiguracionScreen() {
   const [loadingFondos, setLoadingFondos] = useState(false);
   const [loadingFechas, setLoadingFechas] = useState(false);
 
-  // Medios habilitados: si está vacío inicializamos con todos
   const [mediosHabilitados, setMediosHabilitados] = useState(
     mydata.mediosHabilitados?.length > 0 ? mydata.mediosHabilitados : [...MEDIOS_DE_PAGO]
   );
-  // Bancos habilitados
   const [bancosHabilitados, setBancosHabilitados] = useState(
     mydata.bancosHabilitados?.length > 0 ? mydata.bancosHabilitados : [...BANCOS]
   );
-  // Moneda preferida
   const [monedaPreferida, setMonedaPreferida] = useState(mydata.monedaPreferida || 'ARS');
   const [monedaOpen, setMonedaOpen] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
 
-  // Etiquetas
   const [etiquetas, setEtiquetas] = useState(mydata.etiquetas || []);
   const [nuevaEtiqueta, setNuevaEtiqueta] = useState('');
   const [colorEtiqueta, setColorEtiqueta] = useState(ETIQUETA_COLORS[0]);
@@ -162,207 +191,230 @@ export default function ConfiguracionScreen() {
         </View>
 
         {/* Apariencia */}
-        <SectionLabel text="Apariencia" dark={dark} s={s} />
-        <View style={s.card}>
-          <View style={s.themeRow}>
-            {[
-              { key: 'system', label: 'Sistema', icon: 'phone-portrait-outline' },
-              { key: 'light', label: 'Claro', icon: 'sunny-outline' },
-              { key: 'dark', label: 'Oscuro', icon: 'moon-outline' },
-            ].map(opt => (
-              <TouchableOpacity
-                key={opt.key}
-                style={[s.themeBtn, mode === opt.key && s.themeBtnActive]}
-                onPress={() => setTheme(opt.key)}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={opt.icon}
-                  size={20}
-                  color={mode === opt.key ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
-                />
-                <Text style={[s.themeBtnText, mode === opt.key && s.themeBtnTextActive]}>{opt.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Moneda preferida */}
-        <SectionLabel text="Moneda preferida" dark={dark} s={s} />
-        <View style={s.card}>
-          <TouchableOpacity
-            style={[s.input, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
-            onPress={() => setMonedaOpen(v => !v)}
-          >
-            <Text style={{ ...typography.body, color: dark ? colors.text.dark : colors.text.light }}>
-              {MONEDAS.find(m => m.codigo === monedaPreferida)?.nombre || monedaPreferida}
-            </Text>
-            <Ionicons name={monedaOpen ? 'chevron-up' : 'chevron-down'} size={16} color={dark ? colors.textSecondary.dark : colors.textSecondary.light} />
-          </TouchableOpacity>
-          {monedaOpen && (
-            <View style={s.dropdownList}>
-              {MONEDAS.map(m => (
+        <AccordionSection title="Apariencia" dark={dark} defaultOpen>
+          <View style={s.card}>
+            <View style={s.themeRow}>
+              {[
+                { key: 'system', label: 'Sistema', icon: 'phone-portrait-outline' },
+                { key: 'light', label: 'Claro', icon: 'sunny-outline' },
+                { key: 'dark', label: 'Oscuro', icon: 'moon-outline' },
+              ].map(opt => (
                 <TouchableOpacity
-                  key={m.codigo}
-                  style={[s.dropdownItem, monedaPreferida === m.codigo && s.dropdownItemActive]}
-                  onPress={() => handleMoneda(m.codigo)}
+                  key={opt.key}
+                  style={[s.themeBtn, mode === opt.key && s.themeBtnActive]}
+                  onPress={() => setTheme(opt.key)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={[s.dropdownItemText, monedaPreferida === m.codigo && s.dropdownItemTextActive]}>
-                    {m.simbolo}  {m.nombre} ({m.codigo})
-                  </Text>
-                  {monedaPreferida === m.codigo && <Ionicons name="checkmark" size={16} color={colors.primary} />}
+                  <Ionicons
+                    name={opt.icon}
+                    size={20}
+                    color={mode === opt.key ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+                  />
+                  <Text style={[s.themeBtnText, mode === opt.key && s.themeBtnTextActive]}>{opt.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-          )}
-        </View>
+          </View>
+        </AccordionSection>
 
-        {/* Medios habilitados */}
-        <SectionLabel text="Medios de pago habilitados" dark={dark} s={s} />
-        <View style={s.card}>
-          {MEDIOS_DE_PAGO.map(medio => {
-            const enabled = mediosHabilitados.includes(medio);
-            return (
-              <TouchableOpacity key={medio} style={s.toggleItem} onPress={() => toggleMedio(medio)}>
-                <Ionicons
-                  name={enabled ? 'checkmark-circle' : 'ellipse-outline'}
-                  size={22}
-                  color={enabled ? colors.primary : (dark ? '#475569' : '#94A3B8')}
-                />
-                <Text style={[s.toggleItemText, !enabled && s.toggleItemTextOff]}>{medio}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        {/* Moneda preferida */}
+        <AccordionSection title="Moneda preferida" dark={dark}>
+          <View style={s.card}>
+            <TouchableOpacity
+              style={[s.input, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+              onPress={() => setMonedaOpen(v => !v)}
+            >
+              <Text style={{ ...typography.body, color: dark ? colors.text.dark : colors.text.light }}>
+                {MONEDAS.find(m => m.codigo === monedaPreferida)?.nombre || monedaPreferida}
+              </Text>
+              <Ionicons name={monedaOpen ? 'chevron-up' : 'chevron-down'} size={16} color={dark ? colors.textSecondary.dark : colors.textSecondary.light} />
+            </TouchableOpacity>
+            {monedaOpen && (
+              <View style={s.dropdownList}>
+                {MONEDAS.map(m => (
+                  <TouchableOpacity
+                    key={m.codigo}
+                    style={[s.dropdownItem, monedaPreferida === m.codigo && s.dropdownItemActive]}
+                    onPress={() => handleMoneda(m.codigo)}
+                  >
+                    <Text style={[s.dropdownItemText, monedaPreferida === m.codigo && s.dropdownItemTextActive]}>
+                      {m.simbolo}  {m.nombre} ({m.codigo})
+                    </Text>
+                    {monedaPreferida === m.codigo && <Ionicons name="checkmark" size={16} color={colors.primary} />}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        </AccordionSection>
 
-        {/* Bancos habilitados */}
-        <SectionLabel text="Bancos habilitados" dark={dark} s={s} />
-        <View style={s.card}>
-          {BANCOS.map(banco => {
-            const enabled = bancosHabilitados.includes(banco);
-            return (
-              <TouchableOpacity key={banco} style={s.toggleItem} onPress={() => toggleBanco(banco)}>
-                <Ionicons
-                  name={enabled ? 'checkmark-circle' : 'ellipse-outline'}
-                  size={22}
-                  color={enabled ? colors.primary : (dark ? '#475569' : '#94A3B8')}
-                />
-                <Text style={[s.toggleItemText, !enabled && s.toggleItemTextOff]}>{banco}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        {/* Medios habilitados — pills */}
+        <AccordionSection title="Medios de pago" dark={dark}>
+          <View style={s.card}>
+            <View style={s.pillsWrap}>
+              {MEDIOS_DE_PAGO.map(medio => {
+                const enabled = mediosHabilitados.includes(medio);
+                return (
+                  <TouchableOpacity
+                    key={medio}
+                    style={[s.togglePill, enabled && s.togglePillActive]}
+                    onPress={() => toggleMedio(medio)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[s.togglePillText, enabled && s.togglePillTextActive]}>{medio}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </AccordionSection>
+
+        {/* Bancos habilitados — pills */}
+        <AccordionSection title="Bancos" dark={dark}>
+          <View style={s.card}>
+            <View style={s.pillsWrap}>
+              {BANCOS.map(banco => {
+                const enabled = bancosHabilitados.includes(banco);
+                return (
+                  <TouchableOpacity
+                    key={banco}
+                    style={[s.togglePill, enabled && s.togglePillActive]}
+                    onPress={() => toggleBanco(banco)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[s.togglePillText, enabled && s.togglePillTextActive]}>{banco}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </AccordionSection>
 
         {/* Etiquetas */}
-        <SectionLabel text="Etiquetas" dark={dark} s={s} />
-        <View style={s.card}>
-          <View style={s.tagsWrap}>
-            {etiquetas.map(tag => {
-              const nombre = typeof tag === 'string' ? tag : tag.nombre;
-              const color = typeof tag === 'string' ? colors.primary : tag.color;
-              return (
-                <View key={nombre} style={[s.tagChip, { backgroundColor: color + '25', borderColor: color }]}>
-                  <Text style={[s.tagChipText, { color }]}>{nombre}</Text>
-                  <TouchableOpacity
-                    onPress={() => handleEliminarEtiqueta(nombre)}
-                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                  >
-                    <Ionicons name="close-circle" size={16} color={color} />
-                  </TouchableOpacity>
-                </View>
-              );
-            })}
+        <AccordionSection title="Etiquetas" dark={dark} defaultOpen>
+          <View style={s.card}>
+            <View style={s.tagsWrap}>
+              {etiquetas.map(tag => {
+                const nombre = typeof tag === 'string' ? tag : tag.nombre;
+                const color = typeof tag === 'string' ? colors.primary : tag.color;
+                return (
+                  <View key={nombre} style={[s.tagChip, { backgroundColor: color + '25', borderColor: color }]}>
+                    <Text style={[s.tagChipText, { color }]}>{nombre}</Text>
+                    <TouchableOpacity
+                      onPress={() => handleEliminarEtiqueta(nombre)}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="close-circle" size={16} color={color} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View>
+            <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+              <TextInput
+                style={[s.input, { flex: 1, marginBottom: 0 }]}
+                value={nuevaEtiqueta}
+                onChangeText={setNuevaEtiqueta}
+                placeholder="Nueva etiqueta..."
+                placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+                onSubmitEditing={handleAgregarEtiqueta}
+              />
+              <TouchableOpacity
+                style={[s.saveBtn, { paddingHorizontal: spacing.md, backgroundColor: colorEtiqueta, marginTop: 0 }]}
+                onPress={handleAgregarEtiqueta}
+                disabled={savingEtiq}
+              >
+                {savingEtiq
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Ionicons name="add" size={20} color="#fff" />
+                }
+              </TouchableOpacity>
+            </View>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.sm }}>
+              {ETIQUETA_COLORS.map(c => (
+                <TouchableOpacity
+                  key={c}
+                  style={{
+                    width: 26, height: 26, borderRadius: 13, backgroundColor: c,
+                    borderWidth: colorEtiqueta === c ? 3 : 1,
+                    borderColor: colorEtiqueta === c ? (dark ? '#fff' : '#1E293B') : c,
+                  }}
+                  onPress={() => setColorEtiqueta(c)}
+                />
+              ))}
+            </View>
           </View>
-          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+        </AccordionSection>
+
+        {/* Fondos */}
+        <AccordionSection title="Fondos disponibles" dark={dark} defaultOpen>
+          <View style={s.card}>
+            <Text style={s.cardLabel}>
+              Fondos actuales: <Text style={s.fondosValue}>$ {formatARS(mydata.fondos)}</Text>
+            </Text>
             <TextInput
-              style={[s.input, { flex: 1, marginBottom: 0 }]}
-              value={nuevaEtiqueta}
-              onChangeText={setNuevaEtiqueta}
-              placeholder="Nueva etiqueta..."
+              style={s.input}
+              value={fondos}
+              onChangeText={setFondos}
+              keyboardType="decimal-pad"
+              placeholder="Nuevo monto"
               placeholderTextColor={dark ? '#475569' : '#94A3B8'}
-              onSubmitEditing={handleAgregarEtiqueta}
             />
-            <TouchableOpacity style={[s.saveBtn, { paddingHorizontal: spacing.md, backgroundColor: colorEtiqueta, marginTop: 0 }]} onPress={handleAgregarEtiqueta} disabled={savingEtiq}>
-              {savingEtiq
+            <TouchableOpacity style={s.saveBtn} onPress={handleGuardarFondos} disabled={loadingFondos}>
+              {loadingFondos
                 ? <ActivityIndicator color="#fff" size="small" />
-                : <Ionicons name="add" size={20} color="#fff" />
+                : <Text style={s.saveBtnText}>Actualizar fondos</Text>
               }
             </TouchableOpacity>
           </View>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.sm }}>
-            {ETIQUETA_COLORS.map(c => (
-              <TouchableOpacity
-                key={c}
-                style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: c, borderWidth: colorEtiqueta === c ? 3 : 1, borderColor: colorEtiqueta === c ? (dark ? '#fff' : '#1E293B') : c }}
-                onPress={() => setColorEtiqueta(c)}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* Fondos */}
-        <SectionLabel text="Fondos disponibles" dark={dark} s={s} />
-        <View style={s.card}>
-          <Text style={s.cardLabel}>Fondos actuales: <Text style={s.fondosValue}>$ {formatARS(mydata.fondos)}</Text></Text>
-          <TextInput
-            style={s.input}
-            value={fondos}
-            onChangeText={setFondos}
-            keyboardType="decimal-pad"
-            placeholder="Nuevo monto"
-            placeholderTextColor={dark ? '#475569' : '#94A3B8'}
-          />
-          <TouchableOpacity style={s.saveBtn} onPress={handleGuardarFondos} disabled={loadingFondos}>
-            {loadingFondos ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.saveBtnText}>Actualizar fondos</Text>}
-          </TouchableOpacity>
-        </View>
+        </AccordionSection>
 
         {/* Fechas tarjeta */}
-        <SectionLabel text="Fechas de tarjeta" dark={dark} s={s} />
-        <View style={s.card}>
-          <Text style={s.hint}>Usadas para calcular cuotas restantes en crédito</Text>
-
-          <Label text="Cierre actual (YYYY-MM-DD)" dark={dark} />
-          <TextInput style={s.input} value={cierre} onChangeText={setCierre} placeholder="2025-05-15" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
-
-          <Label text="Vencimiento actual (YYYY-MM-DD)" dark={dark} />
-          <TextInput style={s.input} value={vencimiento} onChangeText={setVencimiento} placeholder="2025-05-22" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
-
-          <Label text="Cierre anterior (YYYY-MM-DD)" dark={dark} />
-          <TextInput style={s.input} value={cierreAnterior} onChangeText={setCierreAnterior} placeholder="2025-04-15" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
-
-          <Label text="Vencimiento anterior (YYYY-MM-DD)" dark={dark} />
-          <TextInput style={s.input} value={vencimientoAnterior} onChangeText={setVencimientoAnterior} placeholder="2025-04-22" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
-
-          <TouchableOpacity style={s.saveBtn} onPress={handleGuardarFechas} disabled={loadingFechas}>
-            {loadingFechas ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.saveBtnText}>Guardar fechas</Text>}
-          </TouchableOpacity>
-        </View>
+        <AccordionSection title="Fechas de tarjeta" dark={dark}>
+          <View style={s.card}>
+            <Text style={s.hint}>Usadas para calcular cuotas restantes en crédito</Text>
+            <FieldLabel text="Cierre actual (YYYY-MM-DD)" dark={dark} />
+            <TextInput style={s.input} value={cierre} onChangeText={setCierre} placeholder="2025-05-15" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+            <FieldLabel text="Vencimiento actual (YYYY-MM-DD)" dark={dark} />
+            <TextInput style={s.input} value={vencimiento} onChangeText={setVencimiento} placeholder="2025-05-22" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+            <FieldLabel text="Cierre anterior (YYYY-MM-DD)" dark={dark} />
+            <TextInput style={s.input} value={cierreAnterior} onChangeText={setCierreAnterior} placeholder="2025-04-15" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+            <FieldLabel text="Vencimiento anterior (YYYY-MM-DD)" dark={dark} />
+            <TextInput style={s.input} value={vencimientoAnterior} onChangeText={setVencimientoAnterior} placeholder="2025-04-22" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+            <TouchableOpacity style={s.saveBtn} onPress={handleGuardarFechas} disabled={loadingFechas}>
+              {loadingFechas
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={s.saveBtnText}>Guardar fechas</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        </AccordionSection>
 
         {/* Seguridad */}
-        <SectionLabel text="Seguridad" dark={dark} s={s} />
-        <View style={s.card}>
-          <View style={s.bioRow}>
-            <View style={s.bioInfo}>
-              <Ionicons name="finger-print" size={22} color={biometricEnabled ? colors.primary : (dark ? '#475569' : '#94A3B8')} />
-              <View style={{ flex: 1 }}>
-                <Text style={s.bioTitle}>Huella / Face ID</Text>
-                <Text style={s.bioSub}>
-                  {biometricAvailable
-                    ? 'Desbloquear la app con biometría'
-                    : 'No disponible en este dispositivo'}
-                </Text>
+        <AccordionSection title="Seguridad" dark={dark}>
+          <View style={s.card}>
+            <View style={s.bioRow}>
+              <View style={s.bioInfo}>
+                <Ionicons name="finger-print" size={22} color={biometricEnabled ? colors.primary : (dark ? '#475569' : '#94A3B8')} />
+                <View style={{ flex: 1 }}>
+                  <Text style={s.bioTitle}>Huella / Face ID</Text>
+                  <Text style={s.bioSub}>
+                    {biometricAvailable
+                      ? 'Desbloquear la app con biometría'
+                      : 'No disponible en este dispositivo'}
+                  </Text>
+                </View>
               </View>
+              <Switch
+                value={biometricEnabled}
+                onValueChange={biometricAvailable ? enableBiometric : undefined}
+                disabled={!biometricAvailable}
+                trackColor={{ false: dark ? '#334155' : '#CBD5E1', true: colors.primary }}
+                thumbColor="#fff"
+              />
             </View>
-            <Switch
-              value={biometricEnabled}
-              onValueChange={biometricAvailable ? enableBiometric : undefined}
-              disabled={!biometricAvailable}
-              trackColor={{ false: dark ? '#334155' : '#CBD5E1', true: colors.primary }}
-              thumbColor="#fff"
-            />
           </View>
-        </View>
+        </AccordionSection>
 
         {/* Cerrar sesión */}
         <TouchableOpacity style={s.logoutBtn} onPress={handleLogout}>
@@ -376,13 +428,16 @@ export default function ConfiguracionScreen() {
   );
 }
 
-function SectionLabel({ text, dark, s }) {
-  return <Text style={s.section}>{text}</Text>;
-}
-
-function Label({ text, dark }) {
+function FieldLabel({ text, dark }) {
   return (
-    <Text style={{ ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginBottom: 6, marginTop: spacing.sm, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+    <Text style={{
+      ...typography.captionMed,
+      color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+      marginBottom: 6,
+      marginTop: spacing.sm,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    }}>
       {text}
     </Text>
   );
@@ -392,30 +447,77 @@ const styles = (dark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light },
   scroll: { padding: spacing.md },
   pageTitle: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light, marginBottom: spacing.md },
-  profileCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: dark ? colors.surface.dark : colors.surface.light, borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.md, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, gap: spacing.md },
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: dark ? colors.surface.dark : colors.surface.light,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    gap: spacing.md,
+  },
   avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: '#fff', fontSize: 20, fontWeight: '700' },
   profileInfo: { flex: 1 },
   profileNombre: { ...typography.bodyBold, color: dark ? colors.text.dark : colors.text.light },
   profileEmail: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginTop: 2 },
-  section: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: spacing.lg, marginBottom: spacing.sm },
-  card: { backgroundColor: dark ? colors.surface.dark : colors.surface.light, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, marginBottom: spacing.sm },
+  card: {
+    backgroundColor: dark ? colors.surface.dark : colors.surface.light,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    marginBottom: spacing.sm,
+  },
   cardLabel: { ...typography.body, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginBottom: spacing.sm },
   fondosValue: { color: colors.accent, fontWeight: '700' },
   hint: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginBottom: spacing.sm, fontStyle: 'italic' },
-  input: { backgroundColor: dark ? '#0F172A' : '#F8FAFC', borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, borderRadius: radius.sm, paddingHorizontal: spacing.md, paddingVertical: 10, ...typography.body, color: dark ? colors.text.dark : colors.text.light, marginBottom: spacing.sm },
-  saveBtn: { backgroundColor: colors.primary, borderRadius: radius.sm, paddingVertical: 11, paddingHorizontal: spacing.md, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xs },
+  input: {
+    backgroundColor: dark ? '#0F172A' : '#F8FAFC',
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    ...typography.body,
+    color: dark ? colors.text.dark : colors.text.light,
+    marginBottom: spacing.sm,
+  },
+  saveBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.sm,
+    paddingVertical: 11,
+    paddingHorizontal: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.xs,
+  },
   saveBtnText: { color: '#fff', fontWeight: '600', fontSize: 15 },
-  // Tema
   themeRow: { flexDirection: 'row', gap: spacing.sm },
-  themeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderRadius: radius.md, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, backgroundColor: dark ? '#0F172A' : '#F8FAFC' },
+  themeBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 11, borderRadius: radius.md, borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    backgroundColor: dark ? '#0F172A' : '#F8FAFC',
+  },
   themeBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   themeBtnText: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
   themeBtnTextActive: { color: '#fff', fontWeight: '600' },
-  // Toggle items (medios/bancos)
-  toggleItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: dark ? colors.border.dark : colors.border.light },
-  toggleItemText: { ...typography.body, color: dark ? colors.text.dark : colors.text.light, flex: 1 },
-  toggleItemTextOff: { color: dark ? '#475569' : '#94A3B8' },
+  // Pills para medios/bancos
+  pillsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  togglePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    backgroundColor: dark ? '#0F172A' : '#F8FAFC',
+  },
+  togglePillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  togglePillText: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
+  togglePillTextActive: { color: '#fff', fontWeight: '600' },
   // Dropdown moneda
   dropdownList: { borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, borderRadius: radius.md, marginTop: 4, overflow: 'hidden' },
   dropdownItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: dark ? colors.border.dark : colors.border.light },
@@ -432,6 +534,10 @@ const styles = (dark) => StyleSheet.create({
   bioTitle: { ...typography.bodyMed, color: dark ? colors.text.dark : colors.text.light },
   bioSub: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginTop: 2 },
   // Logout
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.lg, paddingVertical: 14, borderRadius: radius.md, borderWidth: 1, borderColor: colors.error },
+  logoutBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.sm, marginTop: spacing.lg, paddingVertical: 14,
+    borderRadius: radius.md, borderWidth: 1, borderColor: colors.error,
+  },
   logoutText: { ...typography.bodyMed, color: colors.error },
 });

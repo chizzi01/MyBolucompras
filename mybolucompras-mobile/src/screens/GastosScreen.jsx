@@ -1,10 +1,12 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View, Text, FlatList, StyleSheet, RefreshControl,
   TouchableOpacity,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useData } from '../context/DataContext';
 import { getCuotasRestantes } from '../utils/cuotas';
 import { useTheme } from '../context/ThemeContext';
@@ -13,6 +15,11 @@ import FilterBar from '../components/FilterBar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import EditarGastoModal from './EditarGastoModal';
 import { colors, spacing, radius, typography } from '../constants/theme';
+
+const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
 
 export default function GastosScreen() {
   const { gastos, mydata, loading, cargarDatos, eliminarGasto } = useData();
@@ -25,6 +32,18 @@ export default function GastosScreen() {
   const [gastoEditando, setGastoEditando] = useState(null);
   const [tabActivo, setTabActivo] = useState('normales');
   const { showModal, modal } = useModal();
+
+  useEffect(() => {
+    AsyncStorage.getItem('@mybolu:soloEsteMes').then(val => {
+      if (val !== null) setSoloEsteMes(val === 'true');
+    });
+  }, []);
+
+  const toggleSoloEsteMes = useCallback(async () => {
+    const next = !soloEsteMes;
+    setSoloEsteMes(next);
+    await AsyncStorage.setItem('@mybolu:soloEsteMes', String(next));
+  }, [soloEsteMes]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -70,11 +89,31 @@ export default function GastosScreen() {
     />
   );
 
+  const mesNombre = MESES[new Date().getMonth()];
+
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <View style={s.titleRow}>
-        <Text style={s.title}>Mis gastos</Text>
-        <Text style={s.count}>{gastosFiltrados.length}</Text>
+        <View style={s.titleLeft}>
+          <Text style={s.title}>Mis gastos</Text>
+          <Text style={s.count}>{gastosFiltrados.length}</Text>
+        </View>
+        {tabActivo === 'normales' && (
+          <TouchableOpacity
+            style={[s.mesChip, soloEsteMes && s.mesChipActive]}
+            onPress={toggleSoloEsteMes}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={soloEsteMes ? 'calendar' : 'calendar-outline'}
+              size={13}
+              color={soloEsteMes ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+            />
+            <Text style={[s.mesChipText, soloEsteMes && s.mesChipTextActive]}>
+              {soloEsteMes ? mesNombre : 'Todos'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={s.tabsRow}>
@@ -97,9 +136,6 @@ export default function GastosScreen() {
       <FilterBar
         search={search}
         onSearchChange={setSearch}
-        soloEsteMes={soloEsteMes}
-        onToggleSoloEsteMes={() => setSoloEsteMes(v => !v)}
-        mostrarFiltroMes={tabActivo === 'normales'}
       />
 
       {loading ? (
@@ -144,9 +180,42 @@ export default function GastosScreen() {
 
 const styles = (dark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light },
-  titleRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.xs, gap: spacing.sm },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+  },
+  titleLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   title: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light },
-  count: { ...typography.captionMed, backgroundColor: dark ? '#1e3a5f' : '#EEF2FF', color: dark ? colors.primaryLight : colors.primary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99, overflow: 'hidden' },
+  count: {
+    ...typography.captionMed,
+    backgroundColor: dark ? '#1e3a5f' : '#EEF2FF',
+    color: dark ? colors.primaryLight : colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 99,
+    overflow: 'hidden',
+  },
+  mesChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    backgroundColor: dark ? colors.surface.dark : colors.surface.light,
+  },
+  mesChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  mesChipText: {
+    ...typography.captionMed,
+    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+  },
+  mesChipTextActive: { color: '#fff', fontWeight: '600' },
   tabsRow: {
     flexDirection: 'row',
     marginHorizontal: spacing.md,

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator,
+  ScrollView, ActivityIndicator, Platform, Modal,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -10,12 +11,12 @@ import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
-import { formatFecha } from '../utils/formatters';
+import { formatFecha, parseFecha } from '../utils/formatters';
 import { useModal } from '../hooks/useModal';
 
 const INITIAL = {
   objeto: '', fecha: formatFecha(new Date()),
-  medio: '', tipo: 'credito', banco: '',
+  medio: '', tipo: 'debito', banco: '',
   cuotas: '1', cantidad: '1', precio: '',
   moneda: 'ARS', etiqueta: '', isFijo: false,
 };
@@ -103,8 +104,13 @@ export default function AgregarScreen() {
           <Field label="Objeto" dark={dark} flex>
             <TextInput style={s.input} value={form.objeto} onChangeText={v => set('objeto', v)} placeholder="Ej: Zapatillas" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
           </Field>
-          <Field label="Fecha (DD/MM/AAAA)" dark={dark} flex>
-            <TextInput style={s.input} value={form.fecha} onChangeText={v => set('fecha', v)} placeholder="DD/MM/AAAA" placeholderTextColor={dark ? '#475569' : '#94A3B8'} keyboardType="numeric" />
+          <Field label="Fecha" dark={dark} flex>
+            <DatePickerField
+              value={form.fecha}
+              onChange={v => set('fecha', v)}
+              dark={dark}
+              s={s}
+            />
           </Field>
         </Row>
 
@@ -145,11 +151,11 @@ export default function AgregarScreen() {
 
         {esCuotasHabilitado && (
           <Field label="Cuotas" dark={dark}>
-            <TextInput
-              style={s.input}
+            <CuotasSelector
               value={form.cuotas}
-              onChangeText={v => set('cuotas', v)}
-              keyboardType="number-pad"
+              onChange={v => set('cuotas', v)}
+              dark={dark}
+              s={s}
             />
           </Field>
         )}
@@ -178,6 +184,115 @@ export default function AgregarScreen() {
       </ScrollView>
       {modal}
     </SafeAreaView>
+  );
+}
+
+function DatePickerField({ value, onChange, dark, s }) {
+  const [show, setShow] = useState(false);
+  const dateObj = (() => {
+    const d = parseFecha(value);
+    return isNaN(d) ? new Date() : d;
+  })();
+
+  const handleChange = (event, selectedDate) => {
+    if (Platform.OS === 'android') setShow(false);
+    if (selectedDate) onChange(formatFecha(selectedDate));
+  };
+
+  return (
+    <View>
+      <TouchableOpacity style={[s.input, s.dateBtn]} onPress={() => setShow(true)} activeOpacity={0.7}>
+        <Ionicons name="calendar-outline" size={16} color={dark ? colors.textSecondary.dark : colors.textSecondary.light} />
+        <Text style={s.dateBtnText}>{value || 'Seleccionar fecha'}</Text>
+      </TouchableOpacity>
+
+      {Platform.OS === 'android' && show && (
+        <DateTimePicker
+          value={dateObj}
+          mode="date"
+          display="default"
+          onChange={handleChange}
+        />
+      )}
+
+      {Platform.OS === 'ios' && (
+        <Modal visible={show} transparent animationType="slide">
+          <View style={s.dateModalBg}>
+            <View style={s.dateModalCard}>
+              <View style={s.dateModalHeader}>
+                <Text style={s.dateModalTitle}>Seleccionar fecha</Text>
+                <TouchableOpacity onPress={() => setShow(false)}>
+                  <Text style={s.dateModalDone}>Listo</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={dateObj}
+                mode="date"
+                display="spinner"
+                onChange={handleChange}
+                textColor={dark ? colors.text.dark : colors.text.light}
+                locale="es-AR"
+              />
+            </View>
+          </View>
+        </Modal>
+      )}
+    </View>
+  );
+}
+
+const CUOTAS_PRESETS = [1, 3, 6, 12, 18, 24];
+
+function CuotasSelector({ value, onChange, dark, s }) {
+  const numVal = parseInt(value) || 1;
+  const [showCustom, setShowCustom] = useState(!CUOTAS_PRESETS.includes(numVal));
+
+  const handlePreset = (c) => {
+    setShowCustom(false);
+    onChange(String(c));
+  };
+
+  const handleCustomToggle = () => {
+    setShowCustom(true);
+    onChange('');
+  };
+
+  return (
+    <View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+        {CUOTAS_PRESETS.map(c => {
+          const activo = !showCustom && numVal === c;
+          return (
+            <TouchableOpacity
+              key={c}
+              style={[s.cuotasPill, activo && s.cuotasPillActive]}
+              onPress={() => handlePreset(c)}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.cuotasPillText, activo && s.cuotasPillTextActive]}>{c}x</Text>
+            </TouchableOpacity>
+          );
+        })}
+        <TouchableOpacity
+          style={[s.cuotasPill, showCustom && s.cuotasPillActive]}
+          onPress={handleCustomToggle}
+          activeOpacity={0.7}
+        >
+          <Text style={[s.cuotasPillText, showCustom && s.cuotasPillTextActive]}>Otro</Text>
+        </TouchableOpacity>
+      </View>
+      {showCustom && (
+        <TextInput
+          style={[s.input, { marginTop: 8 }]}
+          value={value}
+          onChangeText={onChange}
+          keyboardType="number-pad"
+          placeholder="Ej: 9"
+          placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+          autoFocus
+        />
+      )}
+    </View>
   );
 }
 
@@ -463,4 +578,63 @@ const styles = (dark) => StyleSheet.create({
     elevation: 4,
   },
   btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  cuotasPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    backgroundColor: dark ? '#0F172A' : '#F8FAFC',
+  },
+  cuotasPillActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  cuotasPillText: {
+    ...typography.captionMed,
+    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+  },
+  cuotasPillTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  dateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  dateBtnText: {
+    ...typography.body,
+    color: dark ? colors.text.dark : colors.text.light,
+    flex: 1,
+  },
+  dateModalBg: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  dateModalCard: {
+    backgroundColor: dark ? colors.surface.dark : '#fff',
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingBottom: 34,
+  },
+  dateModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: dark ? colors.border.dark : colors.border.light,
+  },
+  dateModalTitle: {
+    ...typography.bodyMed,
+    color: dark ? colors.text.dark : colors.text.light,
+  },
+  dateModalDone: {
+    ...typography.bodyMed,
+    color: colors.primary,
+    fontWeight: '600',
+  },
 });

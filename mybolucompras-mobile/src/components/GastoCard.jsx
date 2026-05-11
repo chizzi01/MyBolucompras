@@ -1,12 +1,31 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, PanResponder } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 import { formatPrecio, parsePrecio } from '../utils/formatters';
 
 const DELETE_WIDTH = 80;
+
+const MEDIO_ICON_MAP = {
+  'Visa':             { lib: 'fa5', name: 'cc-visa' },
+  'MasterCard':       { lib: 'fa5', name: 'cc-mastercard' },
+  'Mastercard':       { lib: 'fa5', name: 'cc-mastercard' },
+  'American Express': { lib: 'fa5', name: 'cc-amex' },
+  'Efectivo':         { lib: 'ion', name: 'cash-outline' },
+  'Transferencia':    { lib: 'ion', name: 'swap-horizontal-outline' },
+  'Mercado Pago':     { lib: 'mci', name: 'credit-card-fast-outline' },
+};
+
+function MedioIcon({ medio, dark }) {
+  const def = MEDIO_ICON_MAP[medio];
+  const color = dark ? colors.textSecondary.dark : colors.textSecondary.light;
+  if (!def) return <Text style={{ ...typography.caption, color }}>{medio}</Text>;
+  if (def.lib === 'fa5') return <FontAwesome5 name={def.name} size={22} color={color} brand />;
+  if (def.lib === 'mci') return <MaterialCommunityIcons name={def.name} size={18} color={color} />;
+  return <Ionicons name={def.name} size={18} color={color} />;
+}
 
 const resolveEtiqueta = (nombre, etiquetas = []) => {
   const found = etiquetas.find(e => (typeof e === 'string' ? e : e.nombre) === nombre);
@@ -49,10 +68,7 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
     setOpen(false);
   };
 
-  const handleDelete = () => {
-    close();
-    onDelete();
-  };
+  const handleDelete = () => { close(); onDelete(); };
 
   const cuotasRest = getCuotasRestantes(gasto, mydata);
   const cuotasColor = getCuotasColor(cuotasRest, dark);
@@ -67,7 +83,6 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
 
   return (
     <View style={s.row}>
-      {/* Delete button behind the card */}
       <View style={s.deleteAction}>
         <TouchableOpacity style={s.deleteBtn} onPress={handleDelete} activeOpacity={0.8}>
           <Ionicons name="trash-outline" size={22} color="#fff" />
@@ -75,17 +90,19 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
         </TouchableOpacity>
       </View>
 
-      {/* Swipeable card */}
-      <Animated.View style={{ transform: [{ translateX }], flex: 1 }} {...panResponder.panHandlers}>
+      <Animated.View
+        style={{ transform: [{ translateX }], flex: 1 }}
+        {...panResponder.panHandlers}
+      >
         <TouchableOpacity
           style={s.card}
           onPress={() => { if (open) { close(); } else { onPress(); } }}
           activeOpacity={0.75}
         >
-          <View style={[s.left, !entraEsteMes && s.dimmed]}>
+          <View style={[s.left, !entraEsteMes && s.contentDimmed]}>
             <Text style={s.objeto} numberOfLines={1}>{gasto.objeto}</Text>
             <View style={s.meta}>
-              <Text style={s.metaText}>{gasto.medio}</Text>
+              <MedioIcon medio={gasto.medio} dark={dark} />
               {etiquetaObj ? (
                 <View style={[s.tag, { backgroundColor: etiquetaObj.color + '25', borderColor: etiquetaObj.color }]}>
                   <Text style={[s.tagText, { color: etiquetaObj.color }]}>{etiquetaObj.nombre}</Text>
@@ -94,22 +111,22 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
             </View>
           </View>
 
-          <View style={[s.right, !entraEsteMes && s.dimmed]}>
+          <View style={[s.right, !entraEsteMes && s.contentDimmed]}>
             <Text style={s.precio}>{precioDisplay}</Text>
             {precioTotal && <Text style={s.precioTotal}>{precioTotal}</Text>}
-            <View style={[s.cuotasBadge, { backgroundColor: cuotasColor.bg }]}>
-              <Text style={[s.cuotasText, { color: cuotasColor.text }]}>
-                {gasto.isFijo ? '∞' : `${cuotasRest}/${gasto.cuotas}`}
-              </Text>
+            <View style={s.badgesRow}>
+              {!entraEsteMes && (
+                <View style={s.nextMonthBadge}>
+                  <Ionicons name="time-outline" size={11} color={dark ? '#64748B' : '#94A3B8'} />
+                </View>
+              )}
+              <View style={[s.cuotasBadge, { backgroundColor: cuotasColor.bg }]}>
+                <Text style={[s.cuotasText, { color: cuotasColor.text }]}>
+                  {gasto.isFijo ? '∞' : `${cuotasRest}/${gasto.cuotas}`}
+                </Text>
+              </View>
             </View>
           </View>
-
-          {!entraEsteMes && (
-            <View pointerEvents="none" style={s.nextMonthOverlay}>
-              <Ionicons name="time-outline" size={13} color={dark ? '#94A3B8' : '#64748B'} />
-              <Text style={s.nextMonthText}>Entra el próximo mes</Text>
-            </View>
-          )}
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -145,18 +162,28 @@ const styles = (dark) => StyleSheet.create({
     borderWidth: 1,
     borderColor: dark ? colors.border.dark : colors.border.light,
   },
+  contentDimmed: { opacity: 0.4 },
   left: { flex: 1, marginRight: spacing.sm },
   objeto: { ...typography.bodyBold, color: dark ? colors.text.dark : colors.text.light, marginBottom: 4 },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaText: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
   tag: { borderRadius: radius.full, borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2 },
   tagText: { ...typography.captionMed },
   right: { alignItems: 'flex-end', marginRight: spacing.sm },
   precio: { ...typography.bodyBold, color: dark ? colors.text.dark : colors.text.light, marginBottom: 2 },
   precioTotal: { ...typography.caption, color: dark ? '#475569' : '#94A3B8', marginBottom: 4 },
+  badgesRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   cuotasBadge: { borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 2, minWidth: 44, alignItems: 'center' },
   cuotasText: { ...typography.captionMed, fontWeight: '600' },
-  dimmed: { opacity: 0.3 },
+  nextMonthBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: dark ? '#1e293b' : '#F1F5F9',
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+  },
   deleteAction: {
     position: 'absolute',
     right: 0,
@@ -177,20 +204,5 @@ const styles = (dark) => StyleSheet.create({
     color: '#fff',
     fontSize: 11,
     fontWeight: '600',
-  },
-  nextMonthOverlay: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: dark ? 'rgba(2, 6, 23, 0.62)' : 'rgba(248, 250, 252, 0.70)',
-    borderRadius: radius.md,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 5,
-  },
-  nextMonthText: {
-    ...typography.caption,
-    color: dark ? '#94A3B8' : '#475569',
-    fontStyle: 'italic',
   },
 });
