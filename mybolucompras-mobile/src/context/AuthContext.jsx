@@ -15,6 +15,8 @@ export function AuthProvider({ children }) {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [appLocked, setAppLocked] = useState(false);
 
+  const [onboardingNeeded, setOnboardingNeeded] = useState(false);
+
   useEffect(() => {
     LocalAuthentication.hasHardwareAsync().then(has => {
       if (!has) return;
@@ -32,6 +34,32 @@ export function AuthProvider({ children }) {
       setSession(session);
       setUser(session?.user ?? null);
 
+      if (session?.user) {
+        // Check if user already has data in DB
+        const { data: config, error } = await supabase
+          .from('configuracion_usuario')
+          .select('fondos, etiquetas, cierre, vencimiento, moneda_preferida')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        
+        console.log('DEBUG: Onboarding check for', session.user.email, config);
+        if (error) console.error('DEBUG: Onboarding error', error);
+
+        const alreadyHasData = config && (
+          Number(config.fondos) > 0 || 
+          (Array.isArray(config.etiquetas) && config.etiquetas.length > 0) ||
+          config.cierre ||
+          config.vencimiento ||
+          (config.moneda_preferida && config.moneda_preferida !== 'ARS')
+        );
+        
+        console.log('DEBUG: alreadyHasData?', alreadyHasData);
+
+        if (!alreadyHasData) {
+          setOnboardingNeeded(true);
+        }
+      }
+
       const bioOn = bioStored === 'true';
       setBiometricEnabledState(bioOn);
       if (session?.user && bioOn) {
@@ -47,6 +75,23 @@ export function AuthProvider({ children }) {
       setSession(session);
       setUser(prev => {
         const next = session?.user ?? null;
+        if (next && prev?.id !== next.id) {
+          // Check onboarding for new user session
+          supabase.from('configuracion_usuario')
+            .select('fondos, etiquetas, cierre, vencimiento, moneda_preferida')
+            .eq('user_id', next.id)
+            .maybeSingle()
+            .then(({ data }) => {
+              const alreadyHasData = data && (
+                Number(data.fondos) > 0 || 
+                (Array.isArray(data.etiquetas) && data.etiquetas.length > 0) ||
+                data.cierre ||
+                data.vencimiento ||
+                (data.moneda_preferida && data.moneda_preferida !== 'ARS')
+              );
+              if (!alreadyHasData) setOnboardingNeeded(true);
+            });
+        }
         return prev?.id === next?.id ? prev : next;
       });
     });
@@ -56,22 +101,55 @@ export function AuthProvider({ children }) {
 
   const signIn = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) {
+      if (error.message.includes('Email not confirmed')) {
+        throw new Error('VERIFY_REQUIRED');
+      }
+      throw error;
+    }
   };
 
   const signUp = async (email, password, nombre) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { nombre } },
+      options: { 
+        data: { nombre },
+        emailRedirectTo: null // We want OTP, not magic link redirection necessarily
+      },
+    });
+    
+    if (error) throw error;
+    
+    // If user is returned but identities is empty, it means user already exists (if Supabase is configured this way)
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      throw new Error('USER_ALREADY_EXISTS');
+    }
+  };
+
+  const verifyEmail = async (email, token) => {
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'signup',
     });
     if (error) throw error;
+  };
+
+  const completeOnboarding = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase
+      .from('configuracion_usuario')
+      .upsert({ user_id: user.id, onboarding_completed: true });
+    setOnboardingNeeded(false);
   };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setAppLocked(false);
+    setOnboardingNeeded(false);
   };
 
   const enableBiometric = async (val) => {
@@ -91,7 +169,8 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, session, loading,
-      signIn, signUp, signOut,
+      signIn, signUp, signOut, verifyEmail,
+      onboardingNeeded, completeOnboarding,
       biometricEnabled, biometricAvailable, enableBiometric,
       appLocked, unlockApp, authenticateWithBiometrics,
     }}>

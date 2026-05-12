@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Switch,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,10 +57,14 @@ export default function ConfiguracionScreen() {
   const nombre = user?.user_metadata?.nombre || user?.email?.split('@')[0] || 'Usuario';
 
   const [fondos, setFondos] = useState(String(mydata.fondos || ''));
-  const [cierre, setCierre] = useState(mydata.cierre || '');
-  const [vencimiento, setVencimiento] = useState(mydata.vencimiento || '');
-  const [cierreAnterior, setCierreAnterior] = useState(mydata.cierreAnterior || '');
-  const [vencimientoAnterior, setVencimientoAnterior] = useState(mydata.vencimientoAnterior || '');
+  
+  const [cierreDate, setCierreDate] = useState(new Date());
+  const [vencimientoDate, setVencimientoDate] = useState(new Date());
+  const [cierreAnteriorDate, setCierreAnteriorDate] = useState(new Date());
+  const [vencimientoAnteriorDate, setVencimientoAnteriorDate] = useState(new Date());
+  
+  const [showPicker, setShowPicker] = useState(null); // 'cierre', 'vencimiento', etc.
+  
   const [loadingFondos, setLoadingFondos] = useState(false);
   const [loadingFechas, setLoadingFechas] = useState(false);
 
@@ -78,12 +83,27 @@ export default function ConfiguracionScreen() {
   const [colorEtiqueta, setColorEtiqueta] = useState(ETIQUETA_COLORS[0]);
   const [savingEtiq, setSavingEtiq] = useState(false);
 
+  // Helper to parse YYYY-MM-DD to Date
+  const parseDBDate = (str) => {
+    if (!str) return new Date();
+    const [y, m, d] = str.split('-');
+    return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+  };
+
+  const formatDateToDB = (date) => date.toISOString().split('T')[0];
+  const formatDateToDisplay = (date) => {
+    const d = date.getDate().toString().padStart(2, '0');
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}/${m}/${y}`;
+  };
+
   useEffect(() => {
     setFondos(String(mydata.fondos || ''));
-    setCierre(mydata.cierre || '');
-    setVencimiento(mydata.vencimiento || '');
-    setCierreAnterior(mydata.cierreAnterior || '');
-    setVencimientoAnterior(mydata.vencimientoAnterior || '');
+    setCierreDate(parseDBDate(mydata.cierre));
+    setVencimientoDate(parseDBDate(mydata.vencimiento));
+    setCierreAnteriorDate(parseDBDate(mydata.cierreAnterior));
+    setVencimientoAnteriorDate(parseDBDate(mydata.vencimientoAnterior));
     setEtiquetas(mydata.etiquetas || []);
     setMonedaPreferida(mydata.monedaPreferida || 'ARS');
     if (mydata.mediosHabilitados?.length > 0) setMediosHabilitados(mydata.mediosHabilitados);
@@ -105,7 +125,12 @@ export default function ConfiguracionScreen() {
   const handleGuardarFechas = async () => {
     setLoadingFechas(true);
     try {
-      await actualizarCierre(cierre, vencimiento, cierreAnterior, vencimientoAnterior);
+      await actualizarCierre(
+        formatDateToDB(cierreDate),
+        formatDateToDB(vencimientoDate),
+        formatDateToDB(cierreAnteriorDate),
+        formatDateToDB(vencimientoAnteriorDate)
+      );
       showModal({ type: 'success', title: 'Fechas actualizadas', message: 'Las fechas de tarjeta fueron guardadas.' });
     } catch (err) {
       showModal({ type: 'error', title: 'Error', message: err.message });
@@ -373,14 +398,71 @@ export default function ConfiguracionScreen() {
         <AccordionSection title="Fechas de tarjeta" dark={dark}>
           <View style={s.card}>
             <Text style={s.hint}>Usadas para calcular cuotas restantes en crédito</Text>
-            <FieldLabel text="Cierre actual (YYYY-MM-DD)" dark={dark} />
-            <TextInput style={s.input} value={cierre} onChangeText={setCierre} placeholder="2025-05-15" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
-            <FieldLabel text="Vencimiento actual (YYYY-MM-DD)" dark={dark} />
-            <TextInput style={s.input} value={vencimiento} onChangeText={setVencimiento} placeholder="2025-05-22" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
-            <FieldLabel text="Cierre anterior (YYYY-MM-DD)" dark={dark} />
-            <TextInput style={s.input} value={cierreAnterior} onChangeText={setCierreAnterior} placeholder="2025-04-15" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
-            <FieldLabel text="Vencimiento anterior (YYYY-MM-DD)" dark={dark} />
-            <TextInput style={s.input} value={vencimientoAnterior} onChangeText={setVencimientoAnterior} placeholder="2025-04-22" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+            
+            <FieldLabel text="Cierre actual" dark={dark} />
+            <TouchableOpacity style={s.input} onPress={() => setShowPicker('cierre')}>
+              <Text style={{ color: dark ? colors.text.dark : colors.text.light }}>{formatDateToDisplay(cierreDate)}</Text>
+            </TouchableOpacity>
+            {showPicker === 'cierre' && (
+              <DateTimePicker
+                value={cierreDate}
+                mode="date"
+                display="default"
+                onChange={(e, date) => {
+                  setShowPicker(null);
+                  if (date) setCierreDate(date);
+                }}
+              />
+            )}
+
+            <FieldLabel text="Vencimiento actual" dark={dark} />
+            <TouchableOpacity style={s.input} onPress={() => setShowPicker('vencimiento')}>
+              <Text style={{ color: dark ? colors.text.dark : colors.text.light }}>{formatDateToDisplay(vencimientoDate)}</Text>
+            </TouchableOpacity>
+            {showPicker === 'vencimiento' && (
+              <DateTimePicker
+                value={vencimientoDate}
+                mode="date"
+                display="default"
+                onChange={(e, date) => {
+                  setShowPicker(null);
+                  if (date) setVencimientoDate(date);
+                }}
+              />
+            )}
+
+            <FieldLabel text="Cierre anterior" dark={dark} />
+            <TouchableOpacity style={s.input} onPress={() => setShowPicker('cierreAnterior')}>
+              <Text style={{ color: dark ? colors.text.dark : colors.text.light }}>{formatDateToDisplay(cierreAnteriorDate)}</Text>
+            </TouchableOpacity>
+            {showPicker === 'cierreAnterior' && (
+              <DateTimePicker
+                value={cierreAnteriorDate}
+                mode="date"
+                display="default"
+                onChange={(e, date) => {
+                  setShowPicker(null);
+                  if (date) setCierreAnteriorDate(date);
+                }}
+              />
+            )}
+
+            <FieldLabel text="Vencimiento anterior" dark={dark} />
+            <TouchableOpacity style={s.input} onPress={() => setShowPicker('vencimientoAnterior')}>
+              <Text style={{ color: dark ? colors.text.dark : colors.text.light }}>{formatDateToDisplay(vencimientoAnteriorDate)}</Text>
+            </TouchableOpacity>
+            {showPicker === 'vencimientoAnterior' && (
+              <DateTimePicker
+                value={vencimientoAnteriorDate}
+                mode="date"
+                display="default"
+                onChange={(e, date) => {
+                  setShowPicker(null);
+                  if (date) setVencimientoAnteriorDate(date);
+                }}
+              />
+            )}
+
             <TouchableOpacity style={s.saveBtn} onPress={handleGuardarFechas} disabled={loadingFechas}>
               {loadingFechas
                 ? <ActivityIndicator color="#fff" size="small" />

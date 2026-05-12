@@ -11,26 +11,99 @@ export const gastosService = {
     return data.map(mapFromDB);
   },
 
-  async crear(gasto) {
+  async crear(gasto, sharedWith = null) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('No autenticado');
+
+    let finalGasto = { ...gasto };
+    
+    // If dividing, reduce original price
+    if (sharedWith && sharedWith.mode === 'dividir') {
+      finalGasto.precio = gasto.precio / 2;
+    }
+
+    if (sharedWith && sharedWith.nombre) {
+      finalGasto.compartidoConNombre = sharedWith.nombre;
+    }
+
     const { data, error } = await supabase
       .from('gastos')
-      .insert([{ ...mapToDB(gasto), user_id: user.id }])
+      .insert([{ ...mapToDB(finalGasto), user_id: user.id }])
       .select()
       .single();
+    
     if (error) throw error;
+
+    if (sharedWith && sharedWith.userId) {
+      // Create expense for the other user
+      const otherGasto = { 
+        ...finalGasto, 
+        objeto: `${finalGasto.objeto} (Compartido por ${user.user_metadata?.nombre || user.email})`,
+        compartidoConNombre: user.user_metadata?.nombre || user.email
+      };
+      
+      await supabase
+        .from('gastos')
+        .insert([{ ...mapToDB(otherGasto), user_id: sharedWith.userId }]);
+      
+      // Create notification
+      await supabase
+        .from('notifications')
+        .insert([{
+          user_id: sharedWith.userId,
+          title: 'Gasto compartido',
+          message: `${user.user_metadata?.nombre || user.email} te compartió un gasto: ${gasto.objeto}`,
+          data: { gasto_id: data.id }
+        }]);
+    }
+
     return mapFromDB(data);
   },
 
-  async actualizar(id, gasto) {
+  async actualizar(id, gasto, sharedWith = null) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
+
+    let finalGasto = { ...gasto };
+    
+    if (sharedWith && sharedWith.mode === 'dividir') {
+      finalGasto.precio = gasto.precio / 2;
+    }
+
+    if (sharedWith && sharedWith.nombre) {
+      finalGasto.compartidoConNombre = sharedWith.nombre;
+    }
+
     const { data, error } = await supabase
       .from('gastos')
-      .update(mapToDB(gasto))
+      .update(mapToDB(finalGasto))
       .eq('id', id)
       .select()
       .single();
+    
     if (error) throw error;
+
+    if (sharedWith && sharedWith.userId) {
+      const otherGasto = { 
+        ...finalGasto, 
+        objeto: `${finalGasto.objeto} (Compartido por ${user.user_metadata?.nombre || user.email})`,
+        compartidoConNombre: user.user_metadata?.nombre || user.email
+      };
+      
+      await supabase
+        .from('gastos')
+        .insert([{ ...mapToDB(otherGasto), user_id: sharedWith.userId }]);
+      
+      await supabase
+        .from('notifications')
+        .insert([{
+          user_id: sharedWith.userId,
+          title: 'Gasto compartido',
+          message: `${user.user_metadata?.nombre || user.email} te compartió un gasto: ${gasto.objeto}`,
+          data: { gasto_id: data.id }
+        }]);
+    }
+
     return mapFromDB(data);
   },
 
@@ -55,6 +128,7 @@ function mapFromDB(row) {
     precio: `$ ${Number(row.precio).toFixed(2)}`,
     precioNum: Number(row.precio),
     etiqueta: row.etiqueta || '',
+    compartidoConNombre: row.compartido_con_nombre || null,
   };
 }
 
@@ -76,5 +150,6 @@ function mapToDB(gasto) {
     cantidad: gasto.cantidad ?? 1,
     precio: isNaN(precioNumerico) ? 0 : precioNumerico,
     etiqueta: gasto.etiqueta || null,
+    compartido_con_nombre: gasto.compartidoConNombre || null,
   };
 }

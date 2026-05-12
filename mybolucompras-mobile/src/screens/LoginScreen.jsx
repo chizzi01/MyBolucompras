@@ -10,134 +10,209 @@ import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
 export default function LoginScreen() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, verifyEmail } = useAuth();
   const { dark } = useTheme();
   const s = styles(dark);
 
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState('login'); // 'login', 'register', 'verify'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const { showModal, modal } = useModal();
 
   const handleSubmit = async () => {
-    if (!email || !password) {
-      return showModal({ type: 'warning', title: 'Campos requeridos', message: 'Completá email y contraseña.' });
+    if (!email || (mode !== 'verify' && !password)) {
+      return showModal({ type: 'warning', title: 'Campos requeridos', message: 'Completá los campos necesarios.' });
     }
     setLoading(true);
     try {
       if (mode === 'login') {
         await signIn(email.trim(), password);
-      } else {
+      } else if (mode === 'register') {
         if (!nombre) {
           setLoading(false);
           return showModal({ type: 'warning', title: 'Campo requerido', message: 'Ingresá tu nombre.' });
         }
-        await signUp(email.trim(), password, nombre.trim());
+        try {
+          await signUp(email.trim(), password, nombre.trim());
+          setMode('verify');
+          showModal({
+            type: 'success',
+            title: 'Cuenta creada',
+            message: 'Ingresá el código de 6 dígitos que enviamos a tu email.',
+          });
+        } catch (err) {
+          if (err.message === 'USER_ALREADY_EXISTS') {
+            showModal({
+              type: 'warning',
+              title: 'Usuario registrado',
+              message: 'Ya existe una cuenta con este email. ¿Querés iniciar sesión o recuperar tu contraseña?',
+              confirmText: 'Iniciar Sesión',
+              onConfirm: () => setMode('login'),
+            });
+          } else {
+            throw err;
+          }
+        }
+      } else if (mode === 'verify') {
+        if (otp.length < 6) {
+          setLoading(false);
+          return showModal({ type: 'warning', title: 'Código incompleto', message: 'Ingresá el código de verificación que recibiste.' });
+        }
+        await verifyEmail(email.trim(), otp);
         showModal({
           type: 'success',
-          title: 'Cuenta creada',
-          message: 'Revisá tu email para confirmar tu cuenta.',
+          title: 'Email verificado',
+          message: 'Tu cuenta ha sido activada. Ya podés iniciar sesión.',
           onClose: () => setMode('login'),
         });
       }
     } catch (err) {
-      showModal({ type: 'error', title: 'Error', message: err.message });
+      if (err.message === 'VERIFY_REQUIRED') {
+        setMode('verify');
+        showModal({ type: 'warning', title: 'Verificación pendiente', message: 'Tu cuenta no está activa. Ingresá el código que enviamos a tu email.' });
+      } else {
+        showModal({ type: 'error', title: 'Error', message: err.message });
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const getTitle = () => {
+    if (mode === 'login') return 'Iniciar sesión';
+    if (mode === 'register') return 'Crear cuenta';
+    return 'Verificar cuenta';
+  };
+
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.root}>
-      {modal}
-      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
-        <View style={s.header}>
-          <Image
-            source={require('../../assets/MyBolucompras.png')}
-            style={s.logo}
-            resizeMode="contain"
-          />
-          <Text style={s.appName}>Bolucompras</Text>
-          <Text style={s.subtitle}>Gestioná tus gastos en cuotas</Text>
-        </View>
+    <View style={s.root}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        style={{ flex: 1 }}
+      >
+        {modal}
+        <ScrollView 
+          contentContainerStyle={s.scroll} 
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={s.header}>
+            <Image
+              source={require('../../assets/MyBolucompras.png')}
+              style={s.logo}
+              resizeMode="contain"
+            />
+            <Text style={s.appName}>Bolucompras</Text>
+            <Text style={s.subtitle}>Gestioná tus gastos en cuotas</Text>
+          </View>
 
-        <View style={s.card}>
-          <Text style={s.title}>{mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</Text>
+          <View style={s.card}>
+            <Text style={s.title}>{getTitle()}</Text>
 
-          {mode === 'register' && (
+            {mode === 'register' && (
+              <View style={s.field}>
+                <Text style={s.label}>Nombre</Text>
+                <View style={s.inputRow}>
+                  <Ionicons name="person-outline" size={18} color={dark ? '#475569' : '#94A3B8'} style={s.inputIcon} />
+                  <TextInput
+                    style={s.input}
+                    placeholder="Tu nombre"
+                    placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+                    value={nombre}
+                    onChangeText={setNombre}
+                    autoCapitalize="words"
+                  />
+                </View>
+              </View>
+            )}
+
             <View style={s.field}>
-              <Text style={s.label}>Nombre</Text>
+              <Text style={s.label}>Email</Text>
               <View style={s.inputRow}>
-                <Ionicons name="person-outline" size={18} color={dark ? '#475569' : '#94A3B8'} style={s.inputIcon} />
+                <Ionicons name="mail-outline" size={18} color={dark ? '#475569' : '#94A3B8'} style={s.inputIcon} />
                 <TextInput
                   style={s.input}
-                  placeholder="Tu nombre"
+                  placeholder="correo@ejemplo.com"
                   placeholderTextColor={dark ? '#475569' : '#94A3B8'}
-                  value={nombre}
-                  onChangeText={setNombre}
-                  autoCapitalize="words"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={mode !== 'verify'}
                 />
               </View>
             </View>
-          )}
 
-          <View style={s.field}>
-            <Text style={s.label}>Email</Text>
-            <View style={s.inputRow}>
-              <Ionicons name="mail-outline" size={18} color={dark ? '#475569' : '#94A3B8'} style={s.inputIcon} />
-              <TextInput
-                style={s.input}
-                placeholder="correo@ejemplo.com"
-                placeholderTextColor={dark ? '#475569' : '#94A3B8'}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-          </View>
-
-          <View style={s.field}>
-            <Text style={s.label}>Contraseña</Text>
-            <View style={s.inputRow}>
-              <Ionicons name="lock-closed-outline" size={18} color={dark ? '#475569' : '#94A3B8'} style={s.inputIcon} />
-              <TextInput
-                style={[s.input, { flex: 1 }]}
-                placeholder="••••••••"
-                placeholderTextColor={dark ? '#475569' : '#94A3B8'}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPass}
-              />
-              <TouchableOpacity onPress={() => setShowPass(v => !v)} style={s.eyeBtn}>
-                <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={18} color={dark ? '#475569' : '#94A3B8'} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <TouchableOpacity style={s.btn} onPress={handleSubmit} disabled={loading} activeOpacity={0.85}>
-            {loading ? (
-              <ActivityIndicator color="#fff" />
+            {mode !== 'verify' ? (
+              <View style={s.field}>
+                <Text style={s.label}>Contraseña</Text>
+                <View style={s.inputRow}>
+                  <Ionicons name="lock-closed-outline" size={18} color={dark ? '#475569' : '#94A3B8'} style={s.inputIcon} />
+                  <TextInput
+                    style={[s.input, { flex: 1 }]}
+                    placeholder="••••••••"
+                    placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPass}
+                  />
+                  <TouchableOpacity onPress={() => setShowPass(v => !v)} style={s.eyeBtn}>
+                    <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={18} color={dark ? '#475569' : '#94A3B8'} />
+                  </TouchableOpacity>
+                </View>
+              </View>
             ) : (
-              <>
-                <Ionicons name={mode === 'login' ? 'log-in-outline' : 'person-add-outline'} size={18} color="#fff" />
-                <Text style={s.btnText}>{mode === 'login' ? 'Entrar' : 'Crear cuenta'}</Text>
-              </>
+              <View style={s.field}>
+                <Text style={s.label}>Código de Verificación</Text>
+                <View style={s.inputRow}>
+                  <Ionicons name="key-outline" size={18} color={dark ? '#475569' : '#94A3B8'} style={s.inputIcon} />
+                  <TextInput
+                    style={s.input}
+                    placeholder="123456"
+                    placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+                    value={otp}
+                    onChangeText={setOtp}
+                    keyboardType="number-pad"
+                    maxLength={8}
+                  />
+                </View>
+                <Text style={[s.subtitle, { fontSize: 12, marginTop: 8 }]}>Enviamos un código a {email}</Text>
+              </View>
             )}
-          </TouchableOpacity>
 
-          <TouchableOpacity style={s.switchBtn} onPress={() => setMode(mode === 'login' ? 'register' : 'login')}>
-            <Text style={s.switchText}>
-              {mode === 'login' ? '¿No tenés cuenta? Registrate' : '¿Ya tenés cuenta? Iniciá sesión'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <TouchableOpacity style={s.btn} onPress={handleSubmit} disabled={loading} activeOpacity={0.85}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Ionicons 
+                    name={mode === 'login' ? 'log-in-outline' : (mode === 'register' ? 'person-add-outline' : 'checkmark-circle-outline')} 
+                    size={18} color="#fff" 
+                  />
+                  <Text style={s.btnText}>{mode === 'login' ? 'Entrar' : (mode === 'register' ? 'Crear cuenta' : 'Verificar')}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={s.switchBtn} onPress={() => {
+              if (mode === 'verify') setMode('register');
+              else setMode(mode === 'login' ? 'register' : 'login');
+            }}>
+              <Text style={s.switchText}>
+                {mode === 'login' ? '¿No tenés cuenta? Registrate' : 
+                 mode === 'register' ? '¿Ya tenés cuenta? Iniciá sesión' : 
+                 'Volver al registro'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 

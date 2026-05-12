@@ -13,10 +13,26 @@ const MESES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
+import { notificationService } from '../services/notificationService';
+import NotificationsModal from './NotificationsModal';
+
 export default function DashboardScreen() {
   const { gastos, mydata } = useData();
   const { dark } = useTheme();
   const s = styles(dark);
+
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  React.useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const count = await notificationService.getUnreadCount();
+        setUnreadCount(count);
+      } catch (e) {}
+    };
+    fetchCount();
+  }, [gastos]); // Refresh when gastos change (sharing might happen)
 
   const hoy = new Date();
   const [mesSel, setMesSel] = useState({ mes: hoy.getMonth(), anio: hoy.getFullYear() });
@@ -75,7 +91,25 @@ export default function DashboardScreen() {
 
         {/* Header con navegación de mes */}
         <View style={s.headerRow}>
-          <Text style={s.pageTitle}>Dashboard</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Text style={s.pageTitle}>Dashboard</Text>
+            <TouchableOpacity 
+              style={s.notifBtn} 
+              onPress={() => setShowNotifications(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name={unreadCount > 0 ? "notifications" : "notifications-outline"} 
+                size={22} 
+                color={unreadCount > 0 ? colors.primary : (dark ? colors.textSecondary.dark : colors.textSecondary.light)} 
+              />
+              {unreadCount > 0 && (
+                <View style={s.badge}>
+                  <Text style={s.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
           <View style={s.monthNav}>
             <TouchableOpacity
               onPress={prevMes}
@@ -178,6 +212,14 @@ export default function DashboardScreen() {
 
         <View style={{ height: spacing.xl }} />
       </ScrollView>
+
+      <NotificationsModal 
+        visible={showNotifications} 
+        onClose={() => setShowNotifications(false)} 
+        onRefresh={() => {
+          notificationService.getUnreadCount().then(setUnreadCount);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -206,6 +248,29 @@ function KPICard({ label, value, dark, accent }) {
 
 const styles = (dark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light },
+  notifBtn: {
+    padding: 4,
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: colors.error,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: dark ? colors.background.dark : colors.background.light,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '800',
+  },
   scroll: { padding: spacing.md },
   headerRow: {
     flexDirection: 'row',

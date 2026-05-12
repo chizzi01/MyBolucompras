@@ -1,5 +1,5 @@
 
-const API_KEY = '';
+const API_KEY = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
 const model = 'google/gemini-2.0-flash-lite-001';
 
 async function testVision() {

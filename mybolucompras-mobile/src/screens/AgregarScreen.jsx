@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Platform, Modal,
@@ -8,6 +8,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { scanReceiptWithAI } from '../services/ocrService';
 import { OPENROUTER_API_KEY } from '../config/keys';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -17,6 +18,8 @@ import { colors, spacing, radius, typography } from '../constants/theme';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
 import { formatFecha, parseFecha } from '../utils/formatters';
 import { useModal } from '../hooks/useModal';
+import { userService } from '../services/userService';
+import { contactService } from '../services/contactService';
 
 const INITIAL = {
   objeto: '', fecha: formatFecha(new Date()),
@@ -47,6 +50,9 @@ export default function AgregarScreen() {
   });
   const [loading, setLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [ocrItems, setOcrItems] = useState([]); // For bulk items
+  const [showOcrModal, setShowOcrModal] = useState(false);
+  const [ocrCommonData, setOcrCommonData] = useState({});
   const [showCamera, setShowCamera] = useState(false);
   const [takingPhoto, setTakingPhoto] = useState(false);
   const [flash, setFlash] = useState('off');
@@ -60,6 +66,36 @@ export default function AgregarScreen() {
     return next;
   });
 
+  const [sharedUser, setSharedUser] = useState(null);
+  const [shareMode, setShareMode] = useState('dividir'); // 'dividir' o 'mismo'
+  const [searchEmail, setSearchEmail] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [recentContacts, setRecentContacts] = useState([]);
+
+  useEffect(() => {
+    contactService.getRecent().then(setRecentContacts);
+  }, []);
+
+  const handleSearchUser = async () => {
+    if (!searchEmail.trim()) return;
+    setSearching(true);
+    try {
+      const found = await userService.buscarPorEmail(searchEmail);
+      if (found) {
+        setSharedUser(found);
+        const next = await contactService.saveContact(found);
+        setRecentContacts(next);
+      } else {
+        showModal({ type: 'warning', title: 'No encontrado', message: 'No existe un usuario con ese email.' });
+      }
+    } catch (err) {
+      console.error('Error searching user:', err);
+      showModal({ type: 'error', title: 'Error', message: 'Hubo un problema al buscar el usuario.' });
+    } finally {
+      setSearching(false);
+    }
+  };
+
   const handleGuardar = async () => {
     if (!form.objeto.trim()) {
       return showModal({ type: 'warning', title: 'Campo requerido', message: 'Ingresá el objeto del gasto.' });
@@ -70,17 +106,23 @@ export default function AgregarScreen() {
 
     setLoading(true);
     try {
+      const sharedWith = sharedUser ? { userId: sharedUser.id, mode: shareMode } : null;
+      
       await agregarGasto({
         ...form,
         cuotas: parseInt(form.cuotas) || 1,
         cantidad: parseInt(form.cantidad) || 1,
         precio: Number(form.precio),
-      });
+      }, sharedWith);
+
       setForm({
         ...INITIAL,
         medio: mediosDisponibles[0] || '',
         moneda: mydata.monedaPreferida || 'ARS',
       });
+      setSharedUser(null);
+      setSearchEmail('');
+      
       showModal({
         type: 'success',
         title: '¡Guardado!',
@@ -105,32 +147,70 @@ export default function AgregarScreen() {
   };
 
   const processImageBase64 = async (base64Data) => {
+    console.log('LOG DEBUG: processImageBase64 iniciada');
     setIsScanning(true);
     try {
+      console.log('LOG DEBUG: Llamando a scanReceiptWithAI...');
       const datos = await scanReceiptWithAI(base64Data, OPENROUTER_API_KEY, mydata.mediosHabilitados);
-      const camposDetectados = Object.keys(datos).map(k => FIELD_LABELS[k] || k).join(', ');
-
+      console.log('LOG DEBUG: Datos recibidos de la IA:', JSON.stringify(datos).slice(0, 100));
+      
       if (!Object.keys(datos).length) {
-        return showModal({ type: 'warning', title: 'Sin datos', message: 'No se detectaron datos útiles. Podés completar el formulario manualmente.' });
+        return showModal({ type: 'warning', title: 'Sin datos', message: 'No se detectaron datos útiles.' });
       }
 
-      const formVacio = !form.objeto && !form.precio;
-      if (formVacio) {
-        aplicarDatosOCR(datos);
-        showModal({ type: 'success', title: 'Datos cargados', message: `Se completaron: ${camposDetectados}.` });
+      // If multiple items, show review modal
+      if (datos.items?.length > 1) {
+        setOcrItems(datos.items);
+        const { items, ...common } = datos;
+        // Merge AI detected data with current form defaults
+        setOcrCommonData({ ...form, ...common });
+        setShowOcrModal(true);
       } else {
-        showModal({
-          type: 'confirm',
-          title: 'Datos detectados',
-          message: `Se encontraron: ${camposDetectados}. ¿Sobreescribir el formulario?`,
-          confirmText: 'Sobreescribir',
-          onConfirm: () => aplicarDatosOCR(datos),
-        });
+        // Current behavior for single item
+        const camposDetectados = Object.keys(datos).filter(k => k !== 'items').map(k => FIELD_LABELS[k] || k).join(', ');
+        const formVacio = !form.objeto && !form.precio;
+        if (formVacio) {
+          aplicarDatosOCR(datos);
+          showModal({ type: 'success', title: 'Datos cargados', message: `Se completaron: ${camposDetectados}.` });
+        } else {
+          showModal({
+            type: 'confirm',
+            title: 'Datos detectados',
+            message: `Se encontraron: ${camposDetectados}. ¿Sobreescribir el formulario?`,
+            confirmText: 'Sobreescribir',
+            onConfirm: () => aplicarDatosOCR(datos),
+          });
+        }
       }
     } catch (err) {
       showModal({ type: 'error', title: 'Error al escanear', message: err.message });
     } finally {
       setIsScanning(false);
+    }
+  };
+
+  const handleSaveBulk = async () => {
+    setLoading(true);
+    try {
+      for (const item of ocrItems) {
+        await agregarGasto({
+          ...form,
+          ...ocrCommonData,
+          objeto: item.objeto,
+          precio: Number(item.precio),
+        });
+      }
+      setShowOcrModal(false);
+      showModal({ 
+        type: 'success', 
+        title: '¡Guardados!', 
+        message: `Se guardaron ${ocrItems.length} gastos correctamente.`,
+        onClose: () => navigation.navigate('Gastos')
+      });
+    } catch (err) {
+      showModal({ type: 'error', title: 'Error', message: 'Hubo un problema al guardar los gastos.' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -152,14 +232,30 @@ export default function AgregarScreen() {
       }
       setShowCamera(true);
     } else {
-      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) {
-        return showModal({ type: 'warning', title: 'Permiso denegado', message: 'Habilitá el acceso a la galería en Configuración.' });
-      }
-      const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.8, base64: true, mediaTypes: ['images'] });
-      
-      if (!result.canceled && result.assets?.[0]?.base64) {
-        processImageBase64(result.assets[0].base64);
+      try {
+        const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!perm.granted) {
+          return showModal({ type: 'warning', title: 'Permiso denegado', message: 'Habilitá el acceso a la galería en Configuración.' });
+        }
+        const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.7, base64: true, mediaTypes: ['images'] });
+        
+        if (!result.canceled && result.assets?.[0]?.uri) {
+          console.log('LOG DEBUG: Imagen seleccionada:', result.assets[0].uri);
+          // Resize image to max 1024px
+          console.log('LOG DEBUG: Redimensionando...');
+          const manipResult = await manipulateAsync(
+            result.assets[0].uri,
+            [{ resize: { width: 1024 } }],
+            { compress: 0.7, format: SaveFormat.JPEG, base64: true }
+          );
+          console.log('LOG DEBUG: Redimensionado exitoso, base64 length:', manipResult.base64?.length);
+          processImageBase64(manipResult.base64);
+        } else {
+          console.log('LOG DEBUG: Selección cancelada o sin URI');
+        }
+      } catch (e) {
+        console.error('LOG DEBUG ERROR en pickImage:', e);
+        showModal({ type: 'error', title: 'Error', message: 'No se pudo procesar la imagen.' });
       }
     }
   };
@@ -168,10 +264,16 @@ export default function AgregarScreen() {
     if (!cameraRef.current || takingPhoto) return;
     setTakingPhoto(true);
     try {
-      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.8, shutterSound: false });
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.7, shutterSound: false });
       setShowCamera(false);
-      if (photo.base64) {
-        processImageBase64(photo.base64);
+      
+      if (photo.uri) {
+        const manipResult = await manipulateAsync(
+          photo.uri,
+          [{ resize: { width: 1024 } }],
+          { compress: 0.7, format: SaveFormat.JPEG, base64: true }
+        );
+        processImageBase64(manipResult.base64);
       }
     } catch (e) {
       showModal({ type: 'error', title: 'Error', message: 'No se pudo tomar la foto.' });
@@ -285,6 +387,61 @@ export default function AgregarScreen() {
           />
         </Field>
 
+        {/* Compartir Gasto */}
+        <View style={s.shareCard}>
+          <Text style={s.shareTitle}>Compartir gasto</Text>
+          {!sharedUser ? (
+            <View style={s.row}>
+              <TextInput
+                style={[s.input, { flex: 1, marginBottom: 0 }]}
+                placeholder="Email del contacto..."
+                placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+                value={searchEmail}
+                onChangeText={setSearchEmail}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity style={s.searchBtn} onPress={handleSearchUser} disabled={searching}>
+                {searching ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="search" size={20} color="#fff" />}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={s.sharedInfo}>
+              <View style={s.userInfo}>
+                <View style={s.miniAvatar}><Text style={s.miniAvatarText}>{sharedUser.nombre?.[0] || '?'}</Text></View>
+                <Text style={s.userName}>{sharedUser.nombre || sharedUser.email}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setSharedUser(null)}><Ionicons name="close-circle" size={20} color={colors.error} /></TouchableOpacity>
+            </View>
+          )}
+
+          {!sharedUser && recentContacts.length > 0 && (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+              {recentContacts.map(c => (
+                <TouchableOpacity key={c.id} style={s.recentPill} onPress={() => setSharedUser(c)}>
+                  <Text style={s.recentPillText}>{c.nombre || c.email.split('@')[0]}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {sharedUser && (
+            <View style={s.modeRow}>
+              <TouchableOpacity 
+                style={[s.modeBtn, shareMode === 'dividir' && s.modeBtnActive]} 
+                onPress={() => setShareMode('dividir')}
+              >
+                <Text style={[s.modeBtnText, shareMode === 'dividir' && s.modeBtnTextActive]}>Dividir entre 2</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[s.modeBtn, shareMode === 'mismo' && s.modeBtnActive]} 
+                onPress={() => setShareMode('mismo')}
+              >
+                <Text style={[s.modeBtnText, shareMode === 'mismo' && s.modeBtnTextActive]}>Mismo monto</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
         <TouchableOpacity style={s.btn} onPress={handleGuardar} disabled={loading} activeOpacity={0.85}>
           {loading ? (
             <ActivityIndicator color="#fff" />
@@ -350,6 +507,116 @@ export default function AgregarScreen() {
           </View>
         </Modal>
       )}
+      {/* Modal de Revisión de Items (Bulk OCR) */}
+      <Modal visible={showOcrModal} animationType="slide" transparent={true}>
+        <View style={s.bulkOverlay}>
+          <View style={s.bulkContent}>
+            <View style={s.bulkHeader}>
+              <Text style={s.bulkTitle}>Gastos detectados</Text>
+              <TouchableOpacity onPress={() => setShowOcrModal(false)}>
+                <Ionicons name="close" size={24} color={dark ? colors.text.dark : colors.text.light} />
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={s.bulkSubtitle}>Revisá los productos y configurá los datos comunes</Text>
+            
+            <View style={s.bulkCommonSection}>
+              <Row>
+                <Field label="Medio de pago" dark={dark} flex>
+                  <SelectRow 
+                    options={mediosDisponibles} 
+                    value={ocrCommonData.medio} 
+                    onChange={v => setOcrCommonData(p => ({ ...p, medio: v }))} 
+                    dark={dark} 
+                    style={[s.input, { paddingVertical: 8 }]} 
+                  />
+                </Field>
+                <Field label="Banco" dark={dark} flex>
+                  <SelectRow 
+                    options={['', ...bancosDisponibles]} 
+                    value={ocrCommonData.banco} 
+                    onChange={v => setOcrCommonData(p => ({ ...p, banco: v }))} 
+                    dark={dark} 
+                    style={[s.input, { paddingVertical: 8 }]} 
+                    placeholder="Sin banco"
+                  />
+                </Field>
+              </Row>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.label}>Tipo de pago</Text>
+                  <TipoSelector 
+                    value={ocrCommonData.tipo} 
+                    onChange={v => setOcrCommonData(p => ({ ...p, tipo: v, cuotas: v === 'debito' ? '1' : p.cuotas }))} 
+                    dark={dark} 
+                    s={s} 
+                  />
+                </View>
+                {ocrCommonData.tipo === 'credito' && (
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.label}>Cuotas</Text>
+                    <CuotasSelector 
+                      value={ocrCommonData.cuotas} 
+                      onChange={v => setOcrCommonData(p => ({ ...p, cuotas: v }))} 
+                      dark={dark} 
+                      s={s} 
+                    />
+                  </View>
+                )}
+              </View>
+            </View>
+
+            <ScrollView style={s.bulkList}>
+              {ocrItems.map((item, idx) => (
+                <View key={idx} style={s.bulkItem}>
+                  <TextInput 
+                    style={[s.input, { flex: 2, marginBottom: 0 }]} 
+                    value={item.objeto} 
+                    onChangeText={(v) => {
+                      const next = [...ocrItems];
+                      next[idx].objeto = v;
+                      setOcrItems(next);
+                    }}
+                  />
+                  <TextInput 
+                    style={[s.input, { flex: 1, marginBottom: 0 }]} 
+                    value={item.precio} 
+                    keyboardType="decimal-pad"
+                    onChangeText={(v) => {
+                      const next = [...ocrItems];
+                      next[idx].precio = v;
+                      setOcrItems(next);
+                    }}
+                  />
+                  <TouchableOpacity onPress={() => setOcrItems(prev => prev.filter((_, i) => i !== idx))}>
+                    <Ionicons name="trash-outline" size={20} color={colors.error} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+
+            <View style={s.bulkFooter}>
+              <TouchableOpacity 
+                style={[s.btn, { flex: 1, backgroundColor: dark ? '#1e293b' : '#f1f5f9' }]} 
+                onPress={() => {
+                  const total = ocrItems.reduce((acc, curr) => acc + Number(curr.precio), 0);
+                  const { items, ...common } = ocrCommonData;
+                  aplicarDatosOCR({ ...common, precio: String(total) });
+                  setShowOcrModal(false);
+                }}
+              >
+                <Text style={[s.btnText, { color: colors.primary }]}>Juntar todo</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={[s.btn, { flex: 1.5 }]} onPress={handleSaveBulk} disabled={loading}>
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Guardar {ocrItems.length} gastos</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
 
       {modal}
     </SafeAreaView>
@@ -645,6 +912,7 @@ function SelectRow({ options, value, onChange, dark, style, placeholder }) {
 const styles = (dark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light },
   scroll: { padding: spacing.md, paddingBottom: spacing.xl },
+  row: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.lg },
   title: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light },
   scanBtn: {
@@ -781,6 +1049,28 @@ const styles = (dark) => StyleSheet.create({
     elevation: 4,
   },
   btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  shareCard: {
+    backgroundColor: dark ? colors.surface.dark : '#fff',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    marginBottom: spacing.lg,
+  },
+  shareTitle: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginBottom: spacing.sm, textTransform: 'uppercase' },
+  searchBtn: { backgroundColor: colors.primary, borderRadius: radius.md, width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  sharedInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: dark ? '#0F172A' : '#F8FAFC', padding: 10, borderRadius: radius.md },
+  userInfo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  miniAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  miniAvatarText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  userName: { ...typography.bodyMed, color: dark ? colors.text.dark : colors.text.light },
+  modeRow: { flexDirection: 'row', gap: 10, marginTop: spacing.md },
+  modeBtn: { flex: 1, paddingVertical: 10, borderRadius: radius.md, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, alignItems: 'center' },
+  modeBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  modeBtnText: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
+  modeBtnTextActive: { color: '#fff', fontWeight: '600' },
+  recentPill: { backgroundColor: dark ? '#1e293b' : '#F1F5F9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.full, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light },
+  recentPillText: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
   cuotasPill: {
     paddingHorizontal: 14,
     paddingVertical: 9,
@@ -840,4 +1130,39 @@ const styles = (dark) => StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
+  bulkOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  bulkContent: { 
+    backgroundColor: dark ? colors.background.dark : colors.background.light, 
+    borderTopLeftRadius: radius.xl, 
+    borderTopRightRadius: radius.xl, 
+    padding: spacing.md, 
+    height: '75%' 
+  },
+  bulkHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  bulkTitle: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light },
+  bulkSubtitle: { ...typography.body, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginBottom: spacing.md },
+  bulkList: { flex: 1 },
+  bulkItem: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  bulkFooter: { flexDirection: 'row', gap: 10, marginTop: spacing.md, paddingBottom: 20 },
+  bulkCommonSection: {
+    backgroundColor: dark ? '#1e293b' : '#f8fafc',
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+  },
+  label: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginBottom: 4, fontWeight: '600' },
+  miniTab: {
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    alignItems: 'center',
+    backgroundColor: dark ? '#0f172a' : '#fff',
+  },
+  miniTabActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  miniTabText: { fontSize: 11, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
+  miniTabTextActive: { color: '#fff', fontWeight: '700' },
 });

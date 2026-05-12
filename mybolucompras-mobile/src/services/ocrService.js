@@ -3,20 +3,19 @@ import { MEDIOS_DE_PAGO } from '../constants/catalogos';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 const buildPrompt = (medios) =>
-  `Analizá esta imagen de ticket o factura y extraé los datos en JSON. Solo incluí los campos que estén claramente visibles.
-
-Formato esperado:
+  `Extraé datos de este ticket en JSON.
+Formato:
 {
-  "precio": "monto total como string numérico (ej: '1500.50')",
-  "fecha": "fecha en formato DD/MM/YYYY",
-  "medio": "exactamente uno de estos: ${medios.join(', ')}",
+  "precio": "total del ticket",
+  "fecha": "DD/MM/YYYY",
+  "medio": "uno de: ${medios.join(', ')}",
   "tipo": "debito o credito",
   "moneda": "ARS, USD, EUR o BRL",
-  "cuotas": "cantidad de cuotas como string (ej: '3')",
-  "objeto": "descripción breve de la compra, máximo 50 caracteres"
+  "cuotas": "cantidad",
+  "objeto": "resumen Super, Farmacia, etc (máx 50 carac)",
+  "items": [{ "objeto": "nombre del producto", "precio": "monto individual" }]
 }
-
-Respondé SOLO con el JSON puro, sin markdown ni texto adicional.`;
+Respondé SOLO JSON. No inventes campos.`;
 
 export async function scanReceiptWithAI(base64Image, apiKey, mediosHabilitados) {
   const medios = mediosHabilitados?.length > 0 ? mediosHabilitados : MEDIOS_DE_PAGO;
@@ -30,7 +29,7 @@ export async function scanReceiptWithAI(base64Image, apiKey, mediosHabilitados) 
       'X-Title': 'MyBolucompras', // Opcional para OpenRouter
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.0-flash-001',
+      model: 'openai/gpt-4o-mini',
       messages: [
         {
           role: 'user',
@@ -57,6 +56,7 @@ export async function scanReceiptWithAI(base64Image, apiKey, mediosHabilitados) 
 
   const data = await response.json();
   const text = data.choices?.[0]?.message?.content?.trim() || '';
+  console.log('DEBUG OCR Response:', text);
 
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) return {};
@@ -69,13 +69,43 @@ export async function scanReceiptWithAI(base64Image, apiKey, mediosHabilitados) 
   }
 
   const result = {};
-  if (parsed.precio != null && !isNaN(Number(parsed.precio))) result.precio = String(parsed.precio);
-  if (parsed.fecha && /^\d{2}\/\d{2}\/\d{4}$/.test(parsed.fecha)) result.fecha = parsed.fecha;
+  const cleanPrice = (val) => {
+    if (!val) return null;
+    let s = String(val).replace(/\s/g, ''); // Quitar espacios
+    // Si tiene puntos y comas, asumimos formato 1.234,56
+    if (s.includes('.') && s.includes(',')) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else if (s.includes(',')) {
+      // Si solo tiene coma, asumimos 1234,56
+      s = s.replace(',', '.');
+    }
+    return s;
+  };
+
+  const rawPrecio = cleanPrice(parsed.precio || parsed.total || parsed.monto);
+  if (rawPrecio && !isNaN(Number(rawPrecio))) result.precio = rawPrecio;
+  
+  if (parsed.fecha && /^\d{2}\/\d{2}\/\d{4}$/.test(parsed.fecha) && parsed.fecha !== 'DD/MM/YYYY') {
+    result.fecha = parsed.fecha;
+  }
+  
   if (parsed.medio && medios.includes(parsed.medio)) result.medio = parsed.medio;
   if (parsed.tipo && ['debito', 'credito'].includes(parsed.tipo)) result.tipo = parsed.tipo;
   if (parsed.moneda && ['ARS', 'USD', 'EUR', 'BRL'].includes(parsed.moneda)) result.moneda = parsed.moneda;
-  if (parsed.cuotas != null && !isNaN(parseInt(parsed.cuotas))) result.cuotas = String(parseInt(parsed.cuotas));
+  
+  const rawCuotas = parsed.cuotas || parsed.installments;
+  if (rawCuotas != null && !isNaN(parseInt(rawCuotas))) result.cuotas = String(parseInt(rawCuotas));
+  
   if (parsed.objeto && typeof parsed.objeto === 'string') result.objeto = parsed.objeto.trim().slice(0, 60);
+  
+  if (Array.isArray(parsed.items)) {
+    result.items = parsed.items
+      .map(it => ({
+        objeto: String(it.objeto || it.name || '').slice(0, 50),
+        precio: cleanPrice(it.precio || it.price || it.amount)
+      }))
+      .filter(it => it.objeto && it.precio && !isNaN(Number(it.precio)));
+  }
 
   return result;
 }

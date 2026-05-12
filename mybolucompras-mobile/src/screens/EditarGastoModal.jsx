@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Switch, Modal,
@@ -11,6 +11,8 @@ import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { BANCOS, MEDIOS_DE_PAGO, ETIQUETA_COLORS } from '../constants/catalogos';
 import { parsePrecio } from '../utils/formatters';
+import { userService } from '../services/userService';
+import { contactService } from '../services/contactService';
 
 export default function EditarGastoModal({ visible, gasto, onClose }) {
   const { editarGasto, mydata, actualizarConfig } = useData();
@@ -40,6 +42,42 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
   const [loading, setLoading] = useState(false);
   const { showModal, modal } = useModal();
 
+  const [sharedUser, setSharedUser] = useState(null);
+  const [shareMode, setShareMode] = useState('dividir');
+  const [searchEmail, setSearchEmail] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [recentContacts, setRecentContacts] = useState([]);
+
+  const isAlreadyShared = !!gasto.compartidoConNombre;
+
+  React.useEffect(() => {
+    if (visible) {
+      contactService.getRecent().then(setRecentContacts);
+      if (isAlreadyShared) {
+        setSharedUser({ nombre: gasto.compartidoConNombre, email: '' });
+      }
+    }
+  }, [visible, gasto.id]);
+
+  const handleSearchUser = async () => {
+    if (!searchEmail.trim()) return;
+    setSearching(true);
+    try {
+      const found = await userService.buscarPorEmail(searchEmail);
+      if (found) {
+        setSharedUser(found);
+        const next = await contactService.saveContact(found);
+        setRecentContacts(next);
+      } else {
+        showModal({ type: 'warning', title: 'No encontrado', message: 'No existe un usuario con ese email.' });
+      }
+    } catch (err) {
+      showModal({ type: 'error', title: 'Error', message: 'Hubo un problema al buscar el usuario.' });
+    } finally {
+      setSearching(false);
+    }
+  };
+
   const set = (key, val) => setForm(prev => {
     const next = { ...prev, [key]: val };
     if (key === 'tipo' && val === 'debito') next.cuotas = '1';
@@ -52,12 +90,13 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
     }
     setLoading(true);
     try {
+      const sharedWith = sharedUser ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email } : null;
       await editarGasto(gasto.id, {
         ...form,
         cuotas: parseInt(form.cuotas) || 1,
         cantidad: parseInt(form.cantidad) || 1,
         precio: Number(form.precio),
-      });
+      }, sharedWith);
       onClose();
     } catch (err) {
       showModal({ type: 'error', title: 'Error al guardar', message: err.message });
@@ -144,6 +183,82 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
               trackColor={{ false: dark ? '#334155' : '#CBD5E1', true: colors.primary }}
               thumbColor="#fff"
             />
+          </View>
+
+          {/* Compartir Gasto */}
+          <View style={[s.shareCard, isAlreadyShared && s.shareCardDisabled]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+              <Text style={s.shareTitle}>Compartir gasto</Text>
+              {isAlreadyShared && (
+                <View style={s.sharedBadge}>
+                  <Ionicons name="people" size={10} color={colors.primary} />
+                  <Text style={[s.sharedBadgeText, { color: colors.primary }]}>YA COMPARTIDO</Text>
+                </View>
+              )}
+            </View>
+
+            {!sharedUser ? (
+              <>
+                <View style={s.row}>
+                  <TextInput
+                    style={[s.input, { flex: 1 }]}
+                    placeholder="Email del contacto..."
+                    placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+                    value={searchEmail}
+                    onChangeText={setSearchEmail}
+                    autoCapitalize="none"
+                    editable={!isAlreadyShared}
+                  />
+                  <TouchableOpacity 
+                    style={[s.searchBtn, isAlreadyShared && { opacity: 0.5 }]} 
+                    onPress={handleSearchUser} 
+                    disabled={searching || isAlreadyShared}
+                  >
+                    {searching ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="search" size={20} color="#fff" />}
+                  </TouchableOpacity>
+                </View>
+                {!isAlreadyShared && recentContacts.length > 0 && (
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                    {recentContacts.map(c => (
+                      <TouchableOpacity key={c.id} style={s.recentPill} onPress={() => setSharedUser(c)}>
+                        <Text style={s.recentPillText}>{c.nombre || c.email.split('@')[0]}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </>
+            ) : (
+              <View style={s.sharedInfo}>
+                <View style={s.userInfo}>
+                  <View style={s.miniAvatar}><Text style={s.miniAvatarText}>{sharedUser.nombre?.[0] || '?'}</Text></View>
+                  <Text style={s.userName}>{sharedUser.nombre || sharedUser.email}</Text>
+                </View>
+                {!isAlreadyShared && (
+                  <TouchableOpacity onPress={() => setSharedUser(null)}>
+                    <Ionicons name="close-circle" size={20} color={colors.error} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {sharedUser && (
+              <View style={[s.modeRow, isAlreadyShared && { opacity: 0.7 }]}>
+                <TouchableOpacity 
+                  style={[s.modeBtn, shareMode === 'dividir' && s.modeBtnActive]} 
+                  onPress={() => !isAlreadyShared && setShareMode('dividir')}
+                  disabled={isAlreadyShared}
+                >
+                  <Text style={[s.modeBtnText, shareMode === 'dividir' && s.modeBtnTextActive]}>Dividir entre 2</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[s.modeBtn, shareMode === 'mismo' && s.modeBtnActive]} 
+                  onPress={() => !isAlreadyShared && setShareMode('mismo')}
+                  disabled={isAlreadyShared}
+                >
+                  <Text style={[s.modeBtnText, shareMode === 'mismo' && s.modeBtnTextActive]}>Mismo monto</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           <TouchableOpacity style={s.btn} onPress={handleGuardar} disabled={loading} activeOpacity={0.85}>
@@ -322,4 +437,37 @@ const styles = (dark) => StyleSheet.create({
   toggleLabel: { ...typography.bodyMed, color: dark ? colors.text.dark : colors.text.light },
   btn: { backgroundColor: colors.primary, borderRadius: radius.md, paddingVertical: 14, alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
   btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  row: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
+  shareCard: { backgroundColor: dark ? colors.surface.dark : '#fff', borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, marginVertical: spacing.md },
+  shareTitle: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginBottom: spacing.sm, textTransform: 'uppercase' },
+  searchBtn: { backgroundColor: colors.primary, borderRadius: radius.md, width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  sharedInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: dark ? '#0F172A' : '#F8FAFC', padding: 10, borderRadius: radius.md },
+  userInfo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  miniAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  miniAvatarText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  userName: { ...typography.bodyMed, color: dark ? colors.text.dark : colors.text.light },
+  modeRow: { flexDirection: 'row', gap: 10, marginTop: spacing.md },
+  modeBtn: { flex: 1, paddingVertical: 10, borderRadius: radius.md, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, alignItems: 'center' },
+  modeBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  modeBtnText: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
+  modeBtnTextActive: { color: '#fff', fontWeight: '600' },
+  recentPill: { backgroundColor: dark ? '#1e293b' : '#F1F5F9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.full, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light },
+  recentPillText: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
+  shareCardDisabled: {
+    opacity: 0.8,
+    backgroundColor: dark ? '#1e293b' : '#f8fafc',
+  },
+  sharedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.primary + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+  },
+  sharedBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
 });

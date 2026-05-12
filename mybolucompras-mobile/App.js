@@ -19,6 +19,8 @@ import AgregarScreen from './src/screens/AgregarScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import ConfiguracionScreen from './src/screens/ConfiguracionScreen';
 
+import OnboardingFlow from './src/screens/OnboardingFlow';
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
@@ -64,7 +66,7 @@ function TabNavigator() {
 }
 
 function RootNavigator() {
-  const { user, loading, appLocked } = useAuth();
+  const { user, loading, appLocked, onboardingNeeded } = useAuth();
   const { dark } = useTheme();
 
   if (loading) {
@@ -81,6 +83,14 @@ function RootNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} />
       ) : appLocked ? (
         <Stack.Screen name="Lock" component={BiometricLockScreen} />
+      ) : onboardingNeeded ? (
+        <Stack.Screen name="Onboarding">
+          {() => (
+            <DataProvider>
+              <OnboardingFlow />
+            </DataProvider>
+          )}
+        </Stack.Screen>
       ) : (
         <Stack.Screen name="Main">
           {() => (

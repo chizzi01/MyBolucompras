@@ -108,6 +108,12 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
                   <Text style={[s.tagText, { color: etiquetaObj.color }]}>{etiquetaObj.nombre}</Text>
                 </View>
               ) : null}
+              {gasto.compartidoConNombre && (
+                <View style={s.sharedBadge}>
+                  <Ionicons name="people-outline" size={10} color={dark ? '#94A3B8' : '#64748B'} />
+                  <Text style={s.sharedBadgeText} numberOfLines={1}>{gasto.compartidoConNombre}</Text>
+                </View>
+              )}
             </View>
           </View>
 
@@ -204,5 +210,22 @@ const styles = (dark) => StyleSheet.create({
     color: '#fff',
     fontSize: 11,
     fontWeight: '600',
+  },
+  sharedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: dark ? '#1e293b' : '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+    maxWidth: 120,
+  },
+  sharedBadgeText: {
+    ...typography.caption,
+    fontSize: 10,
+    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
   },
 });

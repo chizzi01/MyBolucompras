@@ -47,14 +47,14 @@ export function DataProvider({ children }) {
     }
   }, [user?.id]);
 
-  const agregarGasto = async (gasto) => {
-    const nuevo = await gastosService.crear(gasto);
+  const agregarGasto = async (gasto, sharedWith = null) => {
+    const nuevo = await gastosService.crear(gasto, sharedWith);
     setGastos(prev => [nuevo, ...prev]);
     return nuevo;
   };
 
-  const editarGasto = async (id, gasto) => {
-    const actualizado = await gastosService.actualizar(id, gasto);
+  const editarGasto = async (id, gasto, sharedWith = null) => {
+    const actualizado = await gastosService.actualizar(id, gasto, sharedWith);
     setGastos(prev => prev.map(g => g.id === id ? actualizado : g));
   };
 
