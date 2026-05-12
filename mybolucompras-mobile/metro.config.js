@@ -3,6 +3,13 @@ const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
+// Excluir carpetas de build para evitar errores de lstat en Windows
+config.resolver.blockList = [
+  /.*\/android\/build\/.*/,
+  /.*\/ios\/build\/.*/,
+  /.*\/node_modules\/.*\/android\/build\/.*/,
+];
+
 // Insert a FormData pre-polyfill between InitializeCore and expo/src/winter/index.ts.
 // In Expo SDK 54 + RN 0.81 + New Architecture, expo/winter/runtime.native.ts calls
 // installFormDataPatch(FormData) at pre-module time. If FormData's lazy getter from

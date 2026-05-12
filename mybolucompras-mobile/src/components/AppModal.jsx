@@ -22,9 +22,51 @@ export default function AppModal({
   onConfirm,
   confirmText,
   cancelText = 'Cancelar',
+  actions,
 }) {
   const { dark } = useTheme();
   const s = styles(dark);
+
+  if (type === 'actionsheet') {
+    return (
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+        <TouchableOpacity style={s.sheetBackdrop} activeOpacity={1} onPress={onClose}>
+          <TouchableOpacity activeOpacity={1} style={s.sheet}>
+            {!!title && <Text style={s.sheetTitle}>{title}</Text>}
+            {!!message && <Text style={s.sheetMessage}>{message}</Text>}
+
+            {actions?.map((action, i) => (
+              <TouchableOpacity
+                key={i}
+                style={[s.sheetAction, i < actions.length - 1 && s.sheetActionBorder]}
+                onPress={action.onPress}
+                activeOpacity={0.7}
+              >
+                {!!action.icon && (
+                  <View style={[s.sheetActionIcon, { backgroundColor: action.danger ? 'rgba(239,68,68,0.12)' : `${colors.primary}18` }]}>
+                    <Ionicons
+                      name={action.icon}
+                      size={20}
+                      color={action.danger ? '#EF4444' : colors.primary}
+                    />
+                  </View>
+                )}
+                <Text style={[s.sheetActionText, action.danger && { color: '#EF4444' }]}>
+                  {action.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+
+            <View style={s.sheetDivider} />
+            <TouchableOpacity style={s.sheetCancel} onPress={onClose} activeOpacity={0.7}>
+              <Text style={s.sheetCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+    );
+  }
+
   const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.info;
   const hasConfirm = !!onConfirm;
 
@@ -142,5 +184,76 @@ const styles = (dark) => StyleSheet.create({
     ...typography.bodyMed,
     color: '#fff',
     fontWeight: '700',
+  },
+
+  // Action sheet styles
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: dark ? 'rgba(0,0,0,0.72)' : 'rgba(0,0,0,0.52)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: dark ? colors.surface.dark : '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: spacing.md,
+    paddingBottom: 34,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+  },
+  sheetTitle: {
+    ...typography.h2,
+    color: dark ? colors.text.dark : colors.text.light,
+    textAlign: 'center',
+    marginBottom: 4,
+    marginTop: spacing.sm,
+  },
+  sheetMessage: {
+    ...typography.body,
+    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  sheetAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: 15,
+    paddingHorizontal: spacing.sm,
+  },
+  sheetActionBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: dark ? colors.border.dark : colors.border.light,
+  },
+  sheetActionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetActionText: {
+    ...typography.bodyMed,
+    color: dark ? colors.text.dark : colors.text.light,
+    flex: 1,
+  },
+  sheetDivider: {
+    height: 1,
+    backgroundColor: dark ? colors.border.dark : colors.border.light,
+    marginVertical: spacing.sm,
+    marginHorizontal: -spacing.md,
+  },
+  sheetCancel: {
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderRadius: radius.md,
+    backgroundColor: dark ? '#1e293b' : '#F1F5F9',
+  },
+  sheetCancelText: {
+    ...typography.bodyMed,
+    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+    fontWeight: '600',
   },
 });

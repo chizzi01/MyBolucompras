@@ -12,6 +12,14 @@ export function useModal() {
     <AppModal
       {...config}
       visible
+      actions={config.actions?.map(a => ({
+        ...a,
+        onPress: () => {
+          const cb = a.onPress;
+          hideModal();
+          cb?.();
+        },
+      }))}
       onClose={() => {
         const cb = config.onClose;
         hideModal();

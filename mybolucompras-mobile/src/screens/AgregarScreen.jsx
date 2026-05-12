@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, Platform, Modal,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { scanReceiptWithAI } from '../services/ocrService';
+import { OPENROUTER_API_KEY } from '../config/keys';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,6 +46,12 @@ export default function AgregarScreen() {
     moneda: mydata.monedaPreferida || 'ARS',
   });
   const [loading, setLoading] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [takingPhoto, setTakingPhoto] = useState(false);
+  const [flash, setFlash] = useState('off');
+  const cameraRef = useRef(null);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   const set = (key, val) => setForm(prev => {
     const next = { ...prev, [key]: val };
@@ -84,6 +94,104 @@ export default function AgregarScreen() {
     }
   };
 
+  const FIELD_LABELS = { precio: 'Precio', fecha: 'Fecha', medio: 'Medio de pago', tipo: 'Tipo', moneda: 'Moneda', cuotas: 'Cuotas', objeto: 'Objeto' };
+  
+  const aplicarDatosOCR = (datos) => {
+    setForm(prev => {
+      const next = { ...prev, ...datos };
+      if (datos.tipo === 'debito') next.cuotas = '1';
+      return next;
+    });
+  };
+
+  const processImageBase64 = async (base64Data) => {
+    setIsScanning(true);
+    try {
+      const datos = await scanReceiptWithAI(base64Data, OPENROUTER_API_KEY, mydata.mediosHabilitados);
+      const camposDetectados = Object.keys(datos).map(k => FIELD_LABELS[k] || k).join(', ');
+
+      if (!Object.keys(datos).length) {
+        return showModal({ type: 'warning', title: 'Sin datos', message: 'No se detectaron datos útiles. Podés completar el formulario manualmente.' });
+      }
+
+      const formVacio = !form.objeto && !form.precio;
+      if (formVacio) {
+        aplicarDatosOCR(datos);
+        showModal({ type: 'success', title: 'Datos cargados', message: `Se completaron: ${camposDetectados}.` });
+      } else {
+        showModal({
+          type: 'confirm',
+          title: 'Datos detectados',
+          message: `Se encontraron: ${camposDetectados}. ¿Sobreescribir el formulario?`,
+          confirmText: 'Sobreescribir',
+          onConfirm: () => aplicarDatosOCR(datos),
+        });
+      }
+    } catch (err) {
+      showModal({ type: 'error', title: 'Error al escanear', message: err.message });
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const pickImage = async (source) => {
+    if (!OPENROUTER_API_KEY) {
+      return showModal({
+        type: 'warning',
+        title: 'API no configurada',
+        message: 'Agregá tu clave de OpenRouter en src/config/keys.js. Conseguila gratis en openrouter.ai/keys',
+      });
+    }
+
+    if (source === 'camera') {
+      if (!cameraPermission?.granted) {
+        const perm = await requestCameraPermission();
+        if (!perm.granted) {
+          return showModal({ type: 'warning', title: 'Permiso denegado', message: 'Habilitá el acceso a la cámara en Configuración.' });
+        }
+      }
+      setShowCamera(true);
+    } else {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        return showModal({ type: 'warning', title: 'Permiso denegado', message: 'Habilitá el acceso a la galería en Configuración.' });
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.8, base64: true, mediaTypes: ['images'] });
+      
+      if (!result.canceled && result.assets?.[0]?.base64) {
+        processImageBase64(result.assets[0].base64);
+      }
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    if (!cameraRef.current || takingPhoto) return;
+    setTakingPhoto(true);
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.8, shutterSound: false });
+      setShowCamera(false);
+      if (photo.base64) {
+        processImageBase64(photo.base64);
+      }
+    } catch (e) {
+      showModal({ type: 'error', title: 'Error', message: 'No se pudo tomar la foto.' });
+    } finally {
+      setTakingPhoto(false);
+    }
+  };
+
+  const handleScanReceipt = () => {
+    showModal({
+      type: 'actionsheet',
+      title: 'Escanear ticket',
+      message: 'Elegí cómo querés cargar la imagen',
+      actions: [
+        { label: 'Usar cámara', icon: 'camera-outline', onPress: () => pickImage('camera') },
+        { label: 'Elegir de galería', icon: 'images-outline', onPress: () => pickImage('gallery') },
+      ],
+    });
+  };
+
   const handleCrearEtiqueta = async (nuevaEtiqueta) => {
     const etiquetas = [...(mydata.etiquetas || []), nuevaEtiqueta];
     await actualizarConfig({ etiquetas });
@@ -94,7 +202,13 @@ export default function AgregarScreen() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <Text style={s.title}>Nuevo gasto</Text>
+        <View style={s.titleRow}>
+          <Text style={s.title}>Nuevo gasto</Text>
+          <TouchableOpacity style={s.scanBtn} onPress={handleScanReceipt} disabled={isScanning} activeOpacity={0.7}>
+            <Ionicons name="scan-outline" size={19} color={colors.primary} />
+            <Text style={s.scanBtnText}>Escanear</Text>
+          </TouchableOpacity>
+        </View>
 
         <Field label="Tipo de gasto" dark={dark}>
           <FijoSelector value={form.isFijo} onChange={v => set('isFijo', v)} dark={dark} s={s} />
@@ -182,6 +296,61 @@ export default function AgregarScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      {isScanning && (
+        <View style={s.scanOverlay}>
+          <View style={s.scanOverlayCard}>
+            <ActivityIndicator color={colors.primary} size="large" />
+            <Text style={s.scanOverlayText}>Analizando ticket...</Text>
+          </View>
+        </View>
+      )}
+
+      {showCamera && (
+        <Modal visible={showCamera} animationType="slide" transparent={false}>
+          <View style={{ flex: 1, backgroundColor: '#000' }}>
+            <CameraView
+              style={StyleSheet.absoluteFill}
+              facing="back"
+              ref={cameraRef}
+              flash={flash}
+              mute={true}
+              animateShutter={false}
+            />
+            <View style={{ flex: 1, justifyContent: 'space-between', padding: spacing.xl, paddingVertical: 60 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => setShowCamera(false)} style={{ padding: 8, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: radius.full }}>
+                  <Ionicons name="close" size={28} color="#fff" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  onPress={() => setFlash(f => f === 'off' ? 'on' : 'off')} 
+                  style={{ padding: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: radius.full }}
+                >
+                  <Ionicons name={flash === 'on' ? 'flash' : 'flash-off'} size={24} color={flash === 'on' ? '#FFD700' : '#fff'} />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={{ alignSelf: 'center', alignItems: 'center' }}>
+                <View style={{ width: 280, height: 400, borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)', borderRadius: radius.lg, borderStyle: 'dashed', marginBottom: 40, justifyContent: 'center', alignItems: 'center' }}>
+                  <Text style={{ color: 'rgba(255,255,255,0.7)', ...typography.captionMed }}>Enfocá el ticket acá</Text>
+                </View>
+                
+                <TouchableOpacity 
+                  onPress={handleTakePhoto} 
+                  disabled={takingPhoto}
+                  style={{ width: 70, height: 70, borderRadius: 35, backgroundColor: 'rgba(255,255,255,0.3)', justifyContent: 'center', alignItems: 'center' }}
+                >
+                  <View style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' }}>
+                    {takingPhoto && <ActivityIndicator color="#000" />}
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
       {modal}
     </SafeAreaView>
   );
@@ -476,7 +645,41 @@ function SelectRow({ options, value, onChange, dark, style, placeholder }) {
 const styles = (dark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light },
   scroll: { padding: spacing.md, paddingBottom: spacing.xl },
-  title: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light, marginBottom: spacing.lg },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.lg },
+  title: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light },
+  scanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '14',
+  },
+  scanBtnText: { ...typography.captionMed, color: colors.primary, fontWeight: '600' },
+  scanOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+  },
+  scanOverlayCard: {
+    backgroundColor: dark ? colors.surface.dark : '#fff',
+    borderRadius: radius.lg,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: 40,
+    alignItems: 'center',
+    gap: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  scanOverlayText: { ...typography.bodyMed, color: dark ? colors.text.dark : colors.text.light },
   input: {
     backgroundColor: dark ? '#0F172A' : '#F8FAFC',
     borderWidth: 1,
