@@ -33,6 +33,9 @@ yarn-error.*
 # local env files
 .env*.local
 
+# local Android signing credentials
+android/keystore.properties
+
 # typescript
 *.tsbuildinfo
 

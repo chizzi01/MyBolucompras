@@ -147,12 +147,9 @@ export default function AgregarScreen() {
   };
 
   const processImageBase64 = async (base64Data) => {
-    console.log('LOG DEBUG: processImageBase64 iniciada');
     setIsScanning(true);
     try {
-      console.log('LOG DEBUG: Llamando a scanReceiptWithAI...');
       const datos = await scanReceiptWithAI(base64Data, OPENROUTER_API_KEY, mydata.mediosHabilitados);
-      console.log('LOG DEBUG: Datos recibidos de la IA:', JSON.stringify(datos).slice(0, 100));
       
       if (!Object.keys(datos).length) {
         return showModal({ type: 'warning', title: 'Sin datos', message: 'No se detectaron datos útiles.' });
@@ -240,21 +237,15 @@ export default function AgregarScreen() {
         const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.7, base64: true, mediaTypes: ['images'] });
         
         if (!result.canceled && result.assets?.[0]?.uri) {
-          console.log('LOG DEBUG: Imagen seleccionada:', result.assets[0].uri);
           // Resize image to max 1024px
-          console.log('LOG DEBUG: Redimensionando...');
           const manipResult = await manipulateAsync(
             result.assets[0].uri,
             [{ resize: { width: 1024 } }],
             { compress: 0.7, format: SaveFormat.JPEG, base64: true }
           );
-          console.log('LOG DEBUG: Redimensionado exitoso, base64 length:', manipResult.base64?.length);
           processImageBase64(manipResult.base64);
-        } else {
-          console.log('LOG DEBUG: Selección cancelada o sin URI');
         }
       } catch (e) {
-        console.error('LOG DEBUG ERROR en pickImage:', e);
         showModal({ type: 'error', title: 'Error', message: 'No se pudo procesar la imagen.' });
       }
     }
@@ -518,56 +509,56 @@ export default function AgregarScreen() {
               </TouchableOpacity>
             </View>
             
-            <Text style={s.bulkSubtitle}>Revisá los productos y configurá los datos comunes</Text>
-            
-            <View style={s.bulkCommonSection}>
-              <Row>
-                <Field label="Medio de pago" dark={dark} flex>
-                  <SelectRow 
-                    options={mediosDisponibles} 
-                    value={ocrCommonData.medio} 
-                    onChange={v => setOcrCommonData(p => ({ ...p, medio: v }))} 
-                    dark={dark} 
-                    style={[s.input, { paddingVertical: 8 }]} 
-                  />
-                </Field>
-                <Field label="Banco" dark={dark} flex>
-                  <SelectRow 
-                    options={['', ...bancosDisponibles]} 
-                    value={ocrCommonData.banco} 
-                    onChange={v => setOcrCommonData(p => ({ ...p, banco: v }))} 
-                    dark={dark} 
-                    style={[s.input, { paddingVertical: 8 }]} 
-                    placeholder="Sin banco"
-                  />
-                </Field>
-              </Row>
+            <ScrollView style={s.bulkList} contentContainerStyle={{ paddingBottom: spacing.lg }} keyboardShouldPersistTaps="handled">
+              <Text style={s.bulkSubtitle}>Revisá los productos y configurá los datos comunes</Text>
+              
+              <View style={s.bulkCommonSection}>
+                <Row>
+                  <Field label="Medio de pago" dark={dark} flex>
+                    <SelectRow 
+                      options={mediosDisponibles} 
+                      value={ocrCommonData.medio} 
+                      onChange={v => setOcrCommonData(p => ({ ...p, medio: v }))} 
+                      dark={dark} 
+                      style={[s.input, { paddingVertical: 8 }]} 
+                    />
+                  </Field>
+                  <Field label="Banco" dark={dark} flex>
+                    <SelectRow 
+                      options={['', ...bancosDisponibles]} 
+                      value={ocrCommonData.banco} 
+                      onChange={v => setOcrCommonData(p => ({ ...p, banco: v }))} 
+                      dark={dark} 
+                      style={[s.input, { paddingVertical: 8 }]} 
+                      placeholder="Sin banco"
+                    />
+                  </Field>
+                </Row>
 
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.label}>Tipo de pago</Text>
-                  <TipoSelector 
-                    value={ocrCommonData.tipo} 
-                    onChange={v => setOcrCommonData(p => ({ ...p, tipo: v, cuotas: v === 'debito' ? '1' : p.cuotas }))} 
-                    dark={dark} 
-                    s={s} 
-                  />
-                </View>
-                {ocrCommonData.tipo === 'credito' && (
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.label}>Cuotas</Text>
-                    <CuotasSelector 
-                      value={ocrCommonData.cuotas} 
-                      onChange={v => setOcrCommonData(p => ({ ...p, cuotas: v }))} 
+                <View style={{ marginTop: 10 }}>
+                  <View style={s.bulkFieldItem}>
+                    <Text style={s.label}>Tipo de pago</Text>
+                    <TipoSelector 
+                      value={ocrCommonData.tipo} 
+                      onChange={v => setOcrCommonData(p => ({ ...p, tipo: v, cuotas: v === 'debito' ? '1' : p.cuotas }))} 
                       dark={dark} 
                       s={s} 
                     />
                   </View>
-                )}
+                  {ocrCommonData.tipo === 'credito' && (
+                    <View style={[s.bulkFieldItem, { marginTop: 12 }] }>
+                      <Text style={s.label}>Cuotas</Text>
+                      <CuotasSelector 
+                        value={ocrCommonData.cuotas} 
+                        onChange={v => setOcrCommonData(p => ({ ...p, cuotas: v }))} 
+                        dark={dark} 
+                        s={s} 
+                      />
+                    </View>
+                  )}
+                </View>
               </View>
-            </View>
 
-            <ScrollView style={s.bulkList}>
               {ocrItems.map((item, idx) => (
                 <View key={idx} style={s.bulkItem}>
                   <TextInput 
@@ -1074,14 +1065,26 @@ const styles = (dark) => StyleSheet.create({
   cuotasPill: {
     paddingHorizontal: 14,
     paddingVertical: 9,
+    minHeight: 42,
     borderRadius: radius.full,
     borderWidth: 1,
     borderColor: dark ? colors.border.dark : colors.border.light,
     backgroundColor: dark ? '#0F172A' : '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cuotasPillActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
+  },
+  bulkFieldRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+    alignItems: 'flex-start',
+  },
+  bulkFieldItem: {
+    width: '100%',
   },
   cuotasPillText: {
     ...typography.captionMed,

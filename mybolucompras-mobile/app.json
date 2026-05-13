@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/MyBolucompras.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/MyBolucompras.png",
       "resizeMode": "contain",
@@ -22,7 +22,9 @@
         "backgroundColor": "#0E0B2E"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.chizzi.mybolucomprasmobile"
+      "package": "com.chizzi.mybolucomprasmobile",
+      "compileSdkVersion": 36,
+      "versionCode": 3
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -36,7 +38,27 @@
           "microphonePermission": false,
           "photosPermission": "MyBolucompras necesita acceso a la galería para seleccionar screenshots."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 35
+          }
+        }
+      ],
+      [
+        "./plugins/withGoogleVerification",
+        {
+          "code": "DJ5VFS0TGLKCEAAAAAAAAAAAAAAAA"
+        }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "79dd8d14-8a99-4d87-90a1-65395cc91f3b"
+      }
+    }
   }
 }

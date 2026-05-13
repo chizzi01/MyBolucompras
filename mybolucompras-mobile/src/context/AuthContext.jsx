@@ -26,47 +26,51 @@ export function AuthProvider({ children }) {
     });
 
     const init = async () => {
-      const [{ data: { session } }, bioStored] = await Promise.all([
-        supabase.auth.getSession(),
-        AsyncStorage.getItem(BIOMETRIC_KEY),
-      ]);
+      try {
+        const [{ data: { session } }, bioStored] = await Promise.all([
+          supabase.auth.getSession(),
+          AsyncStorage.getItem(BIOMETRIC_KEY),
+        ]);
 
-      setSession(session);
-      setUser(session?.user ?? null);
+        setSession(session);
+        setUser(session?.user ?? null);
 
-      if (session?.user) {
-        // Check if user already has data in DB
-        const { data: config, error } = await supabase
-          .from('configuracion_usuario')
-          .select('fondos, etiquetas, cierre, vencimiento, moneda_preferida')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-        
-        console.log('DEBUG: Onboarding check for', session.user.email, config);
-        if (error) console.error('DEBUG: Onboarding error', error);
+        if (session?.user) {
+          // Check if user already has data in DB
+          const { data: config, error } = await supabase
+            .from('configuracion_usuario')
+            .select('fondos, etiquetas, cierre, vencimiento, moneda_preferida')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          
+          console.log('DEBUG: Onboarding check for', session.user.email, config);
+          if (error) console.error('DEBUG: Onboarding error', error);
 
-        const alreadyHasData = config && (
-          Number(config.fondos) > 0 || 
-          (Array.isArray(config.etiquetas) && config.etiquetas.length > 0) ||
-          config.cierre ||
-          config.vencimiento ||
-          (config.moneda_preferida && config.moneda_preferida !== 'ARS')
-        );
-        
-        console.log('DEBUG: alreadyHasData?', alreadyHasData);
+          const alreadyHasData = config && (
+            Number(config.fondos) > 0 || 
+            (Array.isArray(config.etiquetas) && config.etiquetas.length > 0) ||
+            config.cierre ||
+            config.vencimiento ||
+            (config.moneda_preferida && config.moneda_preferida !== 'ARS')
+          );
+          
+          console.log('DEBUG: alreadyHasData?', alreadyHasData);
 
-        if (!alreadyHasData) {
-          setOnboardingNeeded(true);
+          if (!alreadyHasData) {
+            setOnboardingNeeded(true);
+          }
         }
-      }
 
-      const bioOn = bioStored === 'true';
-      setBiometricEnabledState(bioOn);
-      if (session?.user && bioOn) {
-        setAppLocked(true);
+        const bioOn = bioStored === 'true';
+        setBiometricEnabledState(bioOn);
+        if (session?.user && bioOn) {
+          setAppLocked(true);
+        }
+      } catch (error) {
+        console.error('Failed to initialize authentication', error);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     init();

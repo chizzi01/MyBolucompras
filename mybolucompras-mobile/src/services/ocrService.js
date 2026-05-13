@@ -56,7 +56,6 @@ export async function scanReceiptWithAI(base64Image, apiKey, mediosHabilitados) 
 
   const data = await response.json();
   const text = data.choices?.[0]?.message?.content?.trim() || '';
-  console.log('DEBUG OCR Response:', text);
 
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) return {};
