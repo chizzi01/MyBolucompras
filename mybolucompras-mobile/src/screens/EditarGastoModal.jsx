@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Switch, Modal,
+  ScrollView, ActivityIndicator, Switch, Modal, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +10,7 @@ import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { BANCOS, MEDIOS_DE_PAGO, ETIQUETA_COLORS } from '../constants/catalogos';
-import { parsePrecio } from '../utils/formatters';
+import { parsePrecio, formatPrecioLive, getCurrencySymbol } from '../utils/formatters';
 import { userService } from '../services/userService';
 import { contactService } from '../services/contactService';
 
@@ -42,6 +42,20 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
   const [loading, setLoading] = useState(false);
   const { showModal, modal } = useModal();
 
+  // Display formateado del precio (lo que ve el usuario: "$ 1.234,56")
+  // Inicializamos con el precio ya formateado del gasto existente
+  const initPrecioDisplay = () => {
+    const num = parsePrecio(gasto.precio);
+    if (!num) return '';
+    // Convertimos a formato de coma decimal para que formatPrecioLive lo procese
+    const { display } = formatPrecioLive(
+      String(num).replace('.', ','),
+      gasto.moneda || 'ARS'
+    );
+    return display;
+  };
+  const [precioDisplay, setPrecioDisplay] = useState(initPrecioDisplay);
+
   const [sharedUser, setSharedUser] = useState(null);
   const [shareMode, setShareMode] = useState('dividir');
   const [searchEmail, setSearchEmail] = useState('');
@@ -56,6 +70,21 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
       if (isAlreadyShared) {
         setSharedUser({ nombre: gasto.compartidoConNombre, email: '' });
       }
+      // Re-inicializar precio display cuando el modal abre (puede ser un gasto diferente)
+      setPrecioDisplay(initPrecioDisplay());
+      setForm({
+        objeto: gasto.objeto,
+        fecha: gasto.fecha,
+        medio: gasto.medio,
+        tipo: gasto.tipo || 'credito',
+        banco: gasto.banco || '',
+        cuotas: String(gasto.cuotas),
+        cantidad: String(gasto.cantidad),
+        precio: String(parsePrecio(gasto.precio)),
+        moneda: gasto.moneda || 'ARS',
+        etiqueta: gasto.etiqueta || '',
+        isFijo: gasto.isFijo || false,
+      });
     }
   }, [visible, gasto.id]);
 
@@ -83,6 +112,25 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
     if (key === 'tipo' && val === 'debito') next.cuotas = '1';
     return next;
   });
+
+  const handlePrecioChange = (val) => {
+    const { display, cleanValue } = formatPrecioLive(val, form.moneda);
+    setPrecioDisplay(display);
+    set('precio', cleanValue);
+  };
+
+  // Cuando cambia la moneda, actualizamos el símbolo en el display
+  useEffect(() => {
+    if (form.precio) {
+      const { display } = formatPrecioLive(
+        String(form.precio).replace('.', ','),
+        form.moneda
+      );
+      setPrecioDisplay(display);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.moneda]);
+
 
   const handleGuardar = async () => {
     if (!form.objeto.trim()) {
@@ -114,7 +162,12 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={s.root} edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <SafeAreaView style={s.root} edges={['top']}>
         <View style={s.header}>
           <Text style={s.title}>Editar gasto</Text>
           <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -122,12 +175,25 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="interactive"
+        >
           <Label text="Objeto" dark={dark} />
           <TextInput style={s.input} value={form.objeto} onChangeText={v => set('objeto', v)} placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
 
           <Label text="Precio" dark={dark} />
-          <TextInput style={s.input} value={form.precio} onChangeText={v => set('precio', v)} keyboardType="decimal-pad" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+          <TextInput
+            style={s.input}
+            value={precioDisplay}
+            onChangeText={handlePrecioChange}
+            placeholder={`${getCurrencySymbol(form.moneda)} 0,00`}
+            placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+            keyboardType="decimal-pad"
+            returnKeyType="done"
+          />
 
           <Label text="Fecha (DD/MM/AAAA)" dark={dark} />
           <TextInput style={s.input} value={form.fecha} onChangeText={v => set('fecha', v)} keyboardType="numeric" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
@@ -267,6 +333,7 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
         </ScrollView>
         {modal}
       </SafeAreaView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

@@ -4,7 +4,7 @@ import { Ionicons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-ico
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
-import { formatPrecio, parsePrecio } from '../utils/formatters';
+import { formatPrecioEuropeo, parsePrecio } from '../utils/formatters';
 
 const DELETE_WIDTH = 80;
 
@@ -77,8 +77,8 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
   const esCuotado = !gasto.isFijo && Number(gasto.cuotas) > 1;
   const precioNum = parsePrecio(gasto.precio);
   const precioCuota = esCuotado ? precioNum / Number(gasto.cuotas) : precioNum;
-  const precioDisplay = formatPrecio(precioCuota, gasto.moneda);
-  const precioTotal = esCuotado ? formatPrecio(precioNum, gasto.moneda) : null;
+  const precioDisplay = formatPrecioEuropeo(precioCuota, gasto.moneda);
+  const precioTotal = esCuotado ? formatPrecioEuropeo(precioNum, gasto.moneda) : null;
   const etiquetaObj = gasto.etiqueta ? resolveEtiqueta(gasto.etiqueta, mydata.etiquetas) : null;
 
   return (

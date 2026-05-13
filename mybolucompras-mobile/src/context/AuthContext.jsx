@@ -140,6 +140,14 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   };
 
+  const resendCode = async (email) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+    if (error) throw error;
+  };
+
   const completeOnboarding = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -173,7 +181,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, session, loading,
-      signIn, signUp, signOut, verifyEmail,
+      signIn, signUp, signOut, verifyEmail, resendCode,
       onboardingNeeded, completeOnboarding,
       biometricEnabled, biometricAvailable, enableBiometric,
       appLocked, unlockApp, authenticateWithBiometrics,

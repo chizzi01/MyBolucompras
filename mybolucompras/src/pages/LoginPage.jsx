@@ -37,12 +37,16 @@ function mapAuthError(message) {
 
 export default function LoginPage() {
   const { theme } = useTheme();
-  const { signIn, demo } = useAuth();
+  const { signIn, verifyEmail, demo } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [verifyMode, setVerifyMode] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpError, setOtpError] = useState('');
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -60,7 +64,29 @@ export default function LoginPage() {
       await signIn(form.email, form.password);
       navigate('/');
     } catch (err) {
-      setError(mapAuthError(err.message));
+      if (err.message === 'VERIFY_REQUIRED') {
+        setPendingEmail(form.email);
+        setVerifyMode(true);
+      } else {
+        setError(mapAuthError(err.message));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    if (otp.length < 8) {
+      setOtpError('Ingresá el código de 8 dígitos.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await verifyEmail(pendingEmail, otp);
+      navigate('/');
+    } catch {
+      setOtpError('Código incorrecto o expirado. Revisá tu email e intentá de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -75,6 +101,62 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (verifyMode) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="auth-logo">
+            <img src={theme === 'light' ? "./img/icon-light.png" : "./img/icon-bgremove.png"} alt="MyBolucompras" className="auth-logo-img" />
+            <h1 className="auth-logo-title">MyBolucompras</h1>
+          </div>
+
+          <div className="auth-success-icon" style={{ background: 'var(--color-primary-light, rgba(99,102,241,0.1))', color: 'var(--color-primary)' }}>✉</div>
+          <h2 className="auth-title">Verificá tu cuenta</h2>
+          <p className="auth-subtitle">
+            Ingresá el código de 8 dígitos que enviamos a <strong>{pendingEmail}</strong>
+          </p>
+
+          <form onSubmit={handleVerify} className="auth-form" noValidate>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="login-otp">Código de verificación</label>
+              <div className="auth-input-wrapper">
+                <input
+                  id="login-otp"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={8}
+                  value={otp}
+                  onChange={e => { setOtp(e.target.value.replace(/\D/g, '')); setOtpError(''); }}
+                  placeholder="12345678"
+                  className={`auth-input${otpError ? ' input-error' : ''}`}
+                  autoComplete="one-time-code"
+                  disabled={loading}
+                  style={{ textAlign: 'center', letterSpacing: '6px', fontSize: '20px', fontWeight: '700', paddingRight: '14px' }}
+                />
+              </div>
+              {otpError && <span className="auth-field-error">⚠ {otpError}</span>}
+            </div>
+
+            <button type="submit" className="auth-btn" disabled={loading || otp.length < 8}>
+              {loading ? <span className="auth-btn-spinner" /> : 'Verificar código'}
+            </button>
+          </form>
+
+          <p className="auth-footer-text">
+            <button
+              onClick={() => { setVerifyMode(false); setOtp(''); setOtpError(''); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              className="auth-link"
+            >
+              Volver al inicio de sesión
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-page">

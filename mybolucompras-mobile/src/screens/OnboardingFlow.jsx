@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Switch, Dimensions,
+  ScrollView, ActivityIndicator, Switch, Dimensions, FlatList,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +11,8 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
-import { MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
+import { MONEDAS, BANCOS, MEDIOS_DE_PAGO } from '../constants/catalogos';
+import { sumarDiasHabiles } from '../utils/cuotas';
 
 const { width } = Dimensions.get('window');
 
@@ -26,16 +28,14 @@ export default function OnboardingFlow() {
   // States for the fields
   const [fondos, setFondos] = useState('');
   const [cierreDate, setCierreDate] = useState(new Date());
-  const [vencimientoDate, setVencimientoDate] = useState(new Date());
   const [showCierre, setShowCierre] = useState(false);
-  const [showVencimiento, setShowVencimiento] = useState(false);
   const [moneda, setMoneda] = useState(mydata.monedaPreferida || 'ARS');
-  const [etiquetas, setEtiquetas] = useState([]);
-  const [nuevaEtiqueta, setNuevaEtiqueta] = useState('');
+  const [selectedBancos, setSelectedBancos] = useState([]);
+  const [selectedMedios, setSelectedMedios] = useState([]);
 
   const next = () => setStep(s => s + 1);
   const skip = () => {
-    if (step === 5) handleFinish();
+    if (step === 4) handleFinish();
     else next();
   };
 
@@ -72,7 +72,9 @@ export default function OnboardingFlow() {
 
   const saveFechas = async () => {
     setLoading(true);
-    await actualizarCierre(formatDateToDB(cierreDate), formatDateToDB(vencimientoDate), '', '');
+    // Calculate vencimiento as 10 business days after cierre
+    const vencimientoCalculada = sumarDiasHabiles(cierreDate, 10);
+    await actualizarCierre(formatDateToDB(cierreDate), formatDateToDB(vencimientoCalculada), '', '');
     setLoading(false);
     next();
   };
@@ -84,20 +86,26 @@ export default function OnboardingFlow() {
     next();
   };
 
-  const addTag = () => {
-    if (nuevaEtiqueta.trim()) {
-      setEtiquetas([...etiquetas, { nombre: nuevaEtiqueta.trim(), color: ETIQUETA_COLORS[0] }]);
-      setNuevaEtiqueta('');
-    }
+  const savePagos = async () => {
+    setLoading(true);
+    await actualizarConfig({ 
+      bancosHabilitados: selectedBancos, 
+      mediosHabilitados: selectedMedios 
+    });
+    setLoading(false);
+    next();
   };
 
-  const saveTags = async () => {
-    if (etiquetas.length > 0) {
-      setLoading(true);
-      await actualizarConfig({ etiquetas });
-      setLoading(false);
-    }
-    next();
+  const toggleBanco = (banco) => {
+    setSelectedBancos(prev => 
+      prev.includes(banco) ? prev.filter(b => b !== banco) : [...prev, banco]
+    );
+  };
+
+  const toggleMedio = (medio) => {
+    setSelectedMedios(prev => 
+      prev.includes(medio) ? prev.filter(m => m !== medio) : [...prev, medio]
+    );
   };
 
   const STEPS = [
@@ -122,7 +130,7 @@ export default function OnboardingFlow() {
     },
     {
       title: 'Fechas de Tarjeta',
-      desc: 'Configurá el cierre y vencimiento de tu tarjeta principal.',
+      desc: 'Configurá el cierre de tu tarjeta principal.',
       content: (
         <View style={s.stepContent}>
           <Text style={s.label}>Cierre</Text>
@@ -141,23 +149,8 @@ export default function OnboardingFlow() {
               }}
             />
           )}
-
-          <Text style={s.label}>Vencimiento</Text>
-          <TouchableOpacity style={s.dateField} onPress={() => setShowVencimiento(true)}>
-            <Text style={s.dateText}>{formatDateToDisplay(vencimientoDate)}</Text>
-            <Ionicons name="calendar-outline" size={20} color={colors.primary} />
-          </TouchableOpacity>
-          {showVencimiento && (
-            <DateTimePicker
-              value={vencimientoDate}
-              mode="date"
-              display="default"
-              onChange={(e, date) => {
-                setShowVencimiento(false);
-                if (date) setVencimientoDate(date);
-              }}
-            />
-          )}
+          
+          <Text style={s.helperText}>El vencimiento se calculará como 10 días hábiles después del cierre.</Text>
 
           <TouchableOpacity style={s.primaryBtn} onPress={saveFechas} disabled={loading}>
             {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.primaryBtnText}>Siguiente</Text>}
@@ -189,31 +182,41 @@ export default function OnboardingFlow() {
       )
     },
     {
-      title: 'Tus Etiquetas',
-      desc: 'Agregá categorías para organizar tus gastos.',
+      title: 'Medios de Pago y Bancos',
+      desc: 'Seleccioná los medios y bancos que usás.',
       content: (
         <View style={s.stepContent}>
-          <View style={s.tagsWrap}>
-            {etiquetas.map((t, idx) => (
-              <View key={idx} style={[s.tag, { backgroundColor: t.color + '20', borderColor: t.color }]}>
-                <Text style={{ color: t.color }}>{t.nombre}</Text>
-              </View>
+          <Text style={s.sectionLabel}>Medios de Pago</Text>
+          <View style={s.selectionGrid}>
+            {MEDIOS_DE_PAGO.map(medio => (
+              <TouchableOpacity
+                key={medio}
+                style={[s.selectionItem, selectedMedios.includes(medio) && s.selectionItemActive]}
+                onPress={() => toggleMedio(medio)}
+              >
+                <Text style={[s.selectionText, selectedMedios.includes(medio) && s.selectionTextActive]}>
+                  {medio}
+                </Text>
+              </TouchableOpacity>
             ))}
           </View>
-          <View style={s.row}>
-            <TextInput
-              style={[s.input, { flex: 1, marginBottom: 0 }]}
-              placeholder="Ej: Supermercado"
-              placeholderTextColor={dark ? '#475569' : '#94A3B8'}
-              value={nuevaEtiqueta}
-              onChangeText={setNuevaEtiqueta}
-              onSubmitEditing={addTag}
-            />
-            <TouchableOpacity style={s.addBtn} onPress={addTag}>
-              <Ionicons name="add" size={24} color="#fff" />
-            </TouchableOpacity>
+
+          <Text style={s.sectionLabel}>Bancos</Text>
+          <View style={s.selectionGrid}>
+            {BANCOS.map(banco => (
+              <TouchableOpacity
+                key={banco}
+                style={[s.selectionItem, selectedBancos.includes(banco) && s.selectionItemActive]}
+                onPress={() => toggleBanco(banco)}
+              >
+                <Text style={[s.selectionText, selectedBancos.includes(banco) && s.selectionTextActive]}>
+                  {banco}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-          <TouchableOpacity style={s.primaryBtn} onPress={saveTags} disabled={loading}>
+
+          <TouchableOpacity style={s.primaryBtn} onPress={savePagos} disabled={loading}>
             {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.primaryBtnText}>Siguiente</Text>}
           </TouchableOpacity>
         </View>
@@ -292,26 +295,34 @@ export default function OnboardingFlow() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={s.scroll}>
-        <View style={s.iconContainer}>
-          <Ionicons 
-            name={
-              step === 0 ? 'cash-outline' : 
-              step === 1 ? 'calendar-outline' : 
-              step === 2 ? 'logo-usd' : 
-              step === 3 ? 'pricetag-outline' : 
-              step === 4 ? 'color-palette-outline' : 
-              'lock-closed-outline'
-            } 
-            size={60} color={colors.primary} 
-          />
-        </View>
-        
-        <Text style={s.title}>{cur.title}</Text>
-        <Text style={s.desc}>{cur.desc}</Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={s.iconContainer}>
+            <Ionicons
+              name={
+                step === 0 ? 'cash-outline' :
+                step === 1 ? 'calendar-outline' :
+                step === 2 ? 'logo-usd' :
+                step === 3 ? 'card-outline' :
+                'lock-closed-outline'
+              }
+              size={60} color={colors.primary}
+            />
+          </View>
 
-        {cur.content}
-      </ScrollView>
+          <Text style={s.title}>{cur.title}</Text>
+          <Text style={s.desc}>{cur.desc}</Text>
+
+          {cur.content}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -353,6 +364,8 @@ const styles = (dark) => StyleSheet.create({
   },
   dateText: { ...typography.body, color: dark ? colors.text.dark : colors.text.light },
   label: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginBottom: 8, textTransform: 'uppercase' },
+  sectionLabel: { ...typography.bodyBold, color: dark ? colors.text.dark : colors.text.light, marginBottom: spacing.md, marginTop: spacing.md },
+  helperText: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginBottom: spacing.lg, fontStyle: 'italic' },
   primaryBtn: {
     backgroundColor: colors.primary,
     borderRadius: radius.md,
@@ -367,10 +380,12 @@ const styles = (dark) => StyleSheet.create({
   monedaSimbolo: { fontSize: 24, fontWeight: '700', color: dark ? colors.text.dark : colors.text.light },
   monedaNombre: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginTop: 4 },
   monedaTextActive: { color: colors.primary },
-  tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md },
-  tag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.full, borderWidth: 1 },
+  selectionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  selectionItem: { flex: 1, minWidth: '45%', paddingVertical: 12, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, alignItems: 'center', backgroundColor: dark ? '#0F172A' : '#F8FAFC' },
+  selectionItemActive: { borderColor: colors.primary, backgroundColor: colors.primary + '10' },
+  selectionText: { ...typography.body, color: dark ? colors.text.dark : colors.text.light, fontWeight: '500' },
+  selectionTextActive: { color: colors.primary, fontWeight: '700' },
   row: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
-  addBtn: { width: 50, height: 50, borderRadius: radius.md, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   themeRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   themeBtn: {
     flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center',

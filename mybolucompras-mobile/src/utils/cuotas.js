@@ -1,5 +1,21 @@
 import { parseFecha } from './formatters';
 
+export function sumarDiasHabiles(fechaInicial, diasHabiles) {
+  let fecha = new Date(fechaInicial);
+  let diasContados = 0;
+  
+  while (diasContados < diasHabiles) {
+    fecha.setDate(fecha.getDate() + 1);
+    const diaSemana = fecha.getDay();
+    // 0 = domingo, 6 = sábado
+    if (diaSemana !== 0 && diaSemana !== 6) {
+      diasContados++;
+    }
+  }
+  
+  return fecha;
+}
+
 export const calcularCuotasRestantesCredito = (
   fecha, cuotas, fechaVencimiento, fechaCierre, fechaVencimientoAnterior, fechaCierreAnterior
 ) => {

@@ -51,16 +51,29 @@ export function AuthProvider({ children }) {
       throw new Error('Credenciales incorrectas. Usá las del modo demo.');
     }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) {
+      if (error.message.includes('Email not confirmed') || error.message.toLowerCase().includes('not confirmed')) {
+        throw new Error('VERIFY_REQUIRED');
+      }
+      throw error;
+    }
   };
 
   const signUp = async (email, password, nombre) => {
     if (demo) throw new Error('El registro no está disponible en modo demo.');
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { nombre } },
     });
+    if (error) throw error;
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      throw new Error('USER_ALREADY_EXISTS');
+    }
+  };
+
+  const verifyEmail = async (email, token) => {
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
     if (error) throw error;
   };
 
@@ -76,7 +89,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, demo }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, verifyEmail, demo }}>
       {children}
     </AuthContext.Provider>
   );

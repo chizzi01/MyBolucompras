@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Platform, Modal,
+  ScrollView, ActivityIndicator, Platform, Modal, KeyboardAvoidingView,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -16,7 +16,7 @@ import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
-import { formatFecha, parseFecha } from '../utils/formatters';
+import { formatFecha, parseFecha, formatPrecioInputDisplay, formatPrecioLive, getCurrencySymbol } from '../utils/formatters';
 import { useModal } from '../hooks/useModal';
 import { userService } from '../services/userService';
 import { contactService } from '../services/contactService';
@@ -65,6 +65,29 @@ export default function AgregarScreen() {
     if (key === 'isFijo' && val) { next.cuotas = '1'; next.cantidad = '1'; }
     return next;
   });
+
+  // Estado del display del precio (lo que ve el usuario: "$ 1.234,56")
+  // El form.precio guarda el número limpio ("1234.56") para el backend
+  const [precioDisplay, setPrecioDisplay] = useState('');
+
+  const handlePriceChange = (val) => {
+    const { display, cleanValue } = formatPrecioLive(val, form.moneda);
+    setPrecioDisplay(display);
+    set('precio', cleanValue);
+  };
+
+  // Cuando cambia la moneda, actualizamos el símbolo en el display
+  useEffect(() => {
+    if (form.precio) {
+      const { display } = formatPrecioLive(
+        // Reconstruimos con coma decimal para que formatPrecioLive lo procese bien
+        String(form.precio).replace('.', ','),
+        form.moneda
+      );
+      setPrecioDisplay(display);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.moneda]);
 
   const [sharedUser, setSharedUser] = useState(null);
   const [shareMode, setShareMode] = useState('dividir'); // 'dividir' o 'mismo'
@@ -120,6 +143,7 @@ export default function AgregarScreen() {
         medio: mediosDisponibles[0] || '',
         moneda: mydata.monedaPreferida || 'ARS',
       });
+      setPrecioDisplay(''); // Resetear display del precio
       setSharedUser(null);
       setSearchEmail('');
       
@@ -293,8 +317,18 @@ export default function AgregarScreen() {
   const esCuotasHabilitado = form.tipo === 'credito' && !form.isFijo;
 
   return (
-    <SafeAreaView style={s.root} edges={['top']}>
-      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <SafeAreaView style={s.root} edges={['top']}>
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="interactive"
+        >
         <View style={s.titleRow}>
           <Text style={s.title}>Nuevo gasto</Text>
           <TouchableOpacity style={s.scanBtn} onPress={handleScanReceipt} disabled={isScanning} activeOpacity={0.7}>
@@ -335,7 +369,15 @@ export default function AgregarScreen() {
             <SelectRow options={MONEDAS.map(m => m.codigo)} value={form.moneda} onChange={v => set('moneda', v)} dark={dark} style={s.input} />
           </Field>
           <Field label="Precio" dark={dark} flex>
-            <TextInput style={s.input} value={form.precio} onChangeText={v => set('precio', v)} placeholder="0.00" placeholderTextColor={dark ? '#475569' : '#94A3B8'} keyboardType="decimal-pad" />
+            <TextInput
+              style={s.input}
+              value={precioDisplay}
+              onChangeText={handlePriceChange}
+              placeholder={`${getCurrencySymbol(form.moneda)} 0,00`}
+              placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+              keyboardType="decimal-pad"
+              returnKeyType="done"
+            />
           </Field>
         </Row>
 
@@ -611,6 +653,7 @@ export default function AgregarScreen() {
 
       {modal}
     </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 

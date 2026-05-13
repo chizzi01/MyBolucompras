@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes } from '../utils/cuotas';
-import { parsePrecio, getCurrencySymbol, formatARS } from '../utils/formatters';
+import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '../utils/formatters';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
 const MESES = [
@@ -145,7 +145,7 @@ export default function DashboardScreen() {
               {Object.entries(stats.totalesPorMoneda).map(([moneda, total]) => (
                 <View key={moneda} style={s.totalHeroRow}>
                   <Text style={s.totalHeroAmount}>
-                    {getCurrencySymbol(moneda)} {formatARS(total)}
+                    {formatPrecioEuropeo(total, moneda)}
                   </Text>
                   {Object.keys(stats.totalesPorMoneda).length > 1 && (
                     <Text style={s.totalHeroMoneda}>{moneda}</Text>
@@ -156,7 +156,7 @@ export default function DashboardScreen() {
             </>
           ) : (
             <>
-              <Text style={s.totalHeroEmpty}>$ 0</Text>
+              <Text style={s.totalHeroEmpty}>$ 0,00</Text>
               <Text style={s.totalHeroLabel}>sin gastos este mes</Text>
             </>
           )}
@@ -185,7 +185,7 @@ export default function DashboardScreen() {
             <View style={s.destacado}>
               <Text style={s.destacadoObj} numberOfLines={1}>{stats.masCaro.objeto}</Text>
               <Text style={s.destacadoVal}>
-                {getCurrencySymbol(stats.masCaro.moneda)} {formatARS(stats.masCaro.precio)}
+                {formatPrecioEuropeo(stats.masCaro.precio, stats.masCaro.moneda)}
               </Text>
             </View>
           </>
@@ -204,7 +204,7 @@ export default function DashboardScreen() {
                   <View style={s.barTrack}>
                     <View style={[s.barFill, { width: `${Math.round((total / stats.maxEtiqueta) * 100)}%` }]} />
                   </View>
-                  <Text style={s.barVal}>$ {formatARS(total)}</Text>
+                  <Text style={s.barVal}>{formatPrecioEuropeo(total, 'ARS')}</Text>
                 </View>
               ))}
           </>

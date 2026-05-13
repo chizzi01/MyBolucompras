@@ -1,11 +1,12 @@
-import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { Animated, Easing, View, Platform, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import SpInAppUpdates, { IAUUpdateKind } from 'sp-react-native-in-app-updates';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { DataProvider } from './src/context/DataContext';
@@ -18,11 +19,74 @@ import GastosScreen from './src/screens/GastosScreen';
 import AgregarScreen from './src/screens/AgregarScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import ConfiguracionScreen from './src/screens/ConfiguracionScreen';
-
 import OnboardingFlow from './src/screens/OnboardingFlow';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const inAppUpdates = new SpInAppUpdates(false);
+
+function AnimatedSplash({ dark }) {
+  const pulse = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0.7)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(pulse, {
+            toValue: 1.12,
+            duration: 950,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 950,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(pulse, {
+            toValue: 0.88,
+            duration: 950,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacity, {
+            toValue: 0.7,
+            duration: 950,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    ).start();
+  }, [pulse, opacity]);
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: dark ? colors.background.dark : colors.background.light,
+      }}
+    >
+      <Animated.Image
+        source={require('./assets/MyBolucompras.png')}
+        style={{
+          width: 150,
+          height: 150,
+          borderRadius: 30,
+          transform: [{ scale: pulse }],
+          opacity,
+        }}
+        resizeMode="contain"
+      />
+    </View>
+  );
+}
 
 function TabNavigator() {
   const { dark } = useTheme();
@@ -70,11 +134,7 @@ function RootNavigator() {
   const { dark } = useTheme();
 
   if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: dark ? colors.background.dark : colors.background.light }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return <AnimatedSplash dark={dark} />;
   }
 
   return (
@@ -105,6 +165,19 @@ function RootNavigator() {
 }
 
 export default function App() {
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      inAppUpdates
+        .checkNeedsUpdate()
+        .then((result) => {
+          if (result.isAvailable) {
+            inAppUpdates.startUpdateFlow(IAUUpdateKind.FLEXIBLE);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
+
   return (
     <SafeAreaProvider>
       <ThemeProvider>

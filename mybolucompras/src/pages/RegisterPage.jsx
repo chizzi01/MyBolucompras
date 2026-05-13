@@ -51,7 +51,7 @@ function mapAuthError(message) {
 
 export default function RegisterPage() {
   const { theme } = useTheme();
-  const { signUp } = useAuth();
+  const { signUp, verifyEmail } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ nombre: '', email: '', password: '', confirm: '' });
   const [touched, setTouched] = useState({});
@@ -60,6 +60,8 @@ export default function RegisterPage() {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpError, setOtpError] = useState('');
 
   const [bancosSeleccionados, setBancosSeleccionados] = useState([]);
   const [mediosSeleccionados, setMediosSeleccionados] = useState([]);
@@ -109,7 +111,28 @@ export default function RegisterPage() {
       await signUp(form.email, form.password, form.nombre);
       setStep(2);
     } catch (err) {
-      setError(mapAuthError(err.message));
+      if (err.message === 'USER_ALREADY_EXISTS') {
+        setError('Ya existe una cuenta con ese email. ¿Querés iniciar sesión?');
+      } else {
+        setError(mapAuthError(err.message));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    if (otp.length < 8) {
+      setOtpError('Ingresá el código de 8 dígitos.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await verifyEmail(form.email, otp);
+      setStep(3);
+    } catch {
+      setOtpError('Código incorrecto o expirado. Revisá tu email e intentá de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -134,14 +157,70 @@ export default function RegisterPage() {
       monedaPreferida,
     };
     localStorage.setItem(`pendingConfig_${form.email}`, JSON.stringify(pendingConfig));
-    navigate('/login');
+    navigate('/');
   };
 
   const handleSkip = () => {
-    navigate('/login');
+    navigate('/');
   };
 
   if (step === 2) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="auth-logo">
+            <img src="./img/icon-bgremove.png" alt="MyBolucompras" className="auth-logo-img" />
+            <h1 className="auth-logo-title">MyBolucompras</h1>
+          </div>
+
+          <div className="auth-success-icon" style={{ background: 'var(--color-primary-light, rgba(99,102,241,0.1))', color: 'var(--color-primary)' }}>✉</div>
+          <h2 className="auth-title">Verificá tu cuenta</h2>
+          <p className="auth-subtitle">
+            Ingresá el código de 8 dígitos que enviamos a <strong>{form.email}</strong>
+          </p>
+
+          <form onSubmit={handleVerify} className="auth-form" noValidate>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="verify-otp">Código de verificación</label>
+              <div className="auth-input-wrapper">
+                <input
+                  id="verify-otp"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={8}
+                  value={otp}
+                  onChange={e => { setOtp(e.target.value.replace(/\D/g, '')); setOtpError(''); }}
+                  placeholder="12345678"
+                  className={`auth-input${otpError ? ' input-error' : ''}`}
+                  autoComplete="one-time-code"
+                  disabled={loading}
+                  style={{ textAlign: 'center', letterSpacing: '6px', fontSize: '20px', fontWeight: '700', paddingRight: '14px' }}
+                />
+              </div>
+              {otpError && <span className="auth-field-error">⚠ {otpError}</span>}
+            </div>
+
+            <button type="submit" className="auth-btn" disabled={loading || otp.length < 8}>
+              {loading ? <span className="auth-btn-spinner" /> : 'Verificar código'}
+            </button>
+          </form>
+
+          <p className="auth-footer-text">
+            <button
+              onClick={() => { setStep(1); setOtp(''); setOtpError(''); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              className="auth-link"
+            >
+              Volver al registro
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 3) {
     return (
       <div className="auth-page" style={{ alignItems: 'flex-start', paddingTop: 40 }}>
         <div className="auth-card" style={{ maxWidth: 580 }}>
@@ -151,9 +230,9 @@ export default function RegisterPage() {
           </div>
 
           <div className="auth-success-icon">✓</div>
-          <h2 className="auth-title">¡Cuenta creada con éxito!</h2>
+          <h2 className="auth-title">¡Email verificado!</h2>
           <p className="auth-subtitle" style={{ marginBottom: 24 }}>
-            Te enviamos un email de confirmación. Mientras tanto, configurá tus preferencias para personalizar la app.
+            Tu cuenta está activa. Configurá tus preferencias para personalizar la app.
           </p>
 
           <div className="setup-section">
