@@ -79,7 +79,7 @@ function setupAutoUpdater() {
 }
 
 ipcMain.on('restart_app', () => {
-  autoUpdater.quitAndInstall();
+  autoUpdater.quitAndInstall(false, true);
 });
 
 function createWindow() {
@@ -189,27 +189,6 @@ app.on('activate', () => {
   }
 });
 
-app.on('ready', () => {
-  autoUpdater.checkForUpdatesAndNotify();
-
-  autoUpdater.on('update-available', () => {
-    dialog.showMessageBox({
-      type: 'info',
-      title: 'Actualización disponible',
-      message: 'Hay una nueva versión disponible. Se descargará en segundo plano.',
-    });
-  });
-
-  autoUpdater.on('update-downloaded', () => {
-    dialog.showMessageBox({
-      type: 'info',
-      title: 'Actualización lista',
-      message: 'La nueva versión está lista. Reinicia la aplicación para aplicar los cambios.',
-    }).then(() => {
-      autoUpdater.quitAndInstall();
-    });
-  });
-});
 // Manejo de archivos y datos
 const archivos = ['data', 'misdatos'];
 const directorio = path.join('C:', 'DatosMybolucompras');
