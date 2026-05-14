@@ -168,6 +168,11 @@ export default function AgregarScreen() {
       if (datos.tipo === 'debito') next.cuotas = '1';
       return next;
     });
+    if (datos.precio !== undefined && datos.precio !== '') {
+      const moneda = datos.moneda || form.moneda;
+      const { display } = formatPrecioLive(String(datos.precio).replace('.', ','), moneda);
+      setPrecioDisplay(display);
+    }
   };
 
   const processImageBase64 = async (base64Data) => {

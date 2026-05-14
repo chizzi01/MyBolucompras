@@ -2,7 +2,7 @@
   "expo": {
     "name": "MyBolucompras",
     "slug": "mybolucompras-mobile",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/MyBolucompras.png",
     "userInterfaceStyle": "automatic",
@@ -24,7 +24,7 @@
       "edgeToEdgeEnabled": true,
       "package": "com.chizzi.mybolucomprasmobile",
       "compileSdkVersion": 36,
-      "versionCode": 6
+      "versionCode": 10
     },
     "web": {
       "favicon": "./assets/favicon.png"

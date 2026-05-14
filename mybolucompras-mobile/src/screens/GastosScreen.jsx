@@ -57,11 +57,23 @@ export default function GastosScreen() {
       const q = search.toLowerCase();
       lista = lista.filter(g => g.objeto.toLowerCase().includes(q));
     }
-    if (soloEsteMes && tabActivo === 'normales') {
-      lista = lista.filter(g => {
-        const rest = getCuotasRestantes(g, mydata);
-        return rest === 'N/A' || rest > 0;
-      });
+    if (soloEsteMes) {
+      if (tabActivo === 'normales') {
+        lista = lista.filter(g => {
+          const rest = getCuotasRestantes(g, mydata);
+          return rest === 'N/A' || rest > 0;
+        });
+      } else {
+        const now = new Date();
+        const nowIndex = now.getFullYear() * 12 + now.getMonth();
+        lista = lista.filter(g => {
+          const [, m, y] = (g.fecha || '').split('/');
+          const startIndex = Number(y) * 12 + (Number(m) - 1);
+          if (nowIndex < startIndex) return false;
+          const period = parseInt(g.cuotas) || 0;
+          return period === 0 || nowIndex < startIndex + period;
+        });
+      }
     }
     return lista;
   }, [gastos, search, soloEsteMes, mydata, tabActivo]);
@@ -98,22 +110,20 @@ export default function GastosScreen() {
           <Text style={s.title}>Mis gastos</Text>
           <Text style={s.count}>{gastosFiltrados.length}</Text>
         </View>
-        {tabActivo === 'normales' && (
-          <TouchableOpacity
-            style={[s.mesChip, soloEsteMes && s.mesChipActive]}
-            onPress={toggleSoloEsteMes}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={soloEsteMes ? 'calendar' : 'calendar-outline'}
-              size={13}
-              color={soloEsteMes ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
-            />
-            <Text style={[s.mesChipText, soloEsteMes && s.mesChipTextActive]}>
-              {soloEsteMes ? mesNombre : 'Todos'}
-            </Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={[s.mesChip, soloEsteMes && s.mesChipActive]}
+          onPress={toggleSoloEsteMes}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={soloEsteMes ? 'calendar' : 'calendar-outline'}
+            size={13}
+            color={soloEsteMes ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+          />
+          <Text style={[s.mesChipText, soloEsteMes && s.mesChipTextActive]}>
+            {soloEsteMes ? mesNombre : 'Todos'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={s.tabsRow}>

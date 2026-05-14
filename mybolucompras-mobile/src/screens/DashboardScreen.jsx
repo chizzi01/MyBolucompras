@@ -49,15 +49,30 @@ export default function DashboardScreen() {
   };
 
   const stats = useMemo(() => {
-    const gastosMes = gastos.filter(g => {
+    const targetIndex = mesSel.anio * 12 + mesSel.mes;
+
+    const gastosNormalesMes = gastos.filter(g => {
+      if (g.isFijo) return false;
       const [, m, y] = (g.fecha || '').split('/');
       return Number(m) - 1 === mesSel.mes && Number(y) === mesSel.anio;
     });
 
+    const gastosFijosMes = gastos.filter(g => {
+      if (!g.isFijo) return false;
+      const [, m, y] = (g.fecha || '').split('/');
+      const startIndex = Number(y) * 12 + (Number(m) - 1);
+      if (targetIndex < startIndex) return false;
+      const period = parseInt(g.cuotas) || 0;
+      return period === 0 || targetIndex < startIndex + period;
+    });
+
+    const gastosMes = [...gastosNormalesMes, ...gastosFijosMes];
+
     const totalesPorMoneda = {};
     gastosMes.forEach(g => {
       const moneda = g.moneda || 'ARS';
-      totalesPorMoneda[moneda] = (totalesPorMoneda[moneda] || 0) + parsePrecio(g.precio);
+      const costo = parsePrecio(g.precio) * (g.isFijo ? (parseInt(g.cantidad) || 1) : 1);
+      totalesPorMoneda[moneda] = (totalesPorMoneda[moneda] || 0) + costo;
     });
 
     const cuotasActivas = gastos.filter(g => {
@@ -67,7 +82,7 @@ export default function DashboardScreen() {
     }).length;
 
     const masCaro = gastosMes.reduce((max, g) => {
-      const p = parsePrecio(g.precio);
+      const p = parsePrecio(g.precio) * (g.isFijo ? (parseInt(g.cantidad) || 1) : 1);
       return p > (max?.precio || 0) ? { ...g, precio: p } : max;
     }, null);
 
@@ -75,7 +90,8 @@ export default function DashboardScreen() {
     gastosMes.forEach(g => {
       if (g.moneda !== 'ARS') return;
       const etiq = g.etiqueta || 'Sin etiqueta';
-      porEtiqueta[etiq] = (porEtiqueta[etiq] || 0) + parsePrecio(g.precio);
+      const costo = parsePrecio(g.precio) * (g.isFijo ? (parseInt(g.cantidad) || 1) : 1);
+      porEtiqueta[etiq] = (porEtiqueta[etiq] || 0) + costo;
     });
 
     const maxEtiqueta = Math.max(...Object.values(porEtiqueta), 1);
