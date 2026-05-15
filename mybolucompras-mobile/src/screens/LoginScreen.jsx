@@ -282,11 +282,11 @@ export default function LoginScreen() {
         >
           <View style={s.header}>
             <Image
-              source={require('../../assets/MyBolucompras.png')}
+              source={require('../../assets/BudgetBuddy.png')}
               style={s.logo}
               resizeMode="contain"
             />
-            <Text style={s.appName}>MyBolucompras</Text>
+            <Text style={s.appName}>Budget Buddy</Text>
             <Text style={s.subtitle}>Gestioná tus gastos</Text>
           </View>
 

@@ -26,7 +26,7 @@ export async function scanReceiptWithAI(base64Image, apiKey, mediosHabilitados) 
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
       'HTTP-Referer': 'https://mybolucompras.app', // Opcional para OpenRouter
-      'X-Title': 'MyBolucompras', // Opcional para OpenRouter
+      'X-Title': 'Budget Buddy', // Opcional para OpenRouter
     },
     body: JSON.stringify({
       model: 'openai/gpt-4o-mini',

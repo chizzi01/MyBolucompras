@@ -11,7 +11,7 @@ async function testVision() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_KEY}`,
         'HTTP-Referer': 'https://mybolucompras.app',
-        'X-Title': 'MyBolucompras',
+        'X-Title': 'Budget Buddy',
       },
       body: JSON.stringify({
         model: model,

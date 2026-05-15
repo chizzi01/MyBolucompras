@@ -37,11 +37,11 @@ export default function BiometricLockScreen() {
     <View style={s.root}>
       <View style={s.content}>
         <Image
-          source={require('../../assets/MyBolucompras.png')}
+          source={require('../../assets/BudgetBuddy.png')}
           style={s.logo}
           resizeMode="contain"
         />
-        <Text style={s.appName}>Bolucompras</Text>
+        <Text style={s.appName}>Budget Buddy</Text>
         <Text style={s.subtitle}>La app está bloqueada</Text>
 
         <View style={s.iconWrap}>

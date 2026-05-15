@@ -51,7 +51,7 @@ function AnimatedSplash({ dark }) {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: dark ? colors.background.dark : colors.background.light }}>
       <Animated.Image
-        source={require('./assets/MyBolucompras.png')}
+        source={require('./assets/BudgetBuddy.png')}
         style={{ width: 150, height: 150, borderRadius: 30, transform: [{ scale: pulse }], opacity }}
         resizeMode="contain"
       />
@@ -129,8 +129,8 @@ export default function App() {
     inAppUpdates
       .checkNeedsUpdate()
       .then((result) => {
-        if (result.isAvailable) {
-          inAppUpdates.startUpdateFlow(IAUUpdateKind.IMMEDIATE);
+        if (result.shouldUpdate) {
+          inAppUpdates.startUpdate({ updateType: IAUUpdateKind.IMMEDIATE });
         }
       })
       .catch((err) => {
