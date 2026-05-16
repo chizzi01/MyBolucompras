@@ -138,7 +138,7 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
     }
     setLoading(true);
     try {
-      const sharedWith = sharedUser ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email } : null;
+      const sharedWith = (!isAlreadyShared && sharedUser) ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email } : null;
       await editarGasto(gasto.id, {
         ...form,
         cuotas: parseInt(form.cuotas) || 1,
@@ -262,6 +262,11 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
                 </View>
               )}
             </View>
+            {isAlreadyShared && (
+              <Text style={{ ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, fontStyle: 'italic', marginBottom: spacing.sm }}>
+                Cada usuario maneja su propia copia del gasto.
+              </Text>
+            )}
 
             {!sharedUser ? (
               <>
