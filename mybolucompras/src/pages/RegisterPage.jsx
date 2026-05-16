@@ -169,8 +169,8 @@ export default function RegisterPage() {
       <div className="auth-page">
         <div className="auth-card">
           <div className="auth-logo">
-            <img src="./img/icon-bgremove.png" alt="MyBolucompras" className="auth-logo-img" />
-            <h1 className="auth-logo-title">MyBolucompras</h1>
+            <img src="./img/icon-bgremove.png" alt="Budget Buddy" className="auth-logo-img" />
+            <h1 className="auth-logo-title">Budget Buddy</h1>
           </div>
 
           <div className="auth-success-icon" style={{ background: 'var(--color-primary-light, rgba(99,102,241,0.1))', color: 'var(--color-primary)' }}>✉</div>
@@ -225,8 +225,8 @@ export default function RegisterPage() {
       <div className="auth-page" style={{ alignItems: 'flex-start', paddingTop: 40 }}>
         <div className="auth-card" style={{ maxWidth: 580 }}>
           <div className="auth-logo">
-            <img src={theme === 'light' ? "./img/icon-light.png" : "./img/icon-bgremove.png"} alt="Bolucompras" className="auth-logo-img" />
-            <h1 className="auth-logo-title">Bolucompras</h1>
+            <img src={theme === 'light' ? "./img/icon-light.png" : "./img/icon-bgremove.png"} alt="Budget Buddy" className="auth-logo-img" />
+            <h1 className="auth-logo-title">Budget Buddy</h1>
           </div>
 
           <div className="auth-success-icon">✓</div>
@@ -304,8 +304,8 @@ export default function RegisterPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src="./img/icon-bgremove.png" alt="Bolucompras" className="auth-logo-img" />
-          <h1 className="auth-logo-title">Bolucompras</h1>
+          <img src="./img/icon-bgremove.png" alt="Budget Buddy" className="auth-logo-img" />
+          <h1 className="auth-logo-title">Budget Buddy</h1>
         </div>
 
         <h2 className="auth-title">Crear cuenta</h2>

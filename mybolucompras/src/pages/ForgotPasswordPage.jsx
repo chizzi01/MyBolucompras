@@ -48,8 +48,8 @@ export default function ForgotPasswordPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src={theme === 'light' ? "./img/icon-light.png" : "./img/icon-bgremove.png"} alt="Bolucompras" className="auth-logo-img" />
-          <h1 className="auth-logo-title">Bolucompras</h1>
+          <img src={theme === 'light' ? "./img/icon-light.png" : "./img/icon-bgremove.png"} alt="Budget Buddy" className="auth-logo-img" />
+          <h1 className="auth-logo-title">Budget Buddy</h1>
         </div>
 
         {sent ? (

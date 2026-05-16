@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const log = require('electron-log');
 //require('dotenv').config();
-app.setName('MyBolucompras');
+app.setName('Budget Buddy');
 app.setAppUserModelId('com.mybolucompras.app');
 
 

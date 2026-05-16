@@ -202,7 +202,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
         const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'Bolucompras.csv';
+        a.download = 'BudgetBuddy.csv';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
