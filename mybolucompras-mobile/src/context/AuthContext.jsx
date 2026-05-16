@@ -132,12 +132,19 @@ export function AuthProvider({ children }) {
   };
 
   const verifyEmail = async (email, token) => {
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       email,
       token,
       type: 'signup',
     });
     if (error) throw error;
+    if (data?.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        email: data.user.email,
+        nombre: data.user.user_metadata?.nombre ?? '',
+      }, { onConflict: 'id' });
+    }
   };
 
   const resendCode = async (email) => {
