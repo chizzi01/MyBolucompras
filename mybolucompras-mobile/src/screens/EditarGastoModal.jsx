@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Switch, Modal, KeyboardAvoidingView, Platform,
+  ScrollView, ActivityIndicator, Switch, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +14,10 @@ import { parsePrecio, formatPrecioLive, getCurrencySymbol } from '../utils/forma
 import { userService } from '../services/userService';
 import { contactService } from '../services/contactService';
 
-export default function EditarGastoModal({ visible, gasto, onClose }) {
+export default function EditarGastoScreen({ route, navigation }) {
+  const { gasto } = route.params;
+  const onClose = () => navigation.goBack();
+
   const { editarGasto, mydata, actualizarConfig } = useData();
   const { dark } = useTheme();
   const s = styles(dark);
@@ -26,11 +29,23 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
     ? mydata.bancosHabilitados
     : BANCOS;
 
+  const initPrecioDisplay = () => {
+    const num = parsePrecio(gasto.precio);
+    if (!num) return '';
+    const { display } = formatPrecioLive(
+      String(num).replace('.', ','),
+      gasto.moneda || 'ARS'
+    );
+    return display;
+  };
+
+  const MEDIOS_SOLO_DEBITO = ['Efectivo', 'Transferencia'];
+
   const [form, setForm] = useState({
     objeto: gasto.objeto,
     fecha: gasto.fecha,
     medio: gasto.medio,
-    tipo: gasto.tipo || 'credito',
+    tipo: MEDIOS_SOLO_DEBITO.includes(gasto.medio) ? 'debito' : (gasto.tipo || 'debito'),
     banco: gasto.banco || '',
     cuotas: String(gasto.cuotas),
     cantidad: String(gasto.cantidad),
@@ -39,22 +54,9 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
     etiqueta: gasto.etiqueta || '',
     isFijo: gasto.isFijo || false,
   });
+  const [precioDisplay, setPrecioDisplay] = useState(initPrecioDisplay);
   const [loading, setLoading] = useState(false);
   const { showModal, modal } = useModal();
-
-  // Display formateado del precio (lo que ve el usuario: "$ 1.234,56")
-  // Inicializamos con el precio ya formateado del gasto existente
-  const initPrecioDisplay = () => {
-    const num = parsePrecio(gasto.precio);
-    if (!num) return '';
-    // Convertimos a formato de coma decimal para que formatPrecioLive lo procese
-    const { display } = formatPrecioLive(
-      String(num).replace('.', ','),
-      gasto.moneda || 'ARS'
-    );
-    return display;
-  };
-  const [precioDisplay, setPrecioDisplay] = useState(initPrecioDisplay);
 
   const [sharedUser, setSharedUser] = useState(null);
   const [shareMode, setShareMode] = useState('dividir');
@@ -64,29 +66,23 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
 
   const isAlreadyShared = !!gasto.compartidoConNombre;
 
-  React.useEffect(() => {
-    if (visible) {
-      contactService.getRecent().then(setRecentContacts);
-      if (isAlreadyShared) {
-        setSharedUser({ nombre: gasto.compartidoConNombre, email: '' });
-      }
-      // Re-inicializar precio display cuando el modal abre (puede ser un gasto diferente)
-      setPrecioDisplay(initPrecioDisplay());
-      setForm({
-        objeto: gasto.objeto,
-        fecha: gasto.fecha,
-        medio: gasto.medio,
-        tipo: gasto.tipo || 'credito',
-        banco: gasto.banco || '',
-        cuotas: String(gasto.cuotas),
-        cantidad: String(gasto.cantidad),
-        precio: String(parsePrecio(gasto.precio)),
-        moneda: gasto.moneda || 'ARS',
-        etiqueta: gasto.etiqueta || '',
-        isFijo: gasto.isFijo || false,
-      });
+  useEffect(() => {
+    contactService.getRecent().then(setRecentContacts);
+    if (isAlreadyShared) {
+      setSharedUser({ nombre: gasto.compartidoConNombre, email: '' });
     }
-  }, [visible, gasto.id]);
+  }, []);
+
+  useEffect(() => {
+    if (form.precio) {
+      const { display } = formatPrecioLive(
+        String(form.precio).replace('.', ','),
+        form.moneda
+      );
+      setPrecioDisplay(display);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.moneda]);
 
   const handleSearchUser = async () => {
     if (!searchEmail.trim()) return;
@@ -110,6 +106,10 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
   const set = (key, val) => setForm(prev => {
     const next = { ...prev, [key]: val };
     if (key === 'tipo' && val === 'debito') next.cuotas = '1';
+    if (key === 'medio' && MEDIOS_SOLO_DEBITO.includes(val)) {
+      next.tipo = 'debito';
+      next.cuotas = '1';
+    }
     return next;
   });
 
@@ -118,19 +118,6 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
     setPrecioDisplay(display);
     set('precio', cleanValue);
   };
-
-  // Cuando cambia la moneda, actualizamos el símbolo en el display
-  useEffect(() => {
-    if (form.precio) {
-      const { display } = formatPrecioLive(
-        String(form.precio).replace('.', ','),
-        form.moneda
-      );
-      setPrecioDisplay(display);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.moneda]);
-
 
   const handleGuardar = async () => {
     if (!form.objeto.trim()) {
@@ -161,13 +148,11 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
   const esCuotasHabilitado = form.tipo === 'credito' && !form.isFijo;
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <SafeAreaView style={s.root} edges={['top']}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light }}
+    >
+      <SafeAreaView style={s.root} edges={['top']}>
         <View style={s.header}>
           <Text style={s.title}>Editar gasto</Text>
           <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -176,6 +161,7 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
         </View>
 
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={s.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -217,7 +203,7 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
             </View>
           )}
 
-          {!form.isFijo && (
+          {!form.isFijo && !MEDIOS_SOLO_DEBITO.includes(form.medio) && (
             <>
               <Label text="Tipo de pago" dark={dark} />
               <TipoSelector value={form.tipo} onChange={v => set('tipo', v)} dark={dark} s={s} />
@@ -251,7 +237,6 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
             />
           </View>
 
-          {/* Compartir Gasto */}
           <View style={[s.shareCard, isAlreadyShared && s.shareCardDisabled]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
               <Text style={s.shareTitle}>Compartir gasto</Text>
@@ -280,9 +265,9 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
                     autoCapitalize="none"
                     editable={!isAlreadyShared}
                   />
-                  <TouchableOpacity 
-                    style={[s.searchBtn, isAlreadyShared && { opacity: 0.5 }]} 
-                    onPress={handleSearchUser} 
+                  <TouchableOpacity
+                    style={[s.searchBtn, isAlreadyShared && { opacity: 0.5 }]}
+                    onPress={handleSearchUser}
                     disabled={searching || isAlreadyShared}
                   >
                     {searching ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="search" size={20} color="#fff" />}
@@ -314,15 +299,15 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
 
             {sharedUser && (
               <View style={[s.modeRow, isAlreadyShared && { opacity: 0.7 }]}>
-                <TouchableOpacity 
-                  style={[s.modeBtn, shareMode === 'dividir' && s.modeBtnActive]} 
+                <TouchableOpacity
+                  style={[s.modeBtn, shareMode === 'dividir' && s.modeBtnActive]}
                   onPress={() => !isAlreadyShared && setShareMode('dividir')}
                   disabled={isAlreadyShared}
                 >
                   <Text style={[s.modeBtnText, shareMode === 'dividir' && s.modeBtnTextActive]}>Dividir entre 2</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[s.modeBtn, shareMode === 'mismo' && s.modeBtnActive]} 
+                <TouchableOpacity
+                  style={[s.modeBtn, shareMode === 'mismo' && s.modeBtnActive]}
                   onPress={() => !isAlreadyShared && setShareMode('mismo')}
                   disabled={isAlreadyShared}
                 >
@@ -338,8 +323,7 @@ export default function EditarGastoModal({ visible, gasto, onClose }) {
         </ScrollView>
         {modal}
       </SafeAreaView>
-      </KeyboardAvoidingView>
-    </Modal>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -482,14 +466,8 @@ const styles = (dark) => StyleSheet.create({
   scroll: { padding: spacing.md, paddingBottom: spacing.xl },
   input: { backgroundColor: dark ? '#0F172A' : '#F8FAFC', borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 12, ...typography.body, color: dark ? colors.text.dark : colors.text.light },
   tipoBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    borderRadius: radius.md,
-    borderWidth: 1,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 12, borderRadius: radius.md, borderWidth: 1,
     borderColor: dark ? colors.border.dark : colors.border.light,
     backgroundColor: dark ? '#0F172A' : '#F8FAFC',
   },
@@ -498,11 +476,9 @@ const styles = (dark) => StyleSheet.create({
   tipoBtnTextActive: { color: '#fff' },
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   tag: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.full, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light, backgroundColor: dark ? '#0F172A' : '#F8FAFC' },
-  tagActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  tagText: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
-  tagTextActive: { color: '#fff' },
   tagAdd: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 7, borderRadius: radius.full, borderWidth: 1, borderColor: colors.primary, borderStyle: 'dashed' },
   tagAddText: { ...typography.captionMed, color: colors.primary },
+  tagText: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
   tagSaveBtn: { backgroundColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', minWidth: 80 },
   tagSaveBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md, marginBottom: spacing.lg, paddingVertical: spacing.sm, borderTopWidth: 1, borderBottomWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light },
@@ -525,21 +501,7 @@ const styles = (dark) => StyleSheet.create({
   modeBtnTextActive: { color: '#fff', fontWeight: '600' },
   recentPill: { backgroundColor: dark ? '#1e293b' : '#F1F5F9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.full, borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light },
   recentPillText: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
-  shareCardDisabled: {
-    opacity: 0.8,
-    backgroundColor: dark ? '#1e293b' : '#f8fafc',
-  },
-  sharedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.primary + '20',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: radius.full,
-  },
-  sharedBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
+  shareCardDisabled: { opacity: 0.8, backgroundColor: dark ? '#1e293b' : '#f8fafc' },
+  sharedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.primary + '20', paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.full },
+  sharedBadgeText: { fontSize: 10, fontWeight: '700' },
 });

@@ -6,6 +6,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import SpInAppUpdates, { IAUUpdateKind } from 'sp-react-native-in-app-updates';
@@ -23,9 +24,11 @@ import AgregarScreen from './src/screens/AgregarScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import ConfiguracionScreen from './src/screens/ConfiguracionScreen';
 import OnboardingFlow from './src/screens/OnboardingFlow';
+import EditarGastoScreen from './src/screens/EditarGastoModal';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const AuthStack = createNativeStackNavigator();
 
 
 // ── Animated splash ──────────────────────────────────────────────────────────
@@ -115,7 +118,22 @@ function RootNavigator() {
         </Stack.Screen>
       ) : (
         <Stack.Screen name="Main">
-          {() => (<DataProvider><TabNavigator /></DataProvider>)}
+          {() => (
+            <DataProvider>
+              <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+                <AuthStack.Screen name="Tabs" component={TabNavigator} />
+                <AuthStack.Screen
+                  name="EditarGasto"
+                  component={EditarGastoScreen}
+                  options={{
+                    animation: 'slide_from_bottom',
+                    gestureEnabled: true,
+                    gestureDirection: 'vertical',
+                  }}
+                />
+              </AuthStack.Navigator>
+            </DataProvider>
+          )}
         </Stack.Screen>
       )}
     </Stack.Navigator>
@@ -139,13 +157,15 @@ export default function App() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <AppWithTheme />
-        </AuthProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppWithTheme />
+          </AuthProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

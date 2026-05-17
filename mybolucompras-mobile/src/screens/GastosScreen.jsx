@@ -13,7 +13,6 @@ import { useTheme } from '../context/ThemeContext';
 import GastoCard from '../components/GastoCard';
 import FilterBar from '../components/FilterBar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import EditarGastoModal from './EditarGastoModal';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
 const MESES = [
@@ -21,7 +20,7 @@ const MESES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-export default function GastosScreen() {
+export default function GastosScreen({ navigation }) {
   const { gastos, mydata, loading, cargarDatos, eliminarGasto } = useData();
   const { dark } = useTheme();
   const s = styles(dark);
@@ -29,7 +28,6 @@ export default function GastosScreen() {
   const [search, setSearch] = useState('');
   const [soloEsteMes, setSoloEsteMes] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [gastoEditando, setGastoEditando] = useState(null);
   const [tabActivo, setTabActivo] = useState('normales');
   const { showModal, modal } = useModal();
 
@@ -96,7 +94,7 @@ export default function GastosScreen() {
     <GastoCard
       gasto={item}
       mydata={mydata}
-      onPress={() => setGastoEditando(item)}
+      onPress={() => navigation.navigate('EditarGasto', { gasto: item })}
       onDelete={() => handleDelete(item)}
     />
   );
@@ -176,13 +174,6 @@ export default function GastosScreen() {
         />
       )}
 
-      {gastoEditando && (
-        <EditarGastoModal
-          visible={!!gastoEditando}
-          gasto={gastoEditando}
-          onClose={() => setGastoEditando(null)}
-        />
-      )}
       {modal}
     </SafeAreaView>
   );

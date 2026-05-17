@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
-import { getCuotasRestantes } from '../utils/cuotas';
+import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '../utils/formatters';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
@@ -50,11 +50,30 @@ export default function DashboardScreen() {
 
   const stats = useMemo(() => {
     const targetIndex = mesSel.anio * 12 + mesSel.mes;
+    const hoyIndex = hoy.getFullYear() * 12 + hoy.getMonth();
+
+    // Returns the cost this expense contributes to the selected month
+    const getCostoMes = (g) => {
+      if (g.isFijo) return parsePrecio(g.precio) * (parseInt(g.cantidad) || 1);
+      if (g.tipo === 'credito' && Number(g.cuotas) > 1) return parsePrecio(g.precio) / Number(g.cuotas);
+      return parsePrecio(g.precio);
+    };
 
     const gastosNormalesMes = gastos.filter(g => {
       if (g.isFijo) return false;
       const [, m, y] = (g.fecha || '').split('/');
-      return Number(m) - 1 === mesSel.mes && Number(y) === mesSel.anio;
+      const compraIndex = Number(y) * 12 + (Number(m) - 1);
+      const cuotas = parseInt(g.cuotas) || 1;
+
+      if (g.tipo === 'credito' && cuotas > 1) {
+        // Multi-installment credit: active across several months
+        if (targetIndex < compraIndex || targetIndex >= compraIndex + cuotas) return false;
+        // For current month, skip purchases pending for next billing cycle
+        if (targetIndex === hoyIndex) return gastoEntraEsteMes(g, mydata);
+        return true;
+      }
+      // Single-charge (cuotas=1) and non-credit: only counts in the purchase month
+      return compraIndex === targetIndex;
     });
 
     const gastosFijosMes = gastos.filter(g => {
@@ -71,8 +90,7 @@ export default function DashboardScreen() {
     const totalesPorMoneda = {};
     gastosMes.forEach(g => {
       const moneda = g.moneda || 'ARS';
-      const costo = parsePrecio(g.precio) * (g.isFijo ? (parseInt(g.cantidad) || 1) : 1);
-      totalesPorMoneda[moneda] = (totalesPorMoneda[moneda] || 0) + costo;
+      totalesPorMoneda[moneda] = (totalesPorMoneda[moneda] || 0) + getCostoMes(g);
     });
 
     const cuotasActivas = gastos.filter(g => {
@@ -82,7 +100,7 @@ export default function DashboardScreen() {
     }).length;
 
     const masCaro = gastosMes.reduce((max, g) => {
-      const p = parsePrecio(g.precio) * (g.isFijo ? (parseInt(g.cantidad) || 1) : 1);
+      const p = getCostoMes(g);
       return p > (max?.precio || 0) ? { ...g, precio: p } : max;
     }, null);
 
@@ -90,8 +108,7 @@ export default function DashboardScreen() {
     gastosMes.forEach(g => {
       if (g.moneda !== 'ARS') return;
       const etiq = g.etiqueta || 'Sin etiqueta';
-      const costo = parsePrecio(g.precio) * (g.isFijo ? (parseInt(g.cantidad) || 1) : 1);
-      porEtiqueta[etiq] = (porEtiqueta[etiq] || 0) + costo;
+      porEtiqueta[etiq] = (porEtiqueta[etiq] || 0) + getCostoMes(g);
     });
 
     const maxEtiqueta = Math.max(...Object.values(porEtiqueta), 1);

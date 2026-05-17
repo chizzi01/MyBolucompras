@@ -59,10 +59,16 @@ export default function AgregarScreen() {
   const cameraRef = useRef(null);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
+  const MEDIOS_SOLO_DEBITO = ['Efectivo', 'Transferencia'];
+
   const set = (key, val) => setForm(prev => {
     const next = { ...prev, [key]: val };
     if (key === 'tipo' && val === 'debito') next.cuotas = '1';
     if (key === 'isFijo' && val) { next.cuotas = '1'; next.cantidad = '1'; }
+    if (key === 'medio' && MEDIOS_SOLO_DEBITO.includes(val)) {
+      next.tipo = 'debito';
+      next.cuotas = '1';
+    }
     return next;
   });
 
@@ -397,7 +403,7 @@ export default function AgregarScreen() {
           </Row>
         )}
 
-        {!form.isFijo && (
+        {!form.isFijo && !MEDIOS_SOLO_DEBITO.includes(form.medio) && (
           <Field label="Tipo de pago" dark={dark}>
             <TipoSelector value={form.tipo} onChange={v => set('tipo', v)} dark={dark} s={s} />
           </Field>
