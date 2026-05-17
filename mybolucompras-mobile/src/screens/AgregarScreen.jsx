@@ -135,7 +135,7 @@ export default function AgregarScreen() {
 
     setLoading(true);
     try {
-      const sharedWith = sharedUser ? { userId: sharedUser.id, mode: shareMode } : null;
+      const sharedWith = sharedUser ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email } : null;
       
       await agregarGasto({
         ...form,

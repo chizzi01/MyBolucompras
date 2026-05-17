@@ -128,6 +128,7 @@ export default function EditarGastoScreen({ route, navigation }) {
       const sharedWith = (!isAlreadyShared && sharedUser) ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email } : null;
       await editarGasto(gasto.id, {
         ...form,
+        compartidoConNombre: gasto.compartidoConNombre || null,
         cuotas: parseInt(form.cuotas) || 1,
         cantidad: parseInt(form.cantidad) || 1,
         precio: Number(form.precio),
