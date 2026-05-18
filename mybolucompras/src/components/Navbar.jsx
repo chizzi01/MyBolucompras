@@ -3,10 +3,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { HiHome } from "react-icons/hi2";
 import { FaCircleQuestion } from "react-icons/fa6";
 import { FiLogOut, FiSun, FiMoon, FiSettings } from "react-icons/fi";
+import { MdCalculate } from "react-icons/md";
 import { FaWallet } from "react-icons/fa";
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
+import { useExchangeRate } from '../hooks/useExchangeRate';
 import '../styles/navbar.css';
 
 function Header({ totalGastado, onPresupuestoClick, onFondosClick }) {
@@ -14,6 +16,7 @@ function Header({ totalGastado, onPresupuestoClick, onFondosClick }) {
   const location = useLocation();
   const { mydata } = useData();
   const { theme, toggleTheme } = useTheme();
+  const { usdToArs } = useExchangeRate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -62,6 +65,16 @@ function Header({ totalGastado, onPresupuestoClick, onFondosClick }) {
         </ul>
 
         <div className="navbar-right">
+          {window.electron && (
+            <button
+              className="navbar-theme-btn"
+              onClick={() => window.electron.openCalculator()}
+              aria-label="Abrir calculadora"
+              title="Calculadora"
+            >
+              <MdCalculate size={17} />
+            </button>
+          )}
           <button
             className="navbar-theme-btn"
             onClick={toggleTheme}
@@ -100,7 +113,9 @@ function Header({ totalGastado, onPresupuestoClick, onFondosClick }) {
 
       <div className="navbar-chips">
         {mydata?.presupuestoMensualMax > 0 && totalGastado && onPresupuestoClick && (() => {
-          const gastadoARS = parseFloat(totalGastado['ARS'] || 0);
+          const gastadoUSD = parseFloat(totalGastado['USD'] || 0);
+          const gastadoARS = parseFloat(totalGastado['ARS'] || 0) +
+            (usdToArs && gastadoUSD ? gastadoUSD * usdToArs : 0);
           const limite = mydata.presupuestoMensualMax;
           const pct = Math.min((gastadoARS / limite) * 100, 100);
           const color = gastadoARS > limite ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';

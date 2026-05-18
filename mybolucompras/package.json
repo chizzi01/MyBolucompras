@@ -1,7 +1,7 @@
 {
   "name": "budgetbuddy",
   "private": true,
-  "version": "0.0.42",
+  "version": "0.0.43",
   "main": "main.js",
   "description": "Aplicación para gestionar compras de manera eficiente.",
   "author": "Agustin Chizzini Melo",
@@ -73,8 +73,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "electron main.js",
-    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=img/icon.ico --prune=true --out=release-builds",
-    "package-win": "electron-packager . --overwrite --asar --platform=win32 --arch=ia32 --icon=img/icon.ico --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Budget Buddy\"",
+    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=build/icon.ico --prune=true --out=release-builds",
+    "package-win": "electron-packager . --overwrite --asar --platform=win32 --arch=ia32 --icon=build/icon.ico --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Budget Buddy\"",
     "electron:dev": "electron .",
     "electron:build": "vite build && electron-builder"
   },

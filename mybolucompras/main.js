@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, nativeImage, shell } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 const path = require('path');
@@ -225,4 +225,8 @@ ipcMain.handle('write-data', async (event, { archivo, newData }) => {
     console.error('Error writing data:', error);
     throw error;
   }
+});
+
+ipcMain.handle('open-calculator', async () => {
+  await shell.openPath('calc.exe');
 });

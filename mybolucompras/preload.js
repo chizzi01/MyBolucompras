@@ -14,6 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
 contextBridge.exposeInMainWorld('electron', {
   readData: (archivo) => ipcRenderer.invoke('read-data', archivo),
   writeData: (archivo, newData) => ipcRenderer.invoke('write-data', { archivo, newData }),
+  openCalculator: () => ipcRenderer.invoke('open-calculator'),
 
   updater: {
     onUpdateAvailable: (cb) => ipcRenderer.on('update_available', (_e, info) => cb(info)),

@@ -14,6 +14,7 @@ import { calcularCuotasRestantesCredito } from '../utils/cuotas';
 import { parsePrecio, formatARS, parseFecha, getCurrencySymbol } from '../utils/formatters';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
 import { useTheme } from '../context/ThemeContext';
+import { useExchangeRate } from '../hooks/useExchangeRate';
 
 /* Estilos MUI — usan CSS variables para respetar dark/light mode */
 const _fieldBase = {
@@ -51,6 +52,7 @@ const fieldSx = (hasValue) => hasValue ? fieldSxFilled : fieldSxEmpty;
 
 function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, saveMyData, handleSubmit, handleDelete, handleDeleteEtiqueta, handleEdit, setModalVisible, handleCloseModal, handleChangeCierre, handleAgregarFondos, handleCreateEtiqueta, modalType }) {
   const { theme } = useTheme();
+  const { usdToArs } = useExchangeRate();
   const iconColor = theme === 'dark' ? '#ffffff' : '#575757';
   const [showSumInput, setShowSumInput] = useState(false);
   const [additionalFunds, setAdditionalFunds] = useState('');
@@ -798,11 +800,6 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                 {/* ================================================= */}
 
                 {(() => {
-                  const totalGastadoMes = Object.values(gastosPorEtiqueta || {}).reduce(
-                    (acc, porEtiqueta) => acc + Number(porEtiqueta?.ARS || 0),
-                    0
-                  );
-
                   const totalPresupuestado = Object.entries(mydata.presupuestos || {}).reduce(
                     (acc, [_, data]) => {
                       if (data?.visible === false) return acc;
@@ -813,11 +810,15 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
 
                   const presupuestoMax = Number(mydata.presupuestoMensualMax || 0);
 
+                  const totalGastadoUSD = parseFloat(totalGastado?.USD || 0);
+                  const totalGastadoConvertido = parseFloat(totalGastado?.ARS || 0) +
+                    (usdToArs && totalGastadoUSD ? totalGastadoUSD * usdToArs : 0);
+
                   const { porcentaje, color, mensaje } =
-                    getEstadoPresupuesto(totalGastado.ARS, presupuestoMax);
+                    getEstadoPresupuesto(totalGastadoConvertido, presupuestoMax);
 
                   const excedido =
-                    presupuestoMax > 0 && totalGastado.ARS > presupuestoMax;
+                    presupuestoMax > 0 && totalGastadoConvertido > presupuestoMax;
 
                   return (
                     <div
@@ -878,7 +879,12 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                         }}
                       >
                         <p style={{ margin: 0 }}>
-                          💸 Gastado: <strong>$ {formatARS(totalGastado.ARS)}</strong>
+                          💸 Gastado: <strong>$ {formatARS(totalGastadoConvertido.toFixed(2))}</strong>
+                          {totalGastadoUSD > 0 && usdToArs && (
+                            <small style={{ color: 'var(--color-text-muted)', marginLeft: 6 }}>
+                              (incl. US${formatARS(totalGastadoUSD.toFixed(2))} × ${formatARS(usdToArs)})
+                            </small>
+                          )}
                         </p>
 
                         <p style={{ margin: 0 }}>
@@ -897,8 +903,8 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                           <strong>
                             $ {formatARS(
                               presupuestoMax > 0
-                                ? presupuestoMax - totalGastado.ARS
-                                : totalPresupuestado - totalGastado.ARS
+                                ? (presupuestoMax - totalGastadoConvertido).toFixed(2)
+                                : (totalPresupuestado - totalGastadoConvertido).toFixed(2)
                             )}
                           </strong>
                         </p>
@@ -967,7 +973,9 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                   const visible = presupuestoData.visible !== false;
                   if (!visible) return null;
 
-                  const gastado = Number(gastosPorEtiqueta?.[nombre]?.ARS || 0);
+                  const gastadoARS = Number(gastosPorEtiqueta?.[nombre]?.ARS || 0);
+                  const gastadoUSD = Number(gastosPorEtiqueta?.[nombre]?.USD || 0);
+                  const gastado = gastadoARS + (usdToArs && gastadoUSD ? gastadoUSD * usdToArs : 0);
                   const presupuesto = Number(presupuestoData.monto || 0);
 
                   const excedido = presupuesto > 0 && gastado > presupuesto;
@@ -1018,6 +1026,11 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                       >
                         <p style={{ margin: 0, fontSize: '1rem' }}>
                           💸 Gastado: <strong>$ {formatARS(gastado.toFixed(2))}</strong>
+                          {gastadoUSD > 0 && usdToArs && (
+                            <small style={{ color: 'var(--color-text-muted)', marginLeft: 6 }}>
+                              (incl. US${formatARS(gastadoUSD.toFixed(2))} × ${formatARS(usdToArs)})
+                            </small>
+                          )}
                         </p>
 
                         <p style={{ margin: 0, fontSize: '1rem' }}>
