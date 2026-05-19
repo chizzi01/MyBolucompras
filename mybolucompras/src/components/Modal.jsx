@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { IoArrowBackCircle, IoSaveOutline, IoAddCircleOutline, IoEyeOffOutline } from "react-icons/io5";
+import { IoArrowBackCircle, IoSaveOutline, IoAddCircleOutline, IoEyeOffOutline, IoPeopleOutline, IoCloseCircle, IoSearchOutline } from "react-icons/io5";
+import { userService } from '../services/userService';
+import { contactService } from '../services/contactService';
 import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdornment, FormHelperText } from '@mui/material';
 import "../App.css";
 import Dashboard from './Dashboard';
@@ -61,6 +63,36 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
   const [selectedColor, setSelectedColor] = useState('#fff');
   const [confirmarBorrado, setConfirmarBorrado] = useState(null);
   const dialogRef = useRef(null);
+
+  // --- Compartir gasto ---
+  const [sharedUser, setSharedUser] = useState(null);
+  const [shareMode, setShareMode] = useState('dividir');
+  const [searchEmail, setSearchEmail] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [recentContacts, setRecentContacts] = useState([]);
+
+  useEffect(() => {
+    setRecentContacts(contactService.getRecent());
+  }, []);
+
+  const handleSearchUser = async () => {
+    if (!searchEmail.trim()) return;
+    setSearching(true);
+    try {
+      const found = await userService.buscarPorEmail(searchEmail);
+      if (found) {
+        setSharedUser(found);
+        const next = contactService.saveContact(found);
+        setRecentContacts(next);
+      } else {
+        alert('No existe un usuario con ese email.');
+      }
+    } catch (err) {
+      console.error('Error buscando usuario:', err);
+    } finally {
+      setSearching(false);
+    }
+  };
 
   /* Bloquear scroll del body mientras el modal está abierto */
   useEffect(() => {
@@ -280,10 +312,13 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
   const handleSave = () => {
     if (validateForm()) {
       setShowHelperText(false);
+      const sharedWith = sharedUser
+        ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email }
+        : null;
       if (modalType === 'nuevo' || modalType === 'repetitivo') {
-        handleSubmit();
+        handleSubmit(sharedWith);
       } else if (modalType === 'editar') {
-        handleEdit();
+        handleEdit(sharedWith);
       } else if (modalType === 'fondos') {
         if (showSumInput) {
           const newFunds = parseFloat(mydata.fondos || 0) + parseFloat(additionalFunds);
@@ -440,11 +475,13 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                     : modalType === "presupuesto"
                       ? "90%"
                       : modalType === "repetitivo"
-                        ? "600px"
+                        ? "660px"
                         : modalType === "crearEtiqueta"
                           ? "500px"
-                          : "500px",
-          width: modalType === "reporte" || modalType === "presupuesto" ? "90%" : "400px",
+                          : (modalType === "nuevo" || modalType === "editar")
+                            ? "760px"
+                            : "500px",
+          width: modalType === "reporte" || modalType === "presupuesto" ? "90%" : "560px",
 
           // 🎨 Fondo según tipo de modal
           background:
@@ -493,6 +530,8 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
               ? { flex: 1, overflowY: 'auto', justifyContent: 'flex-start', alignItems: 'center', paddingBottom: 16 }
               : modalType === 'presupuesto'
               ? { flex: 1, overflowY: 'auto', justifyContent: 'flex-start', alignItems: 'flex-start', paddingBottom: 16 }
+              : (modalType === 'nuevo' || modalType === 'editar' || modalType === 'repetitivo')
+              ? { flex: 1, overflowY: 'auto', justifyContent: 'flex-start', alignItems: 'center', paddingBottom: 16 }
               : {}
           }
         >
@@ -615,6 +654,65 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                   }}
                   sx={fieldSx(formData.precio)}
                 />
+
+                {/* Compartir gasto */}
+                {(modalType === 'nuevo' || modalType === 'editar') && (
+                  <div className="share-card" style={{ flexBasis: '100%' }}>
+                    <div className="share-card-title">
+                      <IoPeopleOutline size={13} />
+                      Compartir gasto
+                    </div>
+
+                    {formData.compartidoConNombre ? (
+                      <p style={{ fontSize: 12, fontStyle: 'italic', margin: 0, opacity: 0.65 }}>
+                        Ya compartido con <strong>{formData.compartidoConNombre}</strong>. Cada usuario maneja su propia copia.
+                      </p>
+                    ) : sharedUser ? (
+                      <>
+                        <div className="share-user-info">
+                          <div className="share-avatar">{(sharedUser.nombre || sharedUser.email)[0].toUpperCase()}</div>
+                          <span style={{ fontWeight: 600, fontSize: 14, flex: 1 }}>{sharedUser.nombre || sharedUser.email}</span>
+                          <button className="share-remove-btn" onClick={() => setSharedUser(null)}>
+                            <IoCloseCircle size={20} />
+                          </button>
+                        </div>
+                        <div className="share-mode-row">
+                          <button className={`share-mode-btn${shareMode === 'dividir' ? ' active' : ''}`} onClick={() => setShareMode('dividir')}>
+                            Dividir entre 2
+                          </button>
+                          <button className={`share-mode-btn${shareMode === 'mismo' ? ' active' : ''}`} onClick={() => setShareMode('mismo')}>
+                            Mismo monto
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="share-search-row">
+                          <input
+                            className="share-email-input"
+                            type="email"
+                            placeholder="Email del contacto..."
+                            value={searchEmail}
+                            onChange={e => setSearchEmail(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleSearchUser()}
+                          />
+                          <button className="share-search-btn" onClick={handleSearchUser} disabled={searching}>
+                            {searching ? '...' : <IoSearchOutline size={16} />}
+                          </button>
+                        </div>
+                        {recentContacts.length > 0 && (
+                          <div className="share-recent-contacts">
+                            {recentContacts.map(c => (
+                              <button key={c.id} className="share-recent-pill" onClick={() => setSharedUser(c)}>
+                                {c.nombre || c.email.split('@')[0]}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
               </>
             )}
             {modalType === 'fondos' && (

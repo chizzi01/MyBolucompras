@@ -32,7 +32,7 @@ function MainPage() {
   const { totalGastado, bancoMasUsado, tarjetaMasUsada } =
     useCalculations(gastos, mydata, filteredData);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (sharedWith = null) => {
     const gasto = {
       isFijo: modalType === 'repetitivo',
       objeto: formData.objeto.charAt(0).toUpperCase() + formData.objeto.slice(1),
@@ -48,7 +48,7 @@ function MainPage() {
         : formData.precio,
     };
     try {
-      await agregarGasto(gasto);
+      await agregarGasto(gasto, sharedWith);
       setModalVisible(false);
       setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: '', cantidad: 1, precio: '', moneda: mydata?.monedaPreferida || 'ARS' });
       addToast('Gasto agregado correctamente', 'success');
@@ -67,16 +67,17 @@ function MainPage() {
     }
   };
 
-  const handleEdit = async () => {
+  const handleEdit = async (sharedWith = null) => {
     const gasto = {
       ...formData,
       fecha: formData.fecha.includes('-') ? formData.fecha.split('-').reverse().join('/') : formData.fecha,
       precio: formData.isFijo
         ? String(parseFloat(formData.precio) * parseInt(formData.cantidad || 1, 10))
         : String(parseFloat(formData.precio)),
+      compartidoConNombre: formData.compartidoConNombre || null,
     };
     try {
-      await editarGasto(formData.id, gasto);
+      await editarGasto(formData.id, gasto, sharedWith);
       setModalVisible(false);
       addToast('Gasto actualizado', 'success');
     } catch {
@@ -156,6 +157,7 @@ function MainPage() {
     setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: defaultBanco, cantidad: 1, precio: '', etiqueta: '', moneda: defaultMoneda });
     setModalType(type);
     if (['eliminar', 'editar', 'crearEtiqueta', 'eliminarEtiqueta'].includes(type)) {
+      if (type === 'editar') console.log('Gasto seleccionado:', item);
       setFormData({
         ...item,
         fecha: item.fecha ? item.fecha.split('/').reverse().join('-') : '',

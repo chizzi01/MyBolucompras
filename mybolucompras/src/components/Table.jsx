@@ -11,6 +11,7 @@ import { FaPiggyBank } from "react-icons/fa";
 import { CiBank } from "react-icons/ci";
 import { FaMoneyCheckDollar, FaXmark } from "react-icons/fa6";
 import { IoMdAdd, IoMdTrash } from "react-icons/io";
+import { IoPeopleOutline } from "react-icons/io5";
 import { FaCalendarAlt } from "react-icons/fa";
 import { FaSwatchbook } from "react-icons/fa";
 import { FaWallet } from "react-icons/fa";
@@ -716,13 +717,19 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                 return (
                                     <tr key={index} style={{ position: 'relative' }}>
                                         <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'center', flexWrap: 'wrap' }}>
                                                 {item.objeto}
                                                 {item.isFijo && <PiRepeatBold size={15} color='#ff9a15' />}
                                                 {item.tipo === 'credito' && <FaCreditCard size={15} color='#3181ff' />}
                                                 {item.tipo === 'debito' && item.isFijo == false && item.medio == 'Efectivo' && <FaMoneyBill1Wave size={15} color='#11af00' />}
                                                 {item.isFijo == false && item.medio == 'Transferencia' && <FaMoneyBillTransfer size={15} color='#e773d4' />}
                                                 {item.tipo === 'debito' && item.isFijo == false && (item.medio != 'Transferencia' && item.medio != 'Efectivo') && <BsCreditCard2Front size={15} color='#11af00' />}
+                                                {item.compartidoConNombre && (
+                                                    <span className="shared-badge">
+                                                        <IoPeopleOutline size={11} />
+                                                        {item.compartidoConNombre}
+                                                    </span>
+                                                )}
                                             </div>
                                         </td>
                                         <td>{item.fecha}</td>

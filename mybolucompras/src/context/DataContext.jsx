@@ -59,23 +59,23 @@ export function DataProvider({ children }) {
   }, [cargarDatos]);
 
   // --- GASTOS ---
-  const agregarGasto = async (gasto) => {
+  const agregarGasto = async (gasto, sharedWith = null) => {
     if (demo) {
       const nuevo = { ...gasto, id: `demo-${Date.now()}`, precio: `$ ${Number(gasto.precio).toFixed(2)}`, fecha: gasto.fecha.includes('-') ? gasto.fecha.split('-').reverse().join('/') : gasto.fecha };
       setGastos(prev => [nuevo, ...prev]);
       return nuevo;
     }
-    const nuevo = await gastosService.crear(gasto);
+    const nuevo = await gastosService.crear(gasto, sharedWith);
     setGastos(prev => [nuevo, ...prev]);
     return nuevo;
   };
 
-  const editarGasto = async (id, gasto) => {
+  const editarGasto = async (id, gasto, sharedWith = null) => {
     if (demo) {
       setGastos(prev => prev.map(g => g.id === id ? { ...g, ...gasto, precio: `$ ${Number(gasto.precio).toFixed(2)}` } : g));
       return;
     }
-    const actualizado = await gastosService.actualizar(id, gasto);
+    const actualizado = await gastosService.actualizar(id, gasto, sharedWith);
     setGastos(prev => prev.map(g => g.id === id ? actualizado : g));
   };
 

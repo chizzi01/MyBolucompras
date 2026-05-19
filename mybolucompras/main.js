@@ -20,8 +20,8 @@ log.info('Log file:', log.transports.file.getFile().path);
 
 function loadAppIcon() {
   const iconPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'build', 'icon.ico')
-    : path.join(__dirname, 'build', 'icon.ico'); const icon = nativeImage.createFromPath(iconPath);
+    ? path.join(process.resourcesPath, 'public', 'icon.ico')
+    : path.join(__dirname, 'public', 'icon.ico'); const icon = nativeImage.createFromPath(iconPath);
   log.info('Icon path:', iconPath);
   log.info('Icon exists:', fs.existsSync(iconPath));
   log.info('Icon isEmpty:', icon.isEmpty());
@@ -88,8 +88,8 @@ function createWindow() {
   console.log('App path:', getAppPath());
 
   const iconPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'build', 'icon.ico')
-    : path.join(__dirname, 'build', 'icon.ico');
+    ? path.join(process.resourcesPath, 'public', 'icon.ico')
+    : path.join(__dirname, 'public', 'icon.ico');
 
   mainWindow = new BrowserWindow({
     width: 1200,
