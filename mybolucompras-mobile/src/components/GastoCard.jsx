@@ -6,7 +6,8 @@ import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 import { formatPrecioEuropeo, parsePrecio } from '../utils/formatters';
 
-const DELETE_WIDTH = 80;
+const DELETE_WIDTH_SINGLE = 80;
+const DELETE_WIDTH_DOUBLE = 160;
 
 const MEDIO_ICON_MAP = {
   'Visa':             { lib: 'fa5', name: 'cc-visa' },
@@ -33,9 +34,13 @@ const resolveEtiqueta = (nombre, etiquetas = []) => {
   return typeof found === 'string' ? { nombre: found, color: colors.primary } : found;
 };
 
-export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
+export default function GastoCard({ gasto, mydata, onPress, onDelete, onMarkPaid }) {
   const { dark } = useTheme();
-  const s = styles(dark);
+
+  const hasDoubleAction = !!onMarkPaid;
+  const DELETE_WIDTH = hasDoubleAction ? DELETE_WIDTH_DOUBLE : DELETE_WIDTH_SINGLE;
+
+  const s = styles(dark, gasto.pagado && !!gasto.compartidoConNombre);
 
   const translateX = useRef(new Animated.Value(0)).current;
   const [open, setOpen] = useState(false);
@@ -69,6 +74,7 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
   };
 
   const handleDelete = () => { close(); onDelete(); };
+  const handleMarkPaid = () => { close(); onMarkPaid(); };
 
   const cuotasRest = getCuotasRestantes(gasto, mydata);
   const cuotasColor = getCuotasColor(cuotasRest, dark);
@@ -81,12 +87,20 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
   const precioTotal = esCuotado ? formatPrecioEuropeo(precioNum, gasto.moneda) : null;
   const etiquetaObj = gasto.etiqueta ? resolveEtiqueta(gasto.etiqueta, mydata.etiquetas) : null;
 
+  const isPaidShared = gasto.pagado && !!gasto.compartidoConNombre;
+
   return (
     <View style={s.row}>
-      <View style={s.deleteAction}>
+      <View style={[s.actionsContainer, { width: DELETE_WIDTH }]}>
+        {hasDoubleAction && (
+          <TouchableOpacity style={s.paidBtn} onPress={handleMarkPaid} activeOpacity={0.8}>
+            <Ionicons name="checkmark-circle" size={22} color="#fff" />
+            <Text style={s.actionText}>Pagado</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={s.deleteBtn} onPress={handleDelete} activeOpacity={0.8}>
           <Ionicons name="trash-outline" size={22} color="#fff" />
-          <Text style={s.deleteActionText}>Eliminar</Text>
+          <Text style={s.actionText}>Eliminar</Text>
         </TouchableOpacity>
       </View>
 
@@ -108,12 +122,17 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete }) {
                   <Text style={[s.tagText, { color: etiquetaObj.color }]}>{etiquetaObj.nombre}</Text>
                 </View>
               ) : null}
-              {gasto.compartidoConNombre && (
+              {isPaidShared ? (
+                <View style={s.paidBadge}>
+                  <Ionicons name="checkmark-circle" size={10} color={colors.accent} />
+                  <Text style={s.paidBadgeText}>Pagado</Text>
+                </View>
+              ) : gasto.compartidoConNombre ? (
                 <View style={s.sharedBadge}>
                   <Ionicons name="people-outline" size={10} color={dark ? '#94A3B8' : '#64748B'} />
                   <Text style={s.sharedBadgeText} numberOfLines={1}>{gasto.compartidoConNombre}</Text>
                 </View>
-              )}
+              ) : null}
             </View>
           </View>
 
@@ -147,7 +166,7 @@ function getCuotasColor(cuotasRest, dark) {
   return { bg: dark ? '#1a3a2e' : '#D1FAE5', text: '#10B981' };
 }
 
-const styles = (dark) => StyleSheet.create({
+const styles = (dark, isPaidShared) => StyleSheet.create({
   row: {
     marginHorizontal: spacing.md,
     marginVertical: spacing.xs,
@@ -165,8 +184,10 @@ const styles = (dark) => StyleSheet.create({
     shadowOpacity: dark ? 0.3 : 0.06,
     shadowRadius: 4,
     elevation: 2,
-    borderWidth: 1,
-    borderColor: dark ? colors.border.dark : colors.border.light,
+    borderWidth: isPaidShared ? 2 : 1,
+    borderColor: isPaidShared
+      ? colors.accent
+      : dark ? colors.border.dark : colors.border.light,
   },
   contentDimmed: { opacity: 0.4 },
   left: { flex: 1, marginRight: spacing.sm },
@@ -181,51 +202,59 @@ const styles = (dark) => StyleSheet.create({
   cuotasBadge: { borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 2, minWidth: 44, alignItems: 'center' },
   cuotasText: { ...typography.captionMed, fontWeight: '600' },
   nextMonthBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 20, height: 20, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
     backgroundColor: dark ? '#1e293b' : '#F1F5F9',
-    borderWidth: 1,
-    borderColor: dark ? colors.border.dark : colors.border.light,
+    borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light,
   },
-  deleteAction: {
+  actionsContainer: {
     position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: DELETE_WIDTH,
-    backgroundColor: colors.error,
+    right: 0, top: 0, bottom: 0,
+    flexDirection: 'row',
     borderRadius: radius.md,
     overflow: 'hidden',
+  },
+  paidBtn: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.accent,
   },
   deleteBtn: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: colors.error,
   },
-  deleteActionText: {
+  actionText: {
     color: '#fff',
     fontSize: 11,
     fontWeight: '600',
   },
   sharedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: dark ? '#1e293b' : '#F1F5F9',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: radius.full,
-    borderWidth: 1,
+    paddingHorizontal: 8, paddingVertical: 2,
+    borderRadius: radius.full, borderWidth: 1,
     borderColor: dark ? colors.border.dark : colors.border.light,
     maxWidth: 120,
   },
   sharedBadgeText: {
-    ...typography.caption,
-    fontSize: 10,
+    ...typography.caption, fontSize: 10,
     color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
+  },
+  paidBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: dark ? '#0d2e1e' : '#D1FAE5',
+    paddingHorizontal: 8, paddingVertical: 2,
+    borderRadius: radius.full, borderWidth: 1,
+    borderColor: colors.accent,
+    maxWidth: 120,
+  },
+  paidBadgeText: {
+    ...typography.caption, fontSize: 10,
+    color: colors.accent, fontWeight: '600',
   },
 });

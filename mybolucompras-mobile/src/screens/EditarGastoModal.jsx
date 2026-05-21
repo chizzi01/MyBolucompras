@@ -168,6 +168,19 @@ export default function EditarGastoScreen({ route, navigation }) {
           showsVerticalScrollIndicator={false}
           keyboardDismissMode="interactive"
         >
+          {gasto.compartidoConNombre && (
+            <View style={[s.paidBanner, gasto.pagado && s.paidBannerGreen]}>
+              <Ionicons
+                name={gasto.pagado ? 'checkmark-circle' : 'time-outline'}
+                size={15}
+                color={gasto.pagado ? colors.accent : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+              />
+              <Text style={[s.paidBannerText, gasto.pagado && s.paidBannerTextGreen]}>
+                {gasto.pagado ? 'Pagado' : 'Pendiente de pago'}
+              </Text>
+            </View>
+          )}
+
           <Label text="Objeto" dark={dark} />
           <TextInput style={s.input} value={form.objeto} onChangeText={v => set('objeto', v)} placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
 
@@ -505,4 +518,17 @@ const styles = (dark) => StyleSheet.create({
   shareCardDisabled: { opacity: 0.8, backgroundColor: dark ? '#1e293b' : '#f8fafc' },
   sharedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.primary + '20', paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.full },
   sharedBadgeText: { fontSize: 10, fontWeight: '700' },
+  paidBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: dark ? '#1e293b' : '#F1F5F9',
+    borderRadius: radius.md, padding: spacing.sm + 2,
+    marginBottom: spacing.md,
+    borderWidth: 1, borderColor: dark ? colors.border.dark : colors.border.light,
+  },
+  paidBannerGreen: {
+    backgroundColor: dark ? '#0d2e1e' : '#D1FAE5',
+    borderColor: colors.accent,
+  },
+  paidBannerText: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
+  paidBannerTextGreen: { color: colors.accent, fontWeight: '600' },
 });

@@ -2,18 +2,20 @@ import React, { useRef, useEffect } from 'react';
 import {
   Animated, Easing, View, Platform,
 } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 import SpInAppUpdates, { IAUUpdateKind } from 'sp-react-native-in-app-updates';
 
 const inAppUpdates = new SpInAppUpdates(false);
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { DataProvider } from './src/context/DataContext';
+import { DeudoresProvider } from './src/context/DeudoresContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { colors } from './src/constants/theme';
 
@@ -25,6 +27,8 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import ConfiguracionScreen from './src/screens/ConfiguracionScreen';
 import OnboardingFlow from './src/screens/OnboardingFlow';
 import EditarGastoScreen from './src/screens/EditarGastoModal';
+import DeudoresScreen from './src/screens/DeudoresScreen';
+import AgregarDeudaModal from './src/screens/AgregarDeudaModal';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -86,6 +90,7 @@ function TabNavigator() {
             Gastos: focused ? 'list' : 'list-outline',
             Agregar: focused ? 'add-circle' : 'add-circle-outline',
             Dashboard: focused ? 'bar-chart' : 'bar-chart-outline',
+            Deudores: focused ? 'people' : 'people-outline',
             Configuracion: focused ? 'settings' : 'settings-outline',
           };
           return <Ionicons name={icons[route.name]} size={route.name === 'Agregar' ? 28 : size} color={color} />;
@@ -95,6 +100,7 @@ function TabNavigator() {
       <Tab.Screen name="Gastos" component={GastosScreen} />
       <Tab.Screen name="Agregar" component={AgregarScreen} options={{ tabBarLabel: 'Agregar', tabBarIconStyle: { marginTop: -2 } }} />
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Deudores" component={DeudoresScreen} />
       <Tab.Screen name="Configuracion" component={ConfiguracionScreen} options={{ tabBarLabel: 'Config' }} />
     </Tab.Navigator>
   );
@@ -120,18 +126,38 @@ function RootNavigator() {
         <Stack.Screen name="Main">
           {() => (
             <DataProvider>
-              <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-                <AuthStack.Screen name="Tabs" component={TabNavigator} />
-                <AuthStack.Screen
-                  name="EditarGasto"
-                  component={EditarGastoScreen}
-                  options={{
-                    animation: 'slide_from_bottom',
-                    gestureEnabled: true,
-                    gestureDirection: 'vertical',
-                  }}
-                />
-              </AuthStack.Navigator>
+              <DeudoresProvider>
+                <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+                  <AuthStack.Screen name="Tabs" component={TabNavigator} />
+                  <AuthStack.Screen
+                    name="EditarGasto"
+                    component={EditarGastoScreen}
+                    options={{
+                      animation: 'slide_from_bottom',
+                      gestureEnabled: true,
+                      gestureDirection: 'vertical',
+                    }}
+                  />
+                  <AuthStack.Screen
+                    name="AgregarDeuda"
+                    component={AgregarDeudaModal}
+                    options={{
+                      animation: 'slide_from_bottom',
+                      gestureEnabled: true,
+                      gestureDirection: 'vertical',
+                    }}
+                  />
+                  <AuthStack.Screen
+                    name="EditarDeuda"
+                    component={AgregarDeudaModal}
+                    options={{
+                      animation: 'slide_from_bottom',
+                      gestureEnabled: true,
+                      gestureDirection: 'vertical',
+                    }}
+                  />
+                </AuthStack.Navigator>
+              </DeudoresProvider>
             </DataProvider>
           )}
         </Stack.Screen>
@@ -171,8 +197,26 @@ export default function App() {
 
 function AppWithTheme() {
   const { dark } = useTheme();
+  const navigationRef = useNavigationContainerRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+      if (!navigationRef.isReady()) return;
+      if (data?.screen === 'Gastos') {
+        navigationRef.navigate('Gastos');
+      } else if (data?.screen === 'Deudores') {
+        navigationRef.navigate('Deudores');
+      }
+    });
+    return () => {
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <StatusBar style={dark ? 'light' : 'dark'} />
       <RootNavigator />
     </NavigationContainer>

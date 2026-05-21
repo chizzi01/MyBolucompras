@@ -81,11 +81,20 @@ export function DataProvider({ children }) {
     setMydata(nuevaConfig);
   };
 
+  const marcarGastoPagado = async (id) => {
+    const gasto = gastos.find(g => g.id === id);
+    if (!gasto) return;
+    const currentUserName = user?.user_metadata?.nombre || user?.email || 'Alguien';
+    await gastosService.marcarPagadoConNotificacion(id, gasto, currentUserName);
+    setGastos(prev => prev.map(g => g.id === id ? { ...g, pagado: true } : g));
+  };
+
   return (
     <DataContext.Provider value={{
       gastos, mydata, loading, error, cargarDatos,
       agregarGasto, editarGasto, eliminarGasto,
       actualizarConfig, actualizarFondos, actualizarCierre,
+      marcarGastoPagado,
       setMydata,
     }}>
       {children}

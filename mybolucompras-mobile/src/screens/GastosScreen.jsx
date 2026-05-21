@@ -8,6 +8,7 @@ import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { getCuotasRestantes } from '../utils/cuotas';
 import { useTheme } from '../context/ThemeContext';
 import GastoCard from '../components/GastoCard';
@@ -21,7 +22,8 @@ const MESES = [
 ];
 
 export default function GastosScreen({ navigation }) {
-  const { gastos, mydata, loading, cargarDatos, eliminarGasto } = useData();
+  const { gastos, mydata, loading, cargarDatos, eliminarGasto, marcarGastoPagado } = useData();
+  const { user } = useAuth();
   const { dark } = useTheme();
   const s = styles(dark);
 
@@ -85,6 +87,20 @@ export default function GastosScreen({ navigation }) {
     });
   };
 
+  // Cualquiera de las dos partes puede marcar el gasto compartido como pagado
+  const esCompartido = (gasto) =>
+    !!gasto.compartidoConNombre && !!gasto.compartidoConUserId;
+
+  const handleMarkPaid = (gasto) => {
+    showModal({
+      type: 'check',
+      title: 'Marcar como pagado',
+      message: `¿Confirmas el pago de "${gasto.objeto}"? Se notificará a ${gasto.compartidoConNombre}.`,
+      confirmText: 'Confirmar',
+      onConfirm: () => marcarGastoPagado(gasto.id),
+    });
+  };
+
   const handleTabChange = (tab) => {
     setTabActivo(tab);
     setSearch('');
@@ -96,6 +112,7 @@ export default function GastosScreen({ navigation }) {
       mydata={mydata}
       onPress={() => navigation.navigate('EditarGasto', { gasto: item })}
       onDelete={() => handleDelete(item)}
+      onMarkPaid={esCompartido(item) && !item.pagado ? () => handleMarkPaid(item) : undefined}
     />
   );
 
