@@ -60,13 +60,12 @@ export const pushNotificationService = {
 
     const { error } = await supabase
       .from('profiles')
-      .update({ fcm_token: fcmToken })
-      .eq('id', user.id);
+      .upsert({ id: user.id, fcm_token: fcmToken }, { onConflict: 'id' });
 
     if (error) {
       console.warn('[Push] Failed to save FCM token to profiles:', error.message);
     } else {
-      console.log('[Push] FCM token saved to profiles');
+      console.log('[Push] FCM token saved to profiles:', fcmToken.slice(0, 20) + '...');
     }
 
     return fcmToken;
