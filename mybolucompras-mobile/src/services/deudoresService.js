@@ -43,9 +43,7 @@ export const deudoresService = {
 
     const gastoParaOtro = {
       es_fijo: finalDeuda.isFijo ?? false,
-      objeto: finalDeuda.descripcion
-        ? `${finalDeuda.descripcion} (deuda con ${nombreCreador})`
-        : `Deuda con ${nombreCreador}`,
+      objeto: finalDeuda.descripcion || `Deuda con ${nombreCreador}`,
       fecha: fechaISO,
       medio: finalDeuda.medio || null,
       cuotas: parseInt(finalDeuda.cuotas) || 1,
@@ -114,17 +112,51 @@ export const deudoresService = {
   },
 
   async marcarPagadaConNotificacion(id, deudaActual, currentUserName) {
+    const { data: { user } } = await supabase.auth.getUser();
     const today = new Date().toISOString().split('T')[0];
+
     const { error } = await supabase
       .from('deudores')
       .update({ pagado: true, fecha_pago: today })
       .eq('id', id);
     if (error) throw error;
 
-    if (deudaActual.compartidoConUserId) {
-      sendPushToUser(deudaActual.compartidoConUserId, {
+    if (deudaActual.compartidoConUserId && user) {
+      const otroUserId = deudaActual.compartidoConUserId;
+      const monto = deudaActual.monto;
+
+      await Promise.all([
+        // Deuda del otro usuario (lado opuesto)
+        supabase
+          .from('deudores')
+          .update({ pagado: true, fecha_pago: today })
+          .eq('user_id', otroUserId)
+          .eq('compartido_con_user_id', user.id)
+          .eq('monto', monto)
+          .eq('pagado', false),
+        // Gasto del otro usuario (creado cuando se compartió la deuda)
+        supabase
+          .from('gastos')
+          .update({ pagado: true })
+          .eq('user_id', otroUserId)
+          .eq('compartido_con_user_id', user.id)
+          .eq('precio', monto)
+          .eq('pagado', false),
+        // Mi gasto si existe (en caso de que la deuda haya surgido de un gasto compartido)
+        supabase
+          .from('gastos')
+          .update({ pagado: true })
+          .eq('user_id', user.id)
+          .eq('compartido_con_user_id', otroUserId)
+          .eq('precio', monto)
+          .eq('pagado', false),
+      ]);
+
+      sendPushToUser(otroUserId, {
         title: '✅ Deuda saldada',
-        body: `${currentUserName} marcó como pagada la deuda de ${deudaActual.nombre}`,
+        body: deudaActual.descripcion
+          ? `${currentUserName} marcó como pagada "${deudaActual.descripcion}"`
+          : `${currentUserName} marcó como pagada la deuda de ${deudaActual.nombre}`,
         data: { screen: 'Deudores' },
       });
     }

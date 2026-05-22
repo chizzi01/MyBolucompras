@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { deudoresService } from '../services/deudoresService';
+import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
 const DeudoresContext = createContext(null);
@@ -33,6 +34,19 @@ export function DeudoresProvider({ children }) {
       setDeudas([]);
       setLoading(false);
     }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`deudores-realtime-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'deudores', filter: `user_id=eq.${user.id}` },
+        () => cargarDeudas()
+      )
+      .subscribe();
+    return () => supabase.removeChannel(channel);
   }, [user?.id]);
 
   const agregarDeuda = async (deuda, sharedWith = null) => {

@@ -1,8 +1,29 @@
 import React, { useRef, useState, useMemo, memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, PanResponder } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { useTheme } from '../context/ThemeContext';
+
+const MEDIO_ICON_MAP = {
+  'Visa':             { lib: 'fa5', name: 'cc-visa' },
+  'MasterCard':       { lib: 'fa5', name: 'cc-mastercard' },
+  'Mastercard':       { lib: 'fa5', name: 'cc-mastercard' },
+  'American Express': { lib: 'fa5', name: 'cc-amex' },
+  'Efectivo':         { lib: 'ion', name: 'cash-outline' },
+  'Transferencia':    { lib: 'ion', name: 'swap-horizontal-outline' },
+  'Mercado Pago':     { lib: 'mci', name: 'credit-card-fast-outline' },
+};
+
+function MedioIcon({ medio, dark }) {
+  const def = MEDIO_ICON_MAP[medio];
+  const color = dark ? colors.textSecondary.dark : colors.textSecondary.light;
+  if (!def) return <Text style={{ ...typography.caption, color }}>{medio}</Text>;
+  if (def.lib === 'fa5') return <FontAwesome5 name={def.name} size={20} color={color} brand />;
+  if (def.lib === 'mci') return <MaterialCommunityIcons name={def.name} size={18} color={color} />;
+  return <Ionicons name={def.name} size={18} color={color} />;
+}
 
 const ACTION_W = 80;
 
@@ -118,11 +139,14 @@ const DeudaCard = memo(function DeudaCard({ deuda, onMarkPaid, onDelete, onRecor
           activeOpacity={0.75}
         >
           <View style={s.left}>
-            <Text style={s.nombre} numberOfLines={1}>{deuda.nombre}</Text>
-            {!!deuda.descripcion && (
-              <Text style={s.descripcion} numberOfLines={1}>{deuda.descripcion}</Text>
-            )}
+            <Text style={s.nombre} numberOfLines={1}>
+              {deuda.descripcion || `Deuda con ${deuda.nombre}`}
+            </Text>
             <View style={s.meta}>
+              <View style={s.nombreBadge}>
+                <Ionicons name="person-outline" size={10} color={dark ? colors.textSecondary.dark : colors.textSecondary.light} />
+                <Text style={s.nombreBadgeText}>{deuda.nombre}</Text>
+              </View>
               {!!deuda.tipo && (
                 <View style={[s.tipoBadge, { backgroundColor: tipoColor + '20', borderColor: tipoColor }]}>
                   <Text style={[s.tipoBadgeText, { color: tipoColor }]}>
@@ -136,7 +160,7 @@ const DeudaCard = memo(function DeudaCard({ deuda, onMarkPaid, onDelete, onRecor
                 </View>
               )}
               {!!deuda.medio && (
-                <Text style={s.medio}>{deuda.medio}</Text>
+                <MedioIcon medio={deuda.medio} dark={dark} />
               )}
               {deuda.compartidoConNombre && (
                 <View style={s.compartidoBadge}>
@@ -213,6 +237,14 @@ const styles = (dark, isPaid) => StyleSheet.create({
   tipoBadge: { borderRadius: radius.full, borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2 },
   tipoBadgeText: { ...typography.captionMed, fontSize: 10 },
   medio: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
+  nombreBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: dark ? '#1e293b' : '#F1F5F9',
+    paddingHorizontal: 7, paddingVertical: 2,
+    borderRadius: radius.full, borderWidth: 1,
+    borderColor: dark ? colors.border.dark : colors.border.light,
+  },
+  nombreBadgeText: { ...typography.caption, fontSize: 10, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, fontWeight: '600' },
   compartidoBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
     backgroundColor: dark ? '#1e293b' : '#EEF2FF',

@@ -177,15 +177,46 @@ export const gastosService = {
   },
 
   async marcarPagadoConNotificacion(id, gastoActual, currentUserName) {
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { error } = await supabase
       .from('gastos')
       .update({ pagado: true })
       .eq('id', id);
-
     if (error) throw error;
 
     const otroUserId = gastoActual.compartidoConUserId;
-    if (!otroUserId) return;
+    if (!otroUserId || !user) return;
+
+    const precio = gastoActual.precioNum;
+    const today = new Date().toISOString().split('T')[0];
+
+    await Promise.all([
+      // Gasto del otro usuario
+      supabase
+        .from('gastos')
+        .update({ pagado: true })
+        .eq('user_id', otroUserId)
+        .eq('compartido_con_user_id', user.id)
+        .eq('precio', precio)
+        .eq('pagado', false),
+      // Mi deuda relacionada (si existe)
+      supabase
+        .from('deudores')
+        .update({ pagado: true, fecha_pago: today })
+        .eq('user_id', user.id)
+        .eq('compartido_con_user_id', otroUserId)
+        .eq('monto', precio)
+        .eq('pagado', false),
+      // Deuda del otro usuario relacionada
+      supabase
+        .from('deudores')
+        .update({ pagado: true, fecha_pago: today })
+        .eq('user_id', otroUserId)
+        .eq('compartido_con_user_id', user.id)
+        .eq('monto', precio)
+        .eq('pagado', false),
+    ]);
 
     sendPushToUser(otroUserId, {
       title: '✅ Pago recibido',

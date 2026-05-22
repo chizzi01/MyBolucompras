@@ -118,6 +118,9 @@ export default function AgregarDeudaModal({ route, navigation }) {
     if (!montoNum || montoNum <= 0) {
       return showModal({ type: 'warning', title: 'Campo requerido', message: 'Ingresá un monto válido.' });
     }
+    if (!form.medio) {
+      return showModal({ type: 'warning', title: 'Campo requerido', message: 'Seleccioná un medio de pago.' });
+    }
 
     setLoading(true);
     try {

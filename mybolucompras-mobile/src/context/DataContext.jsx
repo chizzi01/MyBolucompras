@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { gastosService } from '../services/gastosService';
 import { configuracionService } from '../services/configuracionService';
+import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
 const DataContext = createContext(null);
@@ -45,6 +46,19 @@ export function DataProvider({ children }) {
       setMydata(defaultMydata);
       setLoading(false);
     }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`gastos-realtime-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'gastos', filter: `user_id=eq.${user.id}` },
+        () => cargarDatos()
+      )
+      .subscribe();
+    return () => supabase.removeChannel(channel);
   }, [user?.id]);
 
   const agregarGasto = async (gasto, sharedWith = null) => {

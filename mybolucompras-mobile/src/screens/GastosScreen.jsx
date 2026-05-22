@@ -6,6 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -44,6 +45,10 @@ export default function GastosScreen({ navigation }) {
     setSoloEsteMes(next);
     await AsyncStorage.setItem('@mybolu:soloEsteMes', String(next));
   }, [soloEsteMes]);
+
+  useFocusEffect(useCallback(() => {
+    cargarDatos();
+  }, [cargarDatos]));
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

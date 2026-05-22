@@ -4,6 +4,7 @@ import {
   TouchableOpacity, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useModal } from '../hooks/useModal';
 import { useDeudores } from '../context/DeudoresContext';
@@ -23,6 +24,10 @@ export default function DeudoresScreen({ navigation }) {
   const [tabActivo, setTabActivo] = useState('deudores');
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+
+  useFocusEffect(useCallback(() => {
+    cargarDeudas();
+  }, [cargarDeudas]));
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
