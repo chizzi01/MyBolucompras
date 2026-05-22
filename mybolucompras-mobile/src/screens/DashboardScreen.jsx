@@ -65,14 +65,19 @@ export default function DashboardScreen() {
       const compraIndex = Number(y) * 12 + (Number(m) - 1);
       const cuotas = parseInt(g.cuotas) || 1;
 
-      if (g.tipo === 'credito' && cuotas > 1) {
-        // Multi-installment credit: active across several months
-        if (targetIndex < compraIndex || targetIndex >= compraIndex + cuotas) return false;
+      if (g.tipo === 'credito') {
+        if (cuotas > 1) {
+          // Multi-installment credit: active across several months
+          if (targetIndex < compraIndex || targetIndex >= compraIndex + cuotas) return false;
+        } else {
+          // Single-charge credit: only in purchase month
+          if (compraIndex !== targetIndex) return false;
+        }
         // For current month, skip purchases pending for next billing cycle
         if (targetIndex === hoyIndex) return gastoEntraEsteMes(g, mydata);
         return true;
       }
-      // Single-charge (cuotas=1) and non-credit: only counts in the purchase month
+      // Non-credit: only counts in the purchase month
       return compraIndex === targetIndex;
     });
 
