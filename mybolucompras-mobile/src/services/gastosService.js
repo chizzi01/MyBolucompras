@@ -2,6 +2,24 @@ import { supabase } from '../lib/supabase';
 import { parsePrecio } from '../utils/formatters';
 import { pushNotificationService } from './pushNotificationService';
 
+function sendPushToUser(userId, { title, body, data = {} }) {
+  if (!userId) {
+    console.warn('[Push] sendPushToUser called with null userId');
+    return;
+  }
+  console.log('[Push] Looking up FCM token for userId:', userId);
+  pushNotificationService.getTokenForUser(userId)
+    .then(token => {
+      if (!token) {
+        console.warn('[Push] No FCM token found for userId:', userId);
+        return;
+      }
+      console.log('[Push] Token found, sending notification:', title);
+      return pushNotificationService.sendPushNotification({ token, title, body, data });
+    })
+    .catch(err => console.warn('[Push] sendPushToUser error:', err?.message));
+}
+
 export const gastosService = {
   async getAll() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -58,25 +76,12 @@ export const gastosService = {
         .from('gastos')
         .insert([{ ...mapToDB(otherGasto), user_id: sharedWith.userId }]);
 
-      // Notificación in-app
-      await supabase
-        .from('notifications')
-        .insert([{
-          user_id: sharedWith.userId,
-          title: 'Gasto compartido',
-          message: `${nombreCreador} te compartió un gasto: ${gasto.objeto}`,
-          data: { gasto_id: data.id, screen: 'Gastos' },
-        }]);
-
-      // Push notification (fire-and-forget)
-      pushNotificationService.getTokenForUser(sharedWith.userId).then(token => {
-        pushNotificationService.sendPushNotification({
-          token,
-          title: 'Gasto compartido',
-          body: `${nombreCreador} te compartió: ${gasto.objeto}`,
-          data: { screen: 'Gastos' },
-        });
-      }).catch(err => console.warn('[Push] crear gasto compartido:', err?.message));
+      // Push + notificación in-app (fire-and-forget, no bloquean el flujo)
+      sendPushToUser(sharedWith.userId, {
+        title: '💸 Gasto compartido',
+        body: `${nombreCreador} te compartió: ${gasto.objeto}`,
+        data: { screen: 'Gastos' },
+      });
     }
 
     return mapFromDB(data);
@@ -123,23 +128,11 @@ export const gastosService = {
         .from('gastos')
         .insert([{ ...mapToDB(otherGasto), user_id: sharedWith.userId }]);
 
-      await supabase
-        .from('notifications')
-        .insert([{
-          user_id: sharedWith.userId,
-          title: 'Gasto compartido',
-          message: `${nombreCreador} te compartió un gasto: ${gasto.objeto}`,
-          data: { gasto_id: data.id, screen: 'Gastos' },
-        }]);
-
-      pushNotificationService.getTokenForUser(sharedWith.userId).then(token => {
-        pushNotificationService.sendPushNotification({
-          token,
-          title: 'Gasto compartido',
-          body: `${nombreCreador} te compartió: ${gasto.objeto}`,
-          data: { screen: 'Gastos' },
-        });
-      }).catch(err => console.warn('[Push] actualizar gasto compartido:', err?.message));
+      sendPushToUser(sharedWith.userId, {
+        title: '💸 Gasto compartido',
+        body: `${nombreCreador} te compartió: ${gasto.objeto}`,
+        data: { screen: 'Gastos' },
+      });
     }
 
     return mapFromDB(data);
@@ -150,7 +143,6 @@ export const gastosService = {
     if (error) throw error;
   },
 
-  // El receptor marca su copia del gasto como pagada y notifica al creador
   async marcarPagadoConNotificacion(id, gastoActual, currentUserName) {
     const { error } = await supabase
       .from('gastos')
@@ -159,28 +151,14 @@ export const gastosService = {
 
     if (error) throw error;
 
-    const creatorUserId = gastoActual.compartidoConUserId;
-    if (!creatorUserId) return;
+    const otroUserId = gastoActual.compartidoConUserId;
+    if (!otroUserId) return;
 
-    // Notificación in-app para el creador
-    await supabase
-      .from('notifications')
-      .insert([{
-        user_id: creatorUserId,
-        title: 'Pago recibido',
-        message: `${currentUserName} marcó como pagado: ${gastoActual.objeto}`,
-        data: { screen: 'Gastos' },
-      }]);
-
-    // Push notification al creador (fire-and-forget)
-    pushNotificationService.getTokenForUser(creatorUserId).then(token => {
-      pushNotificationService.sendPushNotification({
-        token,
-        title: 'Pago recibido 💸',
-        body: `${currentUserName} te pagó: ${gastoActual.objeto}`,
-        data: { screen: 'Gastos' },
-      });
-    }).catch(err => console.warn('[Push] marcarPagado:', err?.message));
+    sendPushToUser(otroUserId, {
+      title: '✅ Pago recibido',
+      body: `${currentUserName} marcó como pagado: ${gastoActual.objeto}`,
+      data: { screen: 'Gastos' },
+    });
   },
 };
 

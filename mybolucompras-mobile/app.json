@@ -22,9 +22,10 @@
         "backgroundColor": "#0E0B2E"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "pan",
       "package": "com.chizzi.mybolucomprasmobile",
       "compileSdkVersion": 36,
-      "versionCode": 17,
+      "versionCode": 19,
       "googleServicesFile": "./google-services.json"
     },
     "web": {

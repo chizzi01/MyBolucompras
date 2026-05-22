@@ -7,8 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build:aab": "cd android && .\\gradlew bundleRelease",
-    "build:apk": "cd android && .\\gradlew assembleRelease"
+    "build:aab": "node scripts/bump-version.js && cd android && .\\gradlew bundleRelease",
+    "build:apk": "node scripts/bump-version.js && cd android && .\\gradlew assembleRelease"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

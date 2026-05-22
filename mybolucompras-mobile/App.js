@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import {
-  Animated, Easing, View, Platform,
+  Animated, Easing, View, Platform, useColorScheme,
 } from 'react-native';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -98,7 +98,7 @@ function TabNavigator() {
       })}
     >
       <Tab.Screen name="Gastos" component={GastosScreen} />
-      <Tab.Screen name="Agregar" component={AgregarScreen} options={{ tabBarLabel: 'Agregar', tabBarIconStyle: { marginTop: -2 } }} />
+      <Tab.Screen name="Agregar" component={AgregarScreen} options={{ tabBarLabel: 'Agregar', tabBarIconStyle: { marginTop: -2 }, tabBarHideOnKeyboard: true }} />
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Deudores" component={DeudoresScreen} />
       <Tab.Screen name="Configuracion" component={ConfiguracionScreen} options={{ tabBarLabel: 'Config' }} />
@@ -168,6 +168,9 @@ function RootNavigator() {
 
 // ── Root ─────────────────────────────────────────────────────────────────────
 export default function App() {
+  const colorScheme = useColorScheme();
+  const rootBg = colorScheme === 'dark' ? colors.background.dark : colors.background.light;
+
   useEffect(() => {
     if (Platform.OS !== 'android') return;
     inAppUpdates
@@ -183,7 +186,7 @@ export default function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: rootBg }}>
       <SafeAreaProvider>
         <ThemeProvider>
           <AuthProvider>

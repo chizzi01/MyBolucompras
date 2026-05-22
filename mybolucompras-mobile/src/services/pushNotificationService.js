@@ -87,13 +87,23 @@ export const pushNotificationService = {
 
   async sendPushNotification({ token, title, body, data = {} }) {
     if (!token) return;
+    console.log('[Push] Invoking edge function with token:', token.slice(0, 20) + '...');
     try {
-      const { error } = await supabase.functions.invoke('send-push-notification', {
-        body: { token, title, body, data },
-      });
-      if (error) {
-        console.warn('[Push] Edge function error:', error.message);
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      const jwt = session?.access_token;
+      const res = await fetch(
+        'https://hmlcgwptszhqknyrmarf.supabase.co/functions/v1/send-push-notification',
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${jwt}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token, title, body, data }),
+        }
+      );
+      const text = await res.text();
+      console.log('[Push] Edge function status:', res.status, '| body:', text);
     } catch (err) {
       console.warn('[Push] Failed to send push notification:', err?.message);
     }
