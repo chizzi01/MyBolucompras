@@ -30,7 +30,7 @@ export default function GastosScreen({ navigation }) {
   const [search, setSearch] = useState('');
   const [soloEsteMes, setSoloEsteMes] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [tabActivo, setTabActivo] = useState('normales');
+  const [tabActivo, setTabActivo] = useState('variables');
   const { showModal, modal } = useModal();
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function GastosScreen({ navigation }) {
       lista = lista.filter(g => g.objeto.toLowerCase().includes(q));
     }
     if (soloEsteMes) {
-      if (tabActivo === 'normales') {
+      if (tabActivo === 'variables') {
         lista = lista.filter(g => {
           const rest = getCuotasRestantes(g, mydata);
           return rest === 'N/A' || rest > 0;
@@ -143,11 +143,11 @@ export default function GastosScreen({ navigation }) {
 
       <View style={s.tabsRow}>
         <TouchableOpacity
-          style={[s.tabBtn, tabActivo === 'normales' && s.tabBtnActiveNormales]}
-          onPress={() => handleTabChange('normales')}
+          style={[s.tabBtn, tabActivo === 'variables' && s.tabBtnActiveVariables]}
+          onPress={() => handleTabChange('variables')}
           activeOpacity={0.7}
         >
-          <Text style={[s.tabBtnText, tabActivo === 'normales' && s.tabBtnTextActive]}>Normales</Text>
+          <Text style={[s.tabBtnText, tabActivo === 'variables' && s.tabBtnTextActive]}>Variables</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[s.tabBtn, tabActivo === 'fijos' && s.tabBtnActiveFijos]}
@@ -248,7 +248,7 @@ const styles = (dark) => StyleSheet.create({
     alignItems: 'center',
     borderRadius: radius.md - 1,
   },
-  tabBtnActiveNormales: {
+  tabBtnActiveVariables: {
     backgroundColor: colors.primary,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },

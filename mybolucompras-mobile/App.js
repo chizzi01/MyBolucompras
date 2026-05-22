@@ -100,7 +100,7 @@ function TabNavigator() {
       <Tab.Screen name="Gastos" component={GastosScreen} />
       <Tab.Screen name="Agregar" component={AgregarScreen} options={{ tabBarLabel: 'Agregar', tabBarIconStyle: { marginTop: -2 }, tabBarHideOnKeyboard: true }} />
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Deudores" component={DeudoresScreen} />
+      <Tab.Screen name="Deudores" component={DeudoresScreen} options={{ tabBarLabel: 'Deudas' }} />
       <Tab.Screen name="Configuracion" component={ConfiguracionScreen} options={{ tabBarLabel: 'Config' }} />
     </Tab.Navigator>
   );

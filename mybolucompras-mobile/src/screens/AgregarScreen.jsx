@@ -807,7 +807,7 @@ function TipoSelector({ value, onChange, dark, s }) {
 
 function FijoSelector({ value, onChange, dark, s }) {
   const opciones = [
-    { key: false, label: 'Normal', icon: 'flash-outline' },
+    { key: false, label: 'Variable', icon: 'flash-outline' },
     { key: true, label: 'Fijo', icon: 'repeat-outline' },
   ];
   return (

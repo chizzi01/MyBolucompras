@@ -109,3 +109,17 @@ export const pushNotificationService = {
     }
   },
 };
+
+export function sendPushToUser(userId, { title, body, data = {} }) {
+  if (!userId) return;
+  pushNotificationService.getTokenForUser(userId)
+    .then(token => {
+      if (!token) {
+        console.warn('[Push] No FCM token found for userId:', userId);
+        return;
+      }
+      console.log('[Push] Token found, sending notification:', title);
+      return pushNotificationService.sendPushNotification({ token, title, body, data });
+    })
+    .catch(err => console.warn('[Push] sendPushToUser error:', err?.message));
+}

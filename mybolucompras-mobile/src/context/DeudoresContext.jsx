@@ -4,6 +4,8 @@ import { useAuth } from './AuthContext';
 
 const DeudoresContext = createContext(null);
 
+const getUserName = (user) => user?.user_metadata?.nombre || user?.email || 'Alguien';
+
 export function DeudoresProvider({ children }) {
   const { user } = useAuth();
   const [deudas, setDeudas] = useState([]);
@@ -33,8 +35,8 @@ export function DeudoresProvider({ children }) {
     }
   }, [user?.id]);
 
-  const agregarDeuda = async (deuda) => {
-    const nueva = await deudoresService.crear(deuda);
+  const agregarDeuda = async (deuda, sharedWith = null) => {
+    const nueva = await deudoresService.crear(deuda, sharedWith);
     setDeudas(prev => [nueva, ...prev]);
     return nueva;
   };
@@ -44,9 +46,16 @@ export function DeudoresProvider({ children }) {
     setDeudas(prev => prev.map(d => d.id === id ? actualizada : d));
   };
 
-  const marcarPagada = async (id) => {
-    const actualizada = await deudoresService.marcarPagada(id);
-    setDeudas(prev => prev.map(d => d.id === id ? actualizada : d));
+  const marcarPagadaConNotificacion = async (id, deudaActual) => {
+    await deudoresService.marcarPagadaConNotificacion(id, deudaActual, getUserName(user));
+    const today = new Date().toISOString().split('T')[0].split('-').reverse().join('/');
+    setDeudas(prev => prev.map(d => d.id === id ? { ...d, pagado: true, fechaPago: today } : d));
+  };
+
+  const enviarRecordatorio = async (deuda) => {
+    await deudoresService.enviarRecordatorio(deuda, getUserName(user));
+    const now = new Date().toISOString();
+    setDeudas(prev => prev.map(d => d.id === deuda.id ? { ...d, ultimoRecordatorio: now } : d));
   };
 
   const eliminarDeuda = async (id) => {
@@ -57,7 +66,8 @@ export function DeudoresProvider({ children }) {
   return (
     <DeudoresContext.Provider value={{
       deudas, loading, error, cargarDeudas,
-      agregarDeuda, editarDeuda, marcarPagada, eliminarDeuda,
+      agregarDeuda, editarDeuda,
+      marcarPagadaConNotificacion, enviarRecordatorio, eliminarDeuda,
     }}>
       {children}
     </DeudoresContext.Provider>

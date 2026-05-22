@@ -1,24 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { parsePrecio } from '../utils/formatters';
-import { pushNotificationService } from './pushNotificationService';
-
-function sendPushToUser(userId, { title, body, data = {} }) {
-  if (!userId) {
-    console.warn('[Push] sendPushToUser called with null userId');
-    return;
-  }
-  console.log('[Push] Looking up FCM token for userId:', userId);
-  pushNotificationService.getTokenForUser(userId)
-    .then(token => {
-      if (!token) {
-        console.warn('[Push] No FCM token found for userId:', userId);
-        return;
-      }
-      console.log('[Push] Token found, sending notification:', title);
-      return pushNotificationService.sendPushNotification({ token, title, body, data });
-    })
-    .catch(err => console.warn('[Push] sendPushToUser error:', err?.message));
-}
+import { sendPushToUser } from './pushNotificationService';
 
 export const gastosService = {
   async getAll() {
@@ -63,8 +45,13 @@ export const gastosService = {
 
     if (sharedWith && sharedWith.userId) {
       const nombreCreador = user.user_metadata?.nombre || user.email;
+      const precioBase = parsePrecio(gasto.precio);
+      const precioNum = sharedWith.mode === 'dividir' ? precioBase / 2 : precioBase;
+      const fechaBase = gasto.fecha;
+      const fechaISO = (fechaBase?.includes('/')
+        ? fechaBase.split('/').reverse().join('-')
+        : fechaBase) || new Date().toISOString().split('T')[0];
 
-      // La copia del receptor lleva el user_id del creador como referencia bilateral
       const otherGasto = {
         ...finalGasto,
         objeto: `${finalGasto.objeto} (Compartido por ${nombreCreador})`,
@@ -72,11 +59,57 @@ export const gastosService = {
         compartidoConUserId: user.id,
       };
 
-      await supabase
-        .from('gastos')
-        .insert([{ ...mapToDB(otherGasto), user_id: sharedWith.userId }]);
+      const deudaCreador = {
+        nombre: sharedWith.nombre,
+        descripcion: gasto.objeto,
+        monto: precioNum,
+        moneda: finalGasto.moneda || 'ARS',
+        medio: finalGasto.medio || null,
+        tipo: finalGasto.tipo || null,
+        es_fijo: false,
+        cuotas: finalGasto.cuotas ?? 1,
+        cantidad: 1,
+        pagado: false,
+        fecha_deuda: fechaISO,
+        fecha_pago: null,
+        compartido_con_nombre: sharedWith.nombre,
+        compartido_con_user_id: sharedWith.userId,
+        es_acreedor: true,
+        user_id: user.id,
+      };
 
-      // Push + notificación in-app (fire-and-forget, no bloquean el flujo)
+      const deudaOtro = {
+        nombre: nombreCreador,
+        descripcion: gasto.objeto,
+        monto: precioNum,
+        moneda: finalGasto.moneda || 'ARS',
+        medio: finalGasto.medio || null,
+        tipo: finalGasto.tipo || null,
+        es_fijo: false,
+        cuotas: finalGasto.cuotas ?? 1,
+        cantidad: 1,
+        pagado: false,
+        fecha_deuda: fechaISO,
+        fecha_pago: null,
+        compartido_con_nombre: nombreCreador,
+        compartido_con_user_id: user.id,
+        es_acreedor: false,
+        user_id: sharedWith.userId,
+      };
+
+      const [
+        { error: gastoOtroError },
+        { error: deudaCreadorError },
+        { error: deudaOtroError },
+      ] = await Promise.all([
+        supabase.from('gastos').insert([{ ...mapToDB(otherGasto), user_id: sharedWith.userId }]),
+        supabase.from('deudores').insert([deudaCreador]),
+        supabase.from('deudores').insert([deudaOtro]),
+      ]);
+      if (gastoOtroError) throw gastoOtroError;
+      if (deudaCreadorError) throw deudaCreadorError;
+      if (deudaOtroError) throw deudaOtroError;
+
       sendPushToUser(sharedWith.userId, {
         title: '💸 Gasto compartido',
         body: `${nombreCreador} te compartió: ${gasto.objeto}`,
