@@ -1,9 +1,49 @@
-// src/components/viajes/ViajeGastosTab.jsx
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../constants/theme';
+
+function isSameDay(a, b) {
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate();
+}
+
+function parseFecha(dateStr) {
+  if (!dateStr) return null;
+  if (dateStr.includes('/')) {
+    const [day, month, year] = dateStr.split('/');
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  }
+  const [year, month, day] = dateStr.split('T')[0].split('-');
+  return new Date(Number(year), Number(month) - 1, Number(day));
+}
+
+function formatDateSep(dateStr) {
+  const d = parseFecha(dateStr);
+  if (!d) return 'Sin fecha';
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (isSameDay(d, today)) return 'Hoy';
+  if (isSameDay(d, yesterday)) return 'Ayer';
+  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+}
+
+function groupGastos(gastos) {
+  const items = [];
+  let lastKey = null;
+  for (const g of gastos) {
+    const dateKey = g.fecha ? g.fecha.slice(0, 10) : 'sin-fecha';
+    if (dateKey !== lastKey) {
+      items.push({ type: 'sep', label: formatDateSep(g.fecha), key: `sep-${dateKey}-${items.length}` });
+      lastKey = dateKey;
+    }
+    items.push({ type: 'gasto', ...g, key: g.id });
+  }
+  return items;
+}
 
 export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participantColor, dark }) {
   const navigation = useNavigation();
@@ -12,36 +52,45 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
   const surfaceBg = dark ? '#1E293B' : '#fff';
   const textColor = dark ? colors.text.dark : colors.text.light;
   const subtextColor = dark ? colors.textSecondary.dark : colors.textSecondary.light;
+  const borderColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
 
   const handleAgregarGasto = () => {
-    navigation.navigate('Tabs', { screen: 'Agregar', params: { viajeId: viaje.id, viajeNombre: `${viaje.emoji} ${viaje.titulo}` } });
+    navigation.navigate('Tabs', {
+      screen: 'Agregar',
+      params: { viajeId: viaje.id, viajeNombre: `${viaje.emoji} ${viaje.titulo}` },
+    });
   };
 
-  const renderItem = ({ item: g }) => {
+  const flatItems = groupGastos(gastos);
+
+  const renderItem = ({ item }) => {
+    if (item.type === 'sep') {
+      return <Text style={[styles.dateSep, { color: subtextColor }]}>{item.label}</Text>;
+    }
+
+    const g = item;
     const color = participantColor(g.pagadoPor);
     const initial = g.pagadorNombre?.[0]?.toUpperCase() || '?';
     const n = g.participantes.length || viaje.participantes.length;
-    const splitText = g.modoSplit === 'solo'
-      ? 'solo él/ella'
-      : `÷ ${n}`;
+    const splitText = g.modoSplit === 'solo' ? 'solo él/ella' : `÷ ${n} personas`;
 
     return (
-      <View style={[styles.item, { backgroundColor: surfaceBg }]}>
+      <View style={[styles.item, { backgroundColor: surfaceBg, borderColor }]}>
         <View style={[styles.avatar, { backgroundColor: color }]}>
           <Text style={styles.avatarText}>{initial}</Text>
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[styles.objeto, { color: textColor }]} numberOfLines={1}>{g.objeto}</Text>
-          <Text style={[styles.meta, { color: subtextColor }]}>
-            {g.pagadorNombre} pagó · {splitText}
-          </Text>
+          <View style={styles.metaRow}>
+            <Text style={[styles.metaText, { color: subtextColor }]}>{g.pagadorNombre}</Text>
+            <View style={[styles.metaDot, { backgroundColor: dark ? '#334155' : '#CBD5E1' }]} />
+            <Text style={[styles.metaText, { color: subtextColor }]}>{splitText}</Text>
+          </View>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={[styles.monto, { color: textColor }]}>${g.precio.toFixed(0)}</Text>
           {g.modoSplit !== 'solo' && n > 1 && (
-            <Text style={[styles.ppp, { color: subtextColor }]}>
-              ${(g.precio / n).toFixed(0)} c/u
-            </Text>
+            <Text style={styles.ppp}>${(g.precio / n).toFixed(0)} c/u</Text>
           )}
         </View>
       </View>
@@ -57,11 +106,10 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
         </View>
       )}
       <FlatList
-        data={gastos}
-        keyExtractor={g => g.id}
+        data={flatItems}
+        keyExtractor={item => item.key}
         renderItem={renderItem}
         contentContainerStyle={{ padding: spacing.md, paddingBottom: 100 }}
-        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={{ fontSize: 40 }}>💸</Text>
@@ -72,7 +120,7 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
       {activo && (
         <TouchableOpacity style={styles.fab} onPress={handleAgregarGasto} activeOpacity={0.9}>
           <Ionicons name="add" size={22} color="#fff" />
-          <Text style={styles.fabText}>Gasto al viaje</Text>
+          <Text style={styles.fabText}>Agregar gasto</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -80,14 +128,26 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
 }
 
 const styles = StyleSheet.create({
-  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderRadius: radius.md },
-  avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  objeto: { ...typography.bodyMed },
-  meta: { ...typography.caption, marginTop: 2 },
-  monto: { ...typography.bodyBold },
-  ppp: { fontSize: 11 },
-  readonlyBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#F59E0B20', padding: spacing.sm, paddingHorizontal: spacing.md },
+  dateSep: {
+    fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5,
+    marginTop: 12, marginBottom: 4,
+  },
+  item: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    padding: 10, borderRadius: 10, borderWidth: 1, marginBottom: 5,
+  },
+  avatar: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  objeto: { fontSize: 12, fontWeight: '700', marginBottom: 2 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  metaDot: { width: 3, height: 3, borderRadius: 1.5 },
+  metaText: { fontSize: 11 },
+  monto: { fontSize: 14, fontWeight: '800' },
+  ppp: { fontSize: 11, color: colors.primary, fontWeight: '600' },
+  readonlyBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#F59E0B20', padding: spacing.sm, paddingHorizontal: spacing.md,
+  },
   readonlyText: { color: '#F59E0B', fontSize: 13, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 60, gap: spacing.sm },
   emptyText: { ...typography.body },
@@ -97,7 +157,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: spacing.md, paddingVertical: 14,
     shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4, shadowRadius: 8, elevation: 6,
+    shadowOpacity: 0.45, shadowRadius: 10, elevation: 8,
   },
   fabText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 });
