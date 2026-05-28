@@ -42,7 +42,7 @@ const AuthStack = createNativeStackNavigator();
 
 function RealtimeProvider({ children }) {
   useRealtimeInvalidation();
-  return children;
+  return <>{children}</>;
 }
 
 

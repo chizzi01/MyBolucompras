@@ -52,6 +52,16 @@ export default function AgregarScreen() {
     ? mydata.bancosHabilitados
     : BANCOS;
 
+  const route = useRoute();
+  const { user } = useAuth();
+  const { viajesActivos } = useViajes();
+  const routeViajeId = route.params?.viajeId;
+  const [selectedViajeId, setSelectedViajeId] = useState(routeViajeId || null);
+  const [viajeToggleOn, setViajeToggleOn] = useState(!!routeViajeId);
+  const [splitConfig, setSplitConfig] = useState({ modoSplit: 'todos', participanteIds: [] });
+  const selectedViaje = viajesActivos.find(v => v.id === selectedViajeId) || null;
+  const { agregar: agregarViajeGastoMutation } = useViajeGastoMutations(selectedViajeId);
+
   const [form, setForm] = useState({
     ...INITIAL,
     medio: mediosDisponibles[0] || '',
@@ -109,21 +119,6 @@ export default function AgregarScreen() {
   const [searchEmail, setSearchEmail] = useState('');
   const [searching, setSearching] = useState(false);
   const [recentContacts, setRecentContacts] = useState([]);
-
-  const route = useRoute();
-  const { user } = useAuth();
-  const { viajesActivos } = useViajes();
-
-  // Viaje state
-  const routeViajeId = route.params?.viajeId;
-
-  // Which viaje is selected (null = no viaje)
-  const [selectedViajeId, setSelectedViajeId] = useState(routeViajeId || null);
-  const [viajeToggleOn, setViajeToggleOn] = useState(!!routeViajeId);
-  const [splitConfig, setSplitConfig] = useState({ modoSplit: 'todos', participanteIds: [] });
-
-  const selectedViaje = viajesActivos.find(v => v.id === selectedViajeId) || null;
-  const { agregar: agregarViajeGastoMutation } = useViajeGastoMutations(selectedViajeId);
 
   // Initialize split participanteIds when viaje changes
   useEffect(() => {
