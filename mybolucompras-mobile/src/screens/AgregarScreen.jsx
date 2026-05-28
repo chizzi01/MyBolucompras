@@ -393,11 +393,27 @@ export default function AgregarScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Viaje Banner — Case 0: opened from FAB inside a viaje (locked ON) */}
+        {/* Viaje Banner — Case 0: opened from FAB inside a viaje (toggle ON by default) */}
         {routeViajeId && selectedViaje && (
-          <View style={[s.viajeBanner, { borderColor: '#10B981', backgroundColor: '#10B98112' }]}>
-            <Text style={s.viajeBannerText}>{selectedViaje.emoji} {selectedViaje.titulo} · Activo</Text>
-            <Text style={[s.viajeBannerSub, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>Gasto del viaje</Text>
+          <View style={[s.viajeBanner, { borderColor: viajeToggleOn ? '#10B981' : (dark ? colors.border.dark : colors.border.light), backgroundColor: viajeToggleOn ? '#10B98112' : 'transparent' }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[s.viajeBannerText, { color: viajeToggleOn ? '#10B981' : (dark ? colors.text.dark : colors.text.light) }]}>{selectedViaje.emoji} {selectedViaje.titulo} · Activo</Text>
+              <Text style={[s.viajeBannerSub, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
+                {viajeToggleOn ? 'Gasto del viaje' : 'Gasto personal'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[s.toggle, viajeToggleOn && s.toggleOn]}
+              onPress={() => {
+                const next = !viajeToggleOn;
+                setViajeToggleOn(next);
+                setSelectedViajeId(next ? routeViajeId : null);
+              }}
+            >
+              <Text style={{ color: viajeToggleOn ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light), fontSize: 12, fontWeight: '600' }}>
+                {viajeToggleOn ? 'ON' : 'OFF'}
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
