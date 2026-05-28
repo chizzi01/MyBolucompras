@@ -12,7 +12,6 @@ import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
@@ -20,11 +19,14 @@ import { formatFecha, parseFecha, formatPrecioInputDisplay, formatPrecioLive, ge
 import { useModal } from '../hooks/useModal';
 import { userService } from '../services/userService';
 import { contactService } from '../services/contactService';
-import { useViajes } from '../context/ViajesContext';
 import { useRoute } from '@react-navigation/native';
 import SplitPanel from '../components/viajes/SplitPanel';
 import { useAuth } from '../context/AuthContext';
-import { viajeGastosService } from '../services/viajeGastosService';
+import { useConfiguracion } from '../hooks/queries/useConfiguracion';
+import { useGastoMutations } from '../hooks/mutations/useGastoMutations';
+import { useViajeGastoMutations } from '../hooks/mutations/useViajeGastoMutations';
+import { useViajes } from '../hooks/queries/useViajes';
+import { useConfiguracionMutations } from '../hooks/mutations/useConfiguracionMutations';
 
 const INITIAL = {
   objeto: '', fecha: formatFecha(new Date()),
@@ -34,7 +36,9 @@ const INITIAL = {
 };
 
 export default function AgregarScreen() {
-  const { agregarGasto, mydata, actualizarConfig } = useData();
+  const { mydata } = useConfiguracion();
+  const { agregar: agregarMutation } = useGastoMutations();
+  const { actualizar: actualizarConfigMutation } = useConfiguracionMutations();
   const { dark } = useTheme();
   const s = styles(dark);
   const navigation = useNavigation();
@@ -53,7 +57,7 @@ export default function AgregarScreen() {
     medio: mediosDisponibles[0] || '',
     moneda: mydata.monedaPreferida || 'ARS',
   });
-  const [loading, setLoading] = useState(false);
+  const loading = agregarMutation.isPending || agregarViajeGastoMutation.isPending;
   const [isScanning, setIsScanning] = useState(false);
   const [ocrItems, setOcrItems] = useState([]); // For bulk items
   const [showOcrModal, setShowOcrModal] = useState(false);
@@ -119,6 +123,7 @@ export default function AgregarScreen() {
   const [splitConfig, setSplitConfig] = useState({ modoSplit: 'todos', participanteIds: [] });
 
   const selectedViaje = viajesActivos.find(v => v.id === selectedViajeId) || null;
+  const { agregar: agregarViajeGastoMutation } = useViajeGastoMutations(selectedViajeId);
 
   // Initialize split participanteIds when viaje changes
   useEffect(() => {
@@ -165,7 +170,6 @@ export default function AgregarScreen() {
       return showModal({ type: 'warning', title: 'Cargando', message: 'Los datos del viaje aún están cargando. Intentá de nuevo.' });
     }
 
-    setLoading(true);
     try {
       const shouldGoBack = !!(routeViajeId && viajeToggleOn);
       const gastoData = {
@@ -176,17 +180,16 @@ export default function AgregarScreen() {
       };
 
       if (selectedViaje && viajeToggleOn) {
-        // Save via viajeGastosService (handles split + viaje_gastos registration)
-        await viajeGastosService.agregarGasto(
-          selectedViaje.id,
+        await agregarViajeGastoMutation.mutateAsync({
           gastoData,
           splitConfig,
-          selectedViaje.participantes
-        );
+          viajeParticipantes: selectedViaje.participantes,
+        });
       } else {
-        // Normal gasto (existing behavior)
-        const sharedWith = sharedUser ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email } : null;
-        await agregarGasto(gastoData, sharedWith);
+        const sharedWith = sharedUser
+          ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email }
+          : null;
+        await agregarMutation.mutateAsync({ gasto: gastoData, sharedWith });
       }
 
       setForm({
@@ -208,8 +211,6 @@ export default function AgregarScreen() {
       });
     } catch (err) {
       showModal({ type: 'error', title: 'Error al guardar', message: err.message });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -269,27 +270,27 @@ export default function AgregarScreen() {
   };
 
   const handleSaveBulk = async () => {
-    setLoading(true);
     try {
       for (const item of ocrItems) {
-        await agregarGasto({
-          ...form,
-          ...ocrCommonData,
-          objeto: item.objeto,
-          precio: Number(item.precio),
+        await agregarMutation.mutateAsync({
+          gasto: {
+            ...form,
+            ...ocrCommonData,
+            objeto: item.objeto,
+            precio: Number(item.precio),
+          },
+          sharedWith: null,
         });
       }
       setShowOcrModal(false);
-      showModal({ 
-        type: 'success', 
-        title: '¡Guardados!', 
+      showModal({
+        type: 'success',
+        title: '¡Guardados!',
         message: `Se guardaron ${ocrItems.length} gastos correctamente.`,
         onClose: () => navigation.navigate('Gastos')
       });
     } catch (err) {
       showModal({ type: 'error', title: 'Error', message: 'Hubo un problema al guardar los gastos.' });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -369,7 +370,7 @@ export default function AgregarScreen() {
 
   const handleCrearEtiqueta = async (nuevaEtiqueta) => {
     const etiquetas = [...(mydata.etiquetas || []), nuevaEtiqueta];
-    await actualizarConfig({ etiquetas });
+    await actualizarConfigMutation.mutateAsync({ ...mydata, etiquetas });
   };
 
   const esCuotasHabilitado = form.tipo === 'credito' && !form.isFijo;
