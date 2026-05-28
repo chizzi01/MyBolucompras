@@ -6,13 +6,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
-import { useViajes } from '../../context/ViajesContext';
+import { useViajeMutations } from '../../hooks/mutations/useViajeMutations';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import CerrarViajeModal from './CerrarViajeModal';
 
 export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, onUpdated, onDeleted, dark }) {
   const { user } = useAuth();
-  const { eliminarViaje } = useViajes();
+  const { eliminar: eliminarMutation } = useViajeMutations();
   const insets = useSafeAreaInsets();
   const [showCerrar, setShowCerrar] = useState(false);
 
@@ -32,13 +32,11 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
         {
           text: 'Eliminar',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await eliminarViaje(viaje.id);
-              onDeleted?.();
-            } catch (err) {
-              Alert.alert('Error', err.message);
-            }
+          onPress: () => {
+            eliminarMutation.mutate(viaje.id, {
+              onSuccess: () => onDeleted?.(),
+              onError: (err) => Alert.alert('Error', err.message),
+            });
           },
         },
       ]

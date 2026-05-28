@@ -1,17 +1,16 @@
 // src/components/viajes/CerrarViajeModal.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useViajes } from '../../context/ViajesContext';
+import { useViajeMutations } from '../../hooks/mutations/useViajeMutations';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 
 export default function CerrarViajeModal({ visible, onClose, viaje, gastos, onCerrado, dark }) {
-  const { cerrarViaje } = useViajes();
+  const { cerrar: cerrarMutation } = useViajeMutations();
   const insets = useSafeAreaInsets();
-  const [loading, setLoading] = useState(false);
 
   const bg = dark ? colors.background.dark : '#fff';
   const textColor = dark ? colors.text.dark : colors.text.light;
@@ -19,17 +18,14 @@ export default function CerrarViajeModal({ visible, onClose, viaje, gastos, onCe
 
   const totalGastado = (gastos || []).reduce((sum, g) => sum + (g.precio ?? 0), 0);
 
-  const handleCerrar = async () => {
-    setLoading(true);
-    try {
-      await cerrarViaje(viaje.id);
-      onClose();
-      onCerrado?.();
-    } catch (err) {
-      console.warn('[CerrarViajeModal]', err.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleCerrar = () => {
+    cerrarMutation.mutate(viaje.id, {
+      onSuccess: () => {
+        onClose();
+        onCerrado?.();
+      },
+      onError: (err) => console.warn('[CerrarViajeModal]', err.message),
+    });
   };
 
   return (
@@ -65,9 +61,9 @@ export default function CerrarViajeModal({ visible, onClose, viaje, gastos, onCe
           <TouchableOpacity
             style={[styles.btn, { backgroundColor: '#F59E0B' }]}
             onPress={handleCerrar}
-            disabled={loading}
+            disabled={cerrarMutation.isPending}
           >
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Sí, cerrar viaje</Text>}
+            {cerrarMutation.isPending ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Sí, cerrar viaje</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>

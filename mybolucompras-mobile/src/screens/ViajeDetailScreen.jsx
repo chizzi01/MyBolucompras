@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
@@ -8,9 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
-import { useViajes } from '../context/ViajesContext';
-import { viajesService } from '../services/viajesService';
-import { viajeGastosService } from '../services/viajeGastosService';
+import { useViajeDetalle } from '../hooks/queries/useViajeDetalle';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import ViajeGastosTab from '../components/viajes/ViajeGastosTab';
 import ViajeBalanceTab from '../components/viajes/ViajeBalanceTab';
@@ -25,32 +22,10 @@ export default function ViajeDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { viajeId } = route.params;
-  const { cargarViajes } = useViajes();
 
-  const [viaje, setViaje] = useState(null);
-  const [gastos, setGastos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { viaje, gastos, loading, refetch } = useViajeDetalle(viajeId);
   const [tabIdx, setTabIdx] = useState(0);
   const [showOpciones, setShowOpciones] = useState(false);
-
-  const cargar = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [v, g] = await Promise.all([
-        viajesService.getById(viajeId),
-        viajeGastosService.getByViaje(viajeId),
-      ]);
-      setViaje(v);
-      setGastos(g);
-    } catch (err) {
-      console.warn('[ViajeDetail] cargar:', err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [viajeId]);
-
-  useEffect(() => { cargar(); }, [cargar]);
-  useFocusEffect(useCallback(() => { cargar(); }, [cargar]));
 
   const participantColor = (userId) => {
     if (!viaje) return PARTICIPANT_COLORS[0];
@@ -143,7 +118,7 @@ export default function ViajeDetailScreen() {
         <ViajeGastosTab
           viaje={viaje}
           gastos={gastos}
-          onGastoAdded={cargar}
+          onGastoAdded={refetch}
           participantColor={participantColor}
           dark={dark}
         />
@@ -168,8 +143,8 @@ export default function ViajeDetailScreen() {
         onClose={() => setShowOpciones(false)}
         viaje={viaje}
         gastos={gastos}
-        onUpdated={() => { cargar(); cargarViajes(); }}
-        onDeleted={() => { navigation.goBack(); cargarViajes(); }}
+        onUpdated={refetch}
+        onDeleted={() => navigation.goBack()}
         dark={dark}
       />
     </SafeAreaView>
