@@ -203,7 +203,7 @@ export default function AgregarScreen() {
         type: 'success',
         title: '¡Guardado!',
         message: 'El gasto fue agregado correctamente.',
-        onClose: () => navigation.navigate(routeViajeId ? 'Tabs' : 'Gastos'),
+        onClose: () => routeViajeId ? navigation.goBack() : navigation.navigate('Gastos'),
       });
     } catch (err) {
       showModal({ type: 'error', title: 'Error al guardar', message: err.message });
@@ -545,60 +545,62 @@ export default function AgregarScreen() {
           />
         </Field>
 
-        {/* Compartir Gasto */}
-        <View style={s.shareCard}>
-          <Text style={s.shareTitle}>Compartir gasto</Text>
-          {!sharedUser ? (
-            <View style={s.row}>
-              <TextInput
-                style={[s.input, { flex: 1, marginBottom: 0 }]}
-                placeholder="Email del contacto..."
-                placeholderTextColor={dark ? '#475569' : '#94A3B8'}
-                value={searchEmail}
-                onChangeText={setSearchEmail}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity style={s.searchBtn} onPress={handleSearchUser} disabled={searching}>
-                {searching ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="search" size={20} color="#fff" />}
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={s.sharedInfo}>
-              <View style={s.userInfo}>
-                <View style={s.miniAvatar}><Text style={s.miniAvatarText}>{sharedUser.nombre?.[0] || '?'}</Text></View>
-                <Text style={s.userName}>{sharedUser.nombre || sharedUser.email}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setSharedUser(null)}><Ionicons name="close-circle" size={20} color={colors.error} /></TouchableOpacity>
-            </View>
-          )}
-
-          {!sharedUser && recentContacts.length > 0 && (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-              {recentContacts.map(c => (
-                <TouchableOpacity key={c.id} style={s.recentPill} onPress={() => setSharedUser(c)}>
-                  <Text style={s.recentPillText}>{c.nombre || c.email.split('@')[0]}</Text>
+        {/* Compartir Gasto — hidden when a viaje is active (split handled by SplitPanel) */}
+        {!(selectedViaje && viajeToggleOn) && (
+          <View style={s.shareCard}>
+            <Text style={s.shareTitle}>Compartir gasto</Text>
+            {!sharedUser ? (
+              <View style={s.row}>
+                <TextInput
+                  style={[s.input, { flex: 1, marginBottom: 0 }]}
+                  placeholder="Email del contacto..."
+                  placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+                  value={searchEmail}
+                  onChangeText={setSearchEmail}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity style={s.searchBtn} onPress={handleSearchUser} disabled={searching}>
+                  {searching ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="search" size={20} color="#fff" />}
                 </TouchableOpacity>
-              ))}
-            </View>
-          )}
+              </View>
+            ) : (
+              <View style={s.sharedInfo}>
+                <View style={s.userInfo}>
+                  <View style={s.miniAvatar}><Text style={s.miniAvatarText}>{sharedUser.nombre?.[0] || '?'}</Text></View>
+                  <Text style={s.userName}>{sharedUser.nombre || sharedUser.email}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setSharedUser(null)}><Ionicons name="close-circle" size={20} color={colors.error} /></TouchableOpacity>
+              </View>
+            )}
 
-          {sharedUser && (
-            <View style={s.modeRow}>
-              <TouchableOpacity 
-                style={[s.modeBtn, shareMode === 'dividir' && s.modeBtnActive]} 
-                onPress={() => setShareMode('dividir')}
-              >
-                <Text style={[s.modeBtnText, shareMode === 'dividir' && s.modeBtnTextActive]}>Dividir entre 2</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[s.modeBtn, shareMode === 'mismo' && s.modeBtnActive]} 
-                onPress={() => setShareMode('mismo')}
-              >
-                <Text style={[s.modeBtnText, shareMode === 'mismo' && s.modeBtnTextActive]}>Mismo monto</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+            {!sharedUser && recentContacts.length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                {recentContacts.map(c => (
+                  <TouchableOpacity key={c.id} style={s.recentPill} onPress={() => setSharedUser(c)}>
+                    <Text style={s.recentPillText}>{c.nombre || c.email.split('@')[0]}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {sharedUser && (
+              <View style={s.modeRow}>
+                <TouchableOpacity
+                  style={[s.modeBtn, shareMode === 'dividir' && s.modeBtnActive]}
+                  onPress={() => setShareMode('dividir')}
+                >
+                  <Text style={[s.modeBtnText, shareMode === 'dividir' && s.modeBtnTextActive]}>Dividir entre 2</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.modeBtn, shareMode === 'mismo' && s.modeBtnActive]}
+                  onPress={() => setShareMode('mismo')}
+                >
+                  <Text style={[s.modeBtnText, shareMode === 'mismo' && s.modeBtnTextActive]}>Mismo monto</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
 
         <TouchableOpacity style={s.btn} onPress={handleGuardar} disabled={loading} activeOpacity={0.85}>
           {loading ? (

@@ -10,7 +10,7 @@ export const viajesService = {
       .from('viajes')
       .select(`
         *,
-        viaje_participantes(user_id, profiles:user_id(id, nombre, email))
+        viaje_participantes(user_id, joined_at, profiles:user_id(id, nombre, email))
       `)
       .order('created_at', { ascending: false });
     if (error) throw error;
@@ -22,7 +22,7 @@ export const viajesService = {
       .from('viajes')
       .select(`
         *,
-        viaje_participantes(user_id, profiles:user_id(id, nombre, email))
+        viaje_participantes(user_id, joined_at, profiles:user_id(id, nombre, email))
       `)
       .eq('id', id)
       .single();
@@ -97,7 +97,9 @@ function mapViaje(row) {
     createdBy: row.created_by,
     fechaCierre: row.fecha_cierre,
     createdAt: row.created_at,
-    participantes: (row.viaje_participantes || []).map(p => ({
+    participantes: (row.viaje_participantes || [])
+      .sort((a, b) => new Date(a.joined_at) - new Date(b.joined_at))
+      .map(p => ({
       userId: p.user_id,
       nombre: p.profiles?.nombre || p.profiles?.email || p.user_id,
       email: p.profiles?.email || '',

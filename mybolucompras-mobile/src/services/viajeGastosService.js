@@ -112,15 +112,18 @@ export const viajeGastosService = {
 
       const ids = g.participantes.length ? g.participantes : participantes.map(p => p.userId);
       const n = ids.length;
-      const porPersona = g.precio / n;
+      // g.precio is the already-divided amount (stored as precioBase = total/n)
+      // Reconstruct full amount and per-person share
+      const fullAmount = g.precio * n;
+      const perPersona = g.precio; // = fullAmount / n
 
-      // Payer receives money from others (excluding his own share)
-      nets[g.pagadoPor] = (nets[g.pagadoPor] || 0) + g.precio - porPersona;
+      // Payer receives the shares of everyone else
+      nets[g.pagadoPor] = (nets[g.pagadoPor] || 0) + fullAmount - perPersona;
 
       // Others owe their share
       for (const id of ids) {
         if (id !== g.pagadoPor) {
-          nets[id] = (nets[id] || 0) - porPersona;
+          nets[id] = (nets[id] || 0) - perPersona;
         }
       }
     }
@@ -130,8 +133,8 @@ export const viajeGastosService = {
       userId: p.userId,
       nombre: p.nombre,
       total: viajeGastos
-        .filter(g => g.pagadoPor === p.userId)
-        .reduce((sum, g) => sum + g.precio, 0),
+        .filter(g => g.pagadoPor === p.userId && g.modoSplit !== 'solo')
+        .reduce((sum, g) => sum + g.precio * (g.participantes.length || 1), 0),
       neto: nets[p.userId] || 0,
     }));
 

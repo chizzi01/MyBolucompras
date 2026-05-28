@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
@@ -49,6 +50,7 @@ export default function ViajeDetailScreen() {
   }, [viajeId]);
 
   useEffect(() => { cargar(); }, [cargar]);
+  useFocusEffect(useCallback(() => { cargar(); }, [cargar]));
 
   const participantColor = (userId) => {
     if (!viaje) return PARTICIPANT_COLORS[0];

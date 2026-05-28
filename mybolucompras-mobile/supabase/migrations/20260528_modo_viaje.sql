@@ -77,8 +77,7 @@ CREATE POLICY "vp_select" ON public.viaje_participantes FOR SELECT
   USING (user_id = auth.uid()
     OR viaje_id IN (SELECT id FROM public.viajes WHERE created_by = auth.uid()));
 CREATE POLICY "vp_insert" ON public.viaje_participantes FOR INSERT
-  WITH CHECK (viaje_id IN (SELECT id FROM public.viajes WHERE created_by = auth.uid())
-    OR user_id = auth.uid());
+  WITH CHECK (viaje_id IN (SELECT id FROM public.viajes WHERE created_by = auth.uid()));
 CREATE POLICY "vp_delete" ON public.viaje_participantes FOR DELETE
   USING (viaje_id IN (SELECT id FROM public.viajes WHERE created_by = auth.uid()));
 
