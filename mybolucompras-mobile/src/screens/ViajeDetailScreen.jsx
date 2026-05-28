@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, ActivityIndicator,
+  View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,71 +48,139 @@ export default function ViajeDetailScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light }} edges={['bottom']}>
-      <LinearGradient colors={['#6366F1', '#818CF8']} style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={20} color="#fff" />
-            <Text style={styles.backText}>Mis Viajes</Text>
-          </TouchableOpacity>
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Tabs')}
-              style={styles.optionsBtn}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
-              accessibilityLabel="Ir al inicio"
-              accessibilityRole="button"
-            >
-              <Ionicons name="home-outline" size={22} color="#fff" />
+      {viaje.imagenUrl ? (
+        <ImageBackground
+          source={{ uri: viaje.imagenUrl }}
+          style={styles.header}
+          resizeMode="cover"
+        >
+          <LinearGradient
+            colors={['rgba(0,0,0,0.20)', 'rgba(0,0,0,0.65)']}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.headerTop}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Text style={styles.backText}>Mis Viajes</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowOpciones(true)}
-              style={styles.optionsBtn}
-              hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
-              accessibilityLabel="Opciones del viaje"
-              accessibilityRole="button"
-            >
-              <Ionicons name="ellipsis-horizontal" size={22} color="#fff" />
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Tabs')}
+                style={styles.optionsBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+                accessibilityLabel="Ir al inicio"
+                accessibilityRole="button"
+              >
+                <Ionicons name="home-outline" size={22} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowOpciones(true)}
+                style={styles.optionsBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+                accessibilityLabel="Opciones del viaje"
+                accessibilityRole="button"
+              >
+                <Ionicons name="ellipsis-horizontal" size={22} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <Text style={styles.viajeEmoji}>{viaje.emoji}</Text>
+          <Text style={styles.viajeTitulo}>{viaje.titulo}</Text>
+          <Text style={styles.viajeParticipantes}>
+            {viaje.participantes.map(p => p.nombre.split(' ')[0]).join(' · ')}
+          </Text>
+          <View style={styles.pills}>
+            <View style={styles.pill}>
+              <Text style={styles.pillLabel}>Total</Text>
+              <Text style={styles.pillValue}>${totalGastado.toFixed(0)}</Text>
+            </View>
+            <View style={styles.pill}>
+              <Text style={styles.pillLabel}>Gastos</Text>
+              <Text style={styles.pillValue}>{gastos.length}</Text>
+            </View>
+          </View>
+          <View style={styles.badgeRow}>
+            <View style={[styles.badge, { backgroundColor: activo ? '#10B98130' : '#64748B30' }]}>
+              <Text style={[styles.badgeText, { color: activo ? '#6EE7B7' : '#CBD5E1' }]}>
+                {activo ? '● Activo' : '🔒 Archivado'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.segmented}>
+            {TABS.map((tab, i) => (
+              <TouchableOpacity
+                key={tab}
+                style={[styles.segTab, tabIdx === i && styles.segTabActive]}
+                onPress={() => setTabIdx(i)}
+              >
+                <Text style={[styles.segTabText, tabIdx === i && styles.segTabTextActive]}>{tab}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ImageBackground>
+      ) : (
+        <LinearGradient colors={['#6366F1', '#818CF8']} style={styles.header}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Text style={styles.backText}>Mis Viajes</Text>
             </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Tabs')}
+                style={styles.optionsBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+                accessibilityLabel="Ir al inicio"
+                accessibilityRole="button"
+              >
+                <Ionicons name="home-outline" size={22} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowOpciones(true)}
+                style={styles.optionsBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+                accessibilityLabel="Opciones del viaje"
+                accessibilityRole="button"
+              >
+                <Ionicons name="ellipsis-horizontal" size={22} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-
-        <Text style={styles.viajeEmoji}>{viaje.emoji}</Text>
-        <Text style={styles.viajeTitulo}>{viaje.titulo}</Text>
-        <Text style={styles.viajeParticipantes}>
-          {viaje.participantes.map(p => p.nombre.split(' ')[0]).join(' · ')}
-        </Text>
-
-        <View style={styles.pills}>
-          <View style={styles.pill}>
-            <Text style={styles.pillLabel}>Total</Text>
-            <Text style={styles.pillValue}>${totalGastado.toFixed(0)}</Text>
+          <Text style={styles.viajeEmoji}>{viaje.emoji}</Text>
+          <Text style={styles.viajeTitulo}>{viaje.titulo}</Text>
+          <Text style={styles.viajeParticipantes}>
+            {viaje.participantes.map(p => p.nombre.split(' ')[0]).join(' · ')}
+          </Text>
+          <View style={styles.pills}>
+            <View style={styles.pill}>
+              <Text style={styles.pillLabel}>Total</Text>
+              <Text style={styles.pillValue}>${totalGastado.toFixed(0)}</Text>
+            </View>
+            <View style={styles.pill}>
+              <Text style={styles.pillLabel}>Gastos</Text>
+              <Text style={styles.pillValue}>{gastos.length}</Text>
+            </View>
           </View>
-          <View style={styles.pill}>
-            <Text style={styles.pillLabel}>Gastos</Text>
-            <Text style={styles.pillValue}>{gastos.length}</Text>
+          <View style={styles.badgeRow}>
+            <View style={[styles.badge, { backgroundColor: activo ? '#10B98130' : '#64748B30' }]}>
+              <Text style={[styles.badgeText, { color: activo ? '#6EE7B7' : '#CBD5E1' }]}>
+                {activo ? '● Activo' : '🔒 Archivado'}
+              </Text>
+            </View>
           </View>
-        </View>
-
-        <View style={styles.badgeRow}>
-          <View style={[styles.badge, { backgroundColor: activo ? '#10B98130' : '#64748B30' }]}>
-            <Text style={[styles.badgeText, { color: activo ? '#6EE7B7' : '#CBD5E1' }]}>
-              {activo ? '● Activo' : '🔒 Archivado'}
-            </Text>
+          <View style={styles.segmented}>
+            {TABS.map((tab, i) => (
+              <TouchableOpacity
+                key={tab}
+                style={[styles.segTab, tabIdx === i && styles.segTabActive]}
+                onPress={() => setTabIdx(i)}
+              >
+                <Text style={[styles.segTabText, tabIdx === i && styles.segTabTextActive]}>{tab}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        </View>
-
-        <View style={styles.segmented}>
-          {TABS.map((tab, i) => (
-            <TouchableOpacity
-              key={tab}
-              style={[styles.segTab, tabIdx === i && styles.segTabActive]}
-              onPress={() => setTabIdx(i)}
-            >
-              <Text style={[styles.segTabText, tabIdx === i && styles.segTabTextActive]}>{tab}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </LinearGradient>
+        </LinearGradient>
+      )}
 
       {tabIdx === 0 && (
         <ViajeGastosTab
