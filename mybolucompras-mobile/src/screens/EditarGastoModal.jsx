@@ -6,8 +6,10 @@ import {
 import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
+import { useConfiguracion } from '../hooks/queries/useConfiguracion';
+import { useGastoMutations } from '../hooks/mutations/useGastoMutations';
+import { useConfiguracionMutations } from '../hooks/mutations/useConfiguracionMutations';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { BANCOS, MEDIOS_DE_PAGO, ETIQUETA_COLORS } from '../constants/catalogos';
 import { parsePrecio, formatPrecioLive, getCurrencySymbol } from '../utils/formatters';
@@ -18,7 +20,9 @@ export default function EditarGastoScreen({ route, navigation }) {
   const { gasto } = route.params;
   const onClose = () => navigation.goBack();
 
-  const { editarGasto, mydata, actualizarConfig } = useData();
+  const { mydata } = useConfiguracion();
+  const { editar: editarMutation } = useGastoMutations();
+  const { actualizar: actualizarConfigMutation } = useConfiguracionMutations();
   const { dark } = useTheme();
   const s = styles(dark);
 
@@ -55,7 +59,7 @@ export default function EditarGastoScreen({ route, navigation }) {
     isFijo: gasto.isFijo || false,
   });
   const [precioDisplay, setPrecioDisplay] = useState(initPrecioDisplay);
-  const [loading, setLoading] = useState(false);
+  const loading = editarMutation.isPending;
   const { showModal, modal } = useModal();
 
   const [sharedUser, setSharedUser] = useState(null);
@@ -123,27 +127,28 @@ export default function EditarGastoScreen({ route, navigation }) {
     if (!form.objeto.trim()) {
       return showModal({ type: 'warning', title: 'Campo requerido', message: 'Ingresá el objeto del gasto.' });
     }
-    setLoading(true);
     try {
       const sharedWith = (!isAlreadyShared && sharedUser) ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email } : null;
-      await editarGasto(gasto.id, {
-        ...form,
-        compartidoConNombre: gasto.compartidoConNombre || null,
-        cuotas: parseInt(form.cuotas) || 1,
-        cantidad: parseInt(form.cantidad) || 1,
-        precio: Number(form.precio),
-      }, sharedWith);
+      await editarMutation.mutateAsync({
+        id: gasto.id,
+        gasto: {
+          ...form,
+          compartidoConNombre: gasto.compartidoConNombre || null,
+          cuotas: parseInt(form.cuotas) || 1,
+          cantidad: parseInt(form.cantidad) || 1,
+          precio: Number(form.precio),
+        },
+        sharedWith,
+      });
       onClose();
     } catch (err) {
       showModal({ type: 'error', title: 'Error al guardar', message: err.message });
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleCrearEtiqueta = async (nuevaEtiqueta) => {
     const etiquetas = [...(mydata.etiquetas || []), nuevaEtiqueta];
-    await actualizarConfig({ etiquetas });
+    await actualizarConfigMutation.mutateAsync({ ...mydata, etiquetas });
   };
 
   const esCuotasHabilitado = form.tipo === 'credito' && !form.isFijo;
