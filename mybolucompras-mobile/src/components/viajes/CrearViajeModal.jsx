@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, Modal, ScrollView,
-  StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
+  StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import ImagenGaleriaModal from './ImagenGaleriaModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { useViajeMutations } from '../../hooks/mutations/useViajeMutations';
@@ -27,6 +28,8 @@ export default function CrearViajeModal({ visible, onClose }) {
   const [recentContacts, setRecentContacts] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [imagenUrl, setImagenUrl] = useState(null);
+  const [showGaleria, setShowGaleria] = useState(false);
 
   useEffect(() => {
     if (visible) contactService.getRecent().then(setRecentContacts);
@@ -56,10 +59,16 @@ export default function CrearViajeModal({ visible, onClose }) {
     setSaving(true);
     setError('');
     try {
-      await crearMutation.mutateAsync({ titulo: titulo.trim(), emoji, participanteIds: participantes.map(p => p.id) });
+      await crearMutation.mutateAsync({
+        titulo: titulo.trim(),
+        emoji,
+        participanteIds: participantes.map(p => p.id),
+        imagenUrl,
+      });
       setTitulo('');
       setEmoji('✈️');
       setParticipantes([]);
+      setImagenUrl(null);
       onClose();
     } catch (err) {
       setError('Error al crear el viaje: ' + err.message);
@@ -92,6 +101,28 @@ export default function CrearViajeModal({ visible, onClose }) {
                 </TouchableOpacity>
               ))}
             </ScrollView>
+
+            <Text style={[styles.label, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
+              FOTO DE PORTADA <Text style={{ textTransform: 'none', fontWeight: '400' }}>(opcional)</Text>
+            </Text>
+            {imagenUrl ? (
+              <TouchableOpacity style={styles.portadaPreview} onPress={() => setShowGaleria(true)} activeOpacity={0.8}>
+                <Image source={{ uri: imagenUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                <View style={styles.portadaOverlay} />
+                <Text style={styles.portadaChangeText}>Cambiar</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.portadaEmpty, { borderColor: dark ? '#334155' : '#CBD5E1' }]}
+                onPress={() => setShowGaleria(true)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="image-outline" size={20} color={dark ? '#475569' : '#94A3B8'} />
+                <Text style={[styles.portadaEmptyText, { color: dark ? '#475569' : '#94A3B8' }]}>
+                  Elegir foto de portada
+                </Text>
+              </TouchableOpacity>
+            )}
 
             <TextInput
               style={[styles.input, { backgroundColor: inputBg, borderColor: border, color: textColor }]}
@@ -156,6 +187,15 @@ export default function CrearViajeModal({ visible, onClose }) {
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
               <Text style={{ color: dark ? colors.textSecondary.dark : colors.textSecondary.light }}>Cancelar</Text>
             </TouchableOpacity>
+
+            <ImagenGaleriaModal
+              visible={showGaleria}
+              onClose={() => setShowGaleria(false)}
+              onSelect={setImagenUrl}
+              currentUrl={imagenUrl ? imagenUrl.replace('?w=1200&q=80', '') : null}
+              previewEmoji={emoji}
+              previewTitulo={titulo || 'Tu viaje'}
+            />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -182,4 +222,30 @@ const styles = StyleSheet.create({
   btn: { backgroundColor: colors.primary, borderRadius: radius.md, paddingVertical: 14, alignItems: 'center', marginBottom: spacing.sm },
   btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   cancelBtn: { alignItems: 'center', paddingVertical: 10 },
+  portadaEmpty: {
+    height: 52,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: spacing.md,
+  },
+  portadaEmptyText: { fontSize: 13 },
+  portadaPreview: {
+    height: 52,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    marginBottom: spacing.md,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingRight: spacing.sm,
+  },
+  portadaOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  portadaChangeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
 });
