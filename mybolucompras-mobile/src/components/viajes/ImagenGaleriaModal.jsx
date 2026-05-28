@@ -50,84 +50,86 @@ export default function ImagenGaleriaModal({
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.cats}
-          >
-            {CATEGORIAS_IMAGENES.map((cat, i) => (
-              <TouchableOpacity
-                key={cat.nombre}
-                style={[styles.cat, categoriaIdx === i && styles.catActive]}
-                onPress={() => setCategoriaIdx(i)}
-              >
-                <Text style={[styles.catText, categoriaIdx === i && styles.catTextActive]}>
-                  {cat.emoji} {cat.nombre}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          <FlatList
-            data={categoria.imagenes}
-            numColumns={3}
-            keyExtractor={(item) => item}
-            scrollEnabled={false}
-            columnWrapperStyle={styles.gridRow}
-            style={styles.grid}
-            renderItem={({ item }) => {
-              const isSelected = selectedUrl === item;
-              return (
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.cats}
+            >
+              {CATEGORIAS_IMAGENES.map((cat, i) => (
                 <TouchableOpacity
-                  style={[styles.thumb, isSelected && styles.thumbSelected]}
-                  onPress={() => setSelectedUrl(item)}
-                  activeOpacity={0.75}
+                  key={cat.nombre}
+                  style={[styles.cat, categoriaIdx === i && styles.catActive]}
+                  onPress={() => setCategoriaIdx(i)}
                 >
+                  <Text style={[styles.catText, categoriaIdx === i && styles.catTextActive]}>
+                    {cat.emoji} {cat.nombre}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <FlatList
+              data={categoria.imagenes}
+              numColumns={3}
+              keyExtractor={(item) => item}
+              scrollEnabled={false}
+              columnWrapperStyle={styles.gridRow}
+              style={styles.grid}
+              renderItem={({ item }) => {
+                const isSelected = selectedUrl === item;
+                return (
+                  <TouchableOpacity
+                    style={[styles.thumb, isSelected && styles.thumbSelected]}
+                    onPress={() => setSelectedUrl(item)}
+                    activeOpacity={0.75}
+                  >
+                    <Image
+                      source={{ uri: item + '?w=200&q=70' }}
+                      style={styles.thumbImg}
+                      resizeMode="cover"
+                    />
+                    {isSelected && (
+                      <View style={styles.checkBadge}>
+                        <Ionicons name="checkmark" size={10} color="#fff" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+
+            {selectedUrl && (
+              <>
+                <Text style={styles.previewLabel}>Vista previa</Text>
+                <View style={styles.previewBox}>
                   <Image
-                    source={{ uri: item + '?w=200&q=70' }}
-                    style={styles.thumbImg}
+                    source={{ uri: selectedUrl + '?w=800&q=80' }}
+                    style={StyleSheet.absoluteFill}
                     resizeMode="cover"
                   />
-                  {isSelected && (
-                    <View style={styles.checkBadge}>
-                      <Ionicons name="checkmark" size={10} color="#fff" />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            }}
-          />
+                  <LinearGradient
+                    colors={['rgba(0,0,0,0.20)', 'rgba(0,0,0,0.65)']}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <Text style={styles.previewEmoji}>{previewEmoji}</Text>
+                  <Text style={styles.previewTitulo}>{previewTitulo}</Text>
+                </View>
+              </>
+            )}
 
-          {selectedUrl && (
-            <>
-              <Text style={styles.previewLabel}>Vista previa</Text>
-              <View style={styles.previewBox}>
-                <Image
-                  source={{ uri: selectedUrl + '?w=800&q=80' }}
-                  style={StyleSheet.absoluteFill}
-                  resizeMode="cover"
-                />
-                <LinearGradient
-                  colors={['rgba(0,0,0,0.20)', 'rgba(0,0,0,0.65)']}
-                  style={StyleSheet.absoluteFill}
-                />
-                <Text style={styles.previewEmoji}>{previewEmoji}</Text>
-                <Text style={styles.previewTitulo}>{previewTitulo}</Text>
-              </View>
-            </>
-          )}
+            <TouchableOpacity
+              style={[styles.confirmBtn, !selectedUrl && styles.confirmBtnDisabled]}
+              onPress={handleConfirm}
+              disabled={!selectedUrl}
+            >
+              <Text style={styles.confirmText}>Usar esta imagen</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.confirmBtn, !selectedUrl && styles.confirmBtnDisabled]}
-            onPress={handleConfirm}
-            disabled={!selectedUrl}
-          >
-            <Text style={styles.confirmText}>Usar esta imagen</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.clearBtn} onPress={handleClear}>
-            <Text style={styles.clearText}>Sin imagen (usar gradiente)</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.clearBtn} onPress={handleClear}>
+              <Text style={styles.clearText}>Sin imagen (usar gradiente)</Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -141,6 +143,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     padding: spacing.md,
+    maxHeight: '92%',
   },
   handle: { width: 40, height: 4, backgroundColor: '#334155', borderRadius: 2, alignSelf: 'center', marginBottom: spacing.md },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },

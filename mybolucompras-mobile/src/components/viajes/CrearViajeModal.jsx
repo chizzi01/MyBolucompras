@@ -192,7 +192,7 @@ export default function CrearViajeModal({ visible, onClose }) {
               visible={showGaleria}
               onClose={() => setShowGaleria(false)}
               onSelect={setImagenUrl}
-              currentUrl={imagenUrl ? imagenUrl.replace('?w=1200&q=80', '') : null}
+              currentUrl={imagenUrl ? imagenUrl.split('?')[0] : null}
               previewEmoji={emoji}
               previewTitulo={titulo || 'Tu viaje'}
             />

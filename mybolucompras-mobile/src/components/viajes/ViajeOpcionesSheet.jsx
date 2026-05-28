@@ -113,7 +113,7 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
         visible={showImagenGaleria}
         onClose={() => setShowImagenGaleria(false)}
         onSelect={handleCambiarImagen}
-        currentUrl={viaje?.imagenUrl ? viaje.imagenUrl.replace('?w=1200&q=80', '') : null}
+        currentUrl={viaje?.imagenUrl ? viaje.imagenUrl.split('?')[0] : null}
         previewEmoji={viaje?.emoji}
         previewTitulo={viaje?.titulo}
       />

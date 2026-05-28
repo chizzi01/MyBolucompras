@@ -81,10 +81,14 @@ export const viajesService = {
     if (error) throw error;
   },
 
-  async editarViaje(id, { titulo, emoji, imagenUrl }) {
+  async editarViaje(id, campos) {
+    const update = {};
+    if (campos.titulo !== undefined) update.titulo = campos.titulo;
+    if (campos.emoji !== undefined) update.emoji = campos.emoji;
+    if ('imagenUrl' in campos) update.imagen_url = campos.imagenUrl;
     const { error } = await supabase
       .from('viajes')
-      .update({ titulo, emoji, imagen_url: imagenUrl })
+      .update(update)
       .eq('id', id);
     if (error) throw error;
   },
