@@ -45,7 +45,7 @@ export const viajeGastosService = {
       precioBase = Number(gastoData.precio) / n;
       copias = viajeParticipantes
         .filter(p => p.userId !== user.id)
-        .map(p => ({ ...gastoData, precio: precioBase, compartidoConNombre: gastoData.objeto }));
+        .map(p => ({ ...gastoData, precio: precioBase, compartidoConNombre: gastoData.objeto, _userId: p.userId }));
     } else if (modoSplit === 'algunos') {
       const n = participanteIds.length;
       precioBase = Number(gastoData.precio) / n;
@@ -64,7 +64,7 @@ export const viajeGastosService = {
     for (const copia of copias) {
       const uid = copia._userId;
       const { _userId, ...copiaData } = copia;
-      await supabase.from('gastos').insert([{
+      const { error: copiaError } = await supabase.from('gastos').insert([{
         es_fijo: copiaData.isFijo ?? false,
         objeto: `${copiaData.objeto} (viaje: ${copiaData.compartidoConNombre})`,
         fecha: copiaData.fecha?.includes('/') ? copiaData.fecha.split('/').reverse().join('-') : copiaData.fecha,
@@ -79,6 +79,7 @@ export const viajeGastosService = {
         compartido_con_nombre: copiaData.compartidoConNombre,
         user_id: uid,
       }]);
+      if (copiaError) throw copiaError;
     }
 
     // Register in viaje_gastos
