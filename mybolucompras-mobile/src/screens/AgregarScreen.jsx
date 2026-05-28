@@ -203,7 +203,7 @@ export default function AgregarScreen() {
         type: 'success',
         title: '¡Guardado!',
         message: 'El gasto fue agregado correctamente.',
-        onClose: () => routeViajeId ? navigation.goBack() : navigation.navigate('Gastos'),
+        onClose: () => (routeViajeId && viajeToggleOn) ? navigation.goBack() : navigation.navigate('Gastos'),
       });
     } catch (err) {
       showModal({ type: 'error', title: 'Error al guardar', message: err.message });
