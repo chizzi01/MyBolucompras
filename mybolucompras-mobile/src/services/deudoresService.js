@@ -4,7 +4,8 @@ import { sendPushToUser } from './pushNotificationService';
 
 export const deudoresService = {
   async getAll() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) return [];
     const { data, error } = await supabase
       .from('deudores')
@@ -16,7 +17,8 @@ export const deudoresService = {
   },
 
   async crear(deuda, sharedWith = null) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
 
     let finalDeuda = { ...deuda };
@@ -112,7 +114,8 @@ export const deudoresService = {
   },
 
   async marcarPagadaConNotificacion(id, deudaActual, currentUserName) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     const today = new Date().toISOString().split('T')[0];
 
     const { error } = await supabase

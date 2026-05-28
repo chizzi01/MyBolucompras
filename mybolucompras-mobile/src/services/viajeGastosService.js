@@ -32,7 +32,8 @@ export const viajeGastosService = {
   // Split config: { modoSplit: 'solo'|'todos'|'algunos', participanteIds: uuid[] }
   // participanteIds needed only for 'algunos'; for 'todos' pass all participant IDs
   async agregarGasto(viajeId, gastoData, splitConfig, viajeParticipantes) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
 
     const { modoSplit, participanteIds } = splitConfig;

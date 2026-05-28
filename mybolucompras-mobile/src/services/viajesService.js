@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabase';
 
 export const viajesService = {
   async getAll() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
 
     const { data, error } = await supabase
@@ -31,7 +32,8 @@ export const viajesService = {
   },
 
   async crear(titulo, emoji, participanteIds) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
 
     const { data: viaje, error } = await supabase

@@ -4,7 +4,8 @@ import { sendPushToUser } from './pushNotificationService';
 
 export const gastosService = {
   async getAll() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
 
     const { data, error } = await supabase
@@ -17,7 +18,8 @@ export const gastosService = {
   },
 
   async crear(gasto, sharedWith = null) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
 
     let finalGasto = { ...gasto };
@@ -121,7 +123,8 @@ export const gastosService = {
   },
 
   async actualizar(id, gasto, sharedWith = null) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
 
     let finalGasto = { ...gasto };
@@ -177,7 +180,8 @@ export const gastosService = {
   },
 
   async marcarPagadoConNotificacion(id, gastoActual, currentUserName) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
 
     const { error } = await supabase
       .from('gastos')

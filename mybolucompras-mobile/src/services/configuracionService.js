@@ -2,7 +2,8 @@ import { supabase } from '../lib/supabase';
 
 export const configuracionService = {
   async get() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) return null;
     const { data, error } = await supabase
       .from('configuracion_usuario')
@@ -14,7 +15,8 @@ export const configuracionService = {
   },
 
   async actualizar(config) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
     const { error } = await supabase
       .from('configuracion_usuario')

@@ -20,7 +20,8 @@ export const viajeNotasService = {
   },
 
   async agregarItem(viajeId, texto) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
     const { data, error } = await supabase
       .from('viaje_checklist')
@@ -61,7 +62,8 @@ export const viajeNotasService = {
   },
 
   async agregarNota(viajeId, texto) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
     const { data, error } = await supabase
       .from('viaje_notas')

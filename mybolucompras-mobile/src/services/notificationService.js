@@ -2,7 +2,8 @@ import { supabase } from '../lib/supabase';
 
 export const notificationService = {
   async getAll() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) return [];
     
     const { data, error } = await supabase
@@ -24,7 +25,8 @@ export const notificationService = {
   },
 
   async getUnreadCount() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) return 0;
     
     const { count, error } = await supabase

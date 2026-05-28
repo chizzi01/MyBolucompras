@@ -52,7 +52,8 @@ export const pushNotificationService = {
       return null;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session: authSession } } = await supabase.auth.getSession();
+    const user = authSession?.user ?? null;
     if (!user) {
       console.warn('[Push] No authenticated user — cannot save FCM token');
       return null;
