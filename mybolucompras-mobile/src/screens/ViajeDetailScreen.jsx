@@ -93,6 +93,8 @@ export default function ViajeDetailScreen() {
               onPress={() => setShowOpciones(true)}
               style={styles.optionsBtn}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+              accessibilityLabel="Opciones del viaje"
+              accessibilityRole="button"
             >
               <Ionicons name="ellipsis-horizontal" size={22} color="#fff" />
             </TouchableOpacity>

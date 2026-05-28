@@ -54,6 +54,9 @@ export default function ViajesScreen() {
           style={styles.backBtn}
           onPress={() => navigation.navigate('Tabs')}
           activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityLabel="Ir al inicio"
+          accessibilityRole="button"
         >
           <Ionicons name="arrow-back" size={18} color={colors.primary} />
           <Text style={[styles.backBtnText, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
