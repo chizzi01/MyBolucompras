@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useGastos } from '../hooks/queries/useGastos';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useGastoMutations } from '../hooks/mutations/useGastoMutations';
-import { useViajes } from '../context/ViajesContext';
+import { useViajes } from '../hooks/queries/useViajes';
 import { getCuotasRestantes } from '../utils/cuotas';
 import { useTheme } from '../context/ThemeContext';
 import GastoCard from '../components/GastoCard';
@@ -29,7 +29,8 @@ export default function GastosScreen({ navigation }) {
   const { mydata } = useConfiguracion();
   const { eliminar: eliminarMutation, marcarPagado: marcarPagadoMutation } = useGastoMutations();
   const { user } = useAuth();
-  const { viajeActivo } = useViajes();
+  const { viajesActivos } = useViajes();
+  const viajeActivo = viajesActivos[0] ?? null;
   const { dark } = useTheme();
   const s = styles(dark);
 
@@ -147,7 +148,7 @@ export default function GastosScreen({ navigation }) {
               color={viajeActivo ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
             />
             <Text style={[s.mesChipText, viajeActivo && s.mesChipTextActive]}>
-              {viajeActivo ? viajeActivo.nombre : 'Viajes'}
+              {viajeActivo ? viajeActivo.titulo : 'Viajes'}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity

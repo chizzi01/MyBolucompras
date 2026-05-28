@@ -7,7 +7,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
-import { useViajes } from '../../context/ViajesContext';
+import { useViajeMutations } from '../../hooks/mutations/useViajeMutations';
 import { userService } from '../../services/userService';
 import { contactService } from '../../services/contactService';
 import { colors, spacing, radius, typography } from '../../constants/theme';
@@ -16,7 +16,7 @@ const EMOJIS = ['✈️', '🏔️', '🌊', '🌴', '🎿', '🏖️', '🎒', 
 
 export default function CrearViajeModal({ visible, onClose }) {
   const { dark } = useTheme();
-  const { crearViaje } = useViajes();
+  const { crear: crearMutation } = useViajeMutations();
   const insets = useSafeAreaInsets();
 
   const [titulo, setTitulo] = useState('');
@@ -56,7 +56,7 @@ export default function CrearViajeModal({ visible, onClose }) {
     setSaving(true);
     setError('');
     try {
-      await crearViaje(titulo.trim(), emoji, participantes.map(p => p.id));
+      await crearMutation.mutateAsync({ titulo: titulo.trim(), emoji, participanteIds: participantes.map(p => p.id) });
       setTitulo('');
       setEmoji('✈️');
       setParticipantes([]);

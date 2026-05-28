@@ -8,7 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '../context/AuthContext';
-import { useData } from '../context/DataContext';
+import { useConfiguracion } from '../hooks/queries/useConfiguracion';
+import { useConfiguracionMutations } from '../hooks/mutations/useConfiguracionMutations';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { MONEDAS, BANCOS, MEDIOS_DE_PAGO } from '../constants/catalogos';
@@ -18,7 +19,8 @@ const { width } = Dimensions.get('window');
 
 export default function OnboardingFlow() {
   const { completeOnboarding, biometricEnabled, biometricAvailable, enableBiometric } = useAuth();
-  const { mydata, actualizarFondos, actualizarCierre, actualizarConfig } = useData();
+  const { mydata } = useConfiguracion();
+  const { actualizar } = useConfiguracionMutations();
   const { dark, mode, setTheme } = useTheme();
   const s = styles(dark);
 
@@ -53,7 +55,7 @@ export default function OnboardingFlow() {
   const saveFondos = async () => {
     if (fondos) {
       setLoading(true);
-      await actualizarFondos(Number(fondos));
+      await actualizar.mutateAsync({ ...mydata, fondos: Number(fondos) });
       setLoading(false);
     }
     next();
@@ -72,26 +74,28 @@ export default function OnboardingFlow() {
 
   const saveFechas = async () => {
     setLoading(true);
-    // Calculate vencimiento as 10 business days after cierre
     const vencimientoCalculada = sumarDiasHabiles(cierreDate, 10);
-    await actualizarCierre(formatDateToDB(cierreDate), formatDateToDB(vencimientoCalculada), '', '');
+    await actualizar.mutateAsync({
+      ...mydata,
+      cierre: formatDateToDB(cierreDate),
+      vencimiento: formatDateToDB(vencimientoCalculada),
+      cierreAnterior: '',
+      vencimientoAnterior: '',
+    });
     setLoading(false);
     next();
   };
 
   const saveMoneda = async () => {
     setLoading(true);
-    await actualizarConfig({ monedaPreferida: moneda });
+    await actualizar.mutateAsync({ ...mydata, monedaPreferida: moneda });
     setLoading(false);
     next();
   };
 
   const savePagos = async () => {
     setLoading(true);
-    await actualizarConfig({ 
-      bancosHabilitados: selectedBancos, 
-      mediosHabilitados: selectedMedios 
-    });
+    await actualizar.mutateAsync({ ...mydata, bancosHabilitados: selectedBancos, mediosHabilitados: selectedMedios });
     setLoading(false);
     next();
   };
