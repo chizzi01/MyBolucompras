@@ -14,7 +14,7 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
   const subtextColor = dark ? colors.textSecondary.dark : colors.textSecondary.light;
 
   const handleAgregarGasto = () => {
-    navigation.navigate('Agregar', { viajeId: viaje.id, viajeNombre: `${viaje.emoji} ${viaje.titulo}` });
+    navigation.navigate('Tabs', { screen: 'Agregar', params: { viajeId: viaje.id, viajeNombre: `${viaje.emoji} ${viaje.titulo}` } });
   };
 
   const renderItem = ({ item: g }) => {

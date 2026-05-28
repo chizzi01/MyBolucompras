@@ -26,6 +26,11 @@ CREATE TABLE IF NOT EXISTS public.viaje_participantes (
   joined_at  timestamp DEFAULT now(),
   UNIQUE(viaje_id, user_id)
 );
+-- FK to public.profiles so PostgREST schema cache can resolve the join
+-- viaje_participantes(user_id, profiles:user_id(id, nombre, email))
+ALTER TABLE public.viaje_participantes
+  ADD CONSTRAINT viaje_participantes_user_profile_fkey
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id);
 
 -- 3. viaje_gastos
 CREATE TABLE IF NOT EXISTS public.viaje_gastos (
@@ -37,6 +42,9 @@ CREATE TABLE IF NOT EXISTS public.viaje_gastos (
   participantes  uuid[],
   created_at     timestamp DEFAULT now()
 );
+ALTER TABLE public.viaje_gastos
+  ADD CONSTRAINT viaje_gastos_pagado_por_profile_fkey
+  FOREIGN KEY (pagado_por) REFERENCES public.profiles(id);
 
 -- 4. viaje_checklist
 CREATE TABLE IF NOT EXISTS public.viaje_checklist (
@@ -47,6 +55,9 @@ CREATE TABLE IF NOT EXISTS public.viaje_checklist (
   created_by  uuid    REFERENCES auth.users NOT NULL,
   created_at  timestamp DEFAULT now()
 );
+ALTER TABLE public.viaje_checklist
+  ADD CONSTRAINT viaje_checklist_created_by_profile_fkey
+  FOREIGN KEY (created_by) REFERENCES public.profiles(id);
 
 -- 5. viaje_notas
 CREATE TABLE IF NOT EXISTS public.viaje_notas (
@@ -56,6 +67,9 @@ CREATE TABLE IF NOT EXISTS public.viaje_notas (
   created_by  uuid  REFERENCES auth.users NOT NULL,
   created_at  timestamp DEFAULT now()
 );
+ALTER TABLE public.viaje_notas
+  ADD CONSTRAINT viaje_notas_created_by_profile_fkey
+  FOREIGN KEY (created_by) REFERENCES public.profiles(id);
 
 -- ── RLS ──────────────────────────────────────────────────────────────────────
 
@@ -65,9 +79,27 @@ ALTER TABLE public.viaje_gastos         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.viaje_checklist      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.viaje_notas          ENABLE ROW LEVEL SECURITY;
 
--- viajes: participants can SELECT; only creator can UPDATE/DELETE
+-- SECURITY DEFINER helper: queries viaje_participantes bypassing its own RLS policies,
+-- which breaks the mutual recursion between viajes_select and vp_select.
+-- Without this, the chain vp_insert→viajes_select→vp_select→viajes_select loops infinitely.
+CREATE OR REPLACE FUNCTION public.is_viaje_participant(viaje_uuid uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.viaje_participantes
+    WHERE viaje_id = viaje_uuid AND user_id = auth.uid()
+  );
+$$;
+
+-- viajes: participants can SELECT; only creator can UPDATE/DELETE.
+-- created_by = auth.uid() allows the creator to SELECT immediately after INSERT,
+-- before their viaje_participantes row is committed.
 CREATE POLICY "viajes_select" ON public.viajes FOR SELECT
-  USING (id IN (SELECT viaje_id FROM public.viaje_participantes WHERE user_id = auth.uid()));
+  USING (created_by = auth.uid() OR is_viaje_participant(id));
 CREATE POLICY "viajes_insert" ON public.viajes FOR INSERT WITH CHECK (created_by = auth.uid());
 CREATE POLICY "viajes_update" ON public.viajes FOR UPDATE USING (created_by = auth.uid());
 CREATE POLICY "viajes_delete" ON public.viajes FOR DELETE USING (created_by = auth.uid());
