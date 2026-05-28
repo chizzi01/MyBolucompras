@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,9 +32,17 @@ function formatDateSep(dateStr) {
 }
 
 function groupGastos(gastos) {
+  const sorted = [...gastos].sort((a, b) => {
+    const da = parseFecha(a.fecha);
+    const db = parseFecha(b.fecha);
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return db - da;
+  });
   const items = [];
   let lastKey = null;
-  for (const g of gastos) {
+  for (const g of sorted) {
     const dateKey = g.fecha ? g.fecha.slice(0, 10) : 'sin-fecha';
     if (dateKey !== lastKey) {
       items.push({ type: 'sep', label: formatDateSep(g.fecha), key: `sep-${dateKey}-${items.length}` });
@@ -61,7 +69,7 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
     });
   };
 
-  const flatItems = groupGastos(gastos);
+  const flatItems = useMemo(() => groupGastos(gastos), [gastos]);
 
   const renderItem = ({ item }) => {
     if (item.type === 'sep') {
