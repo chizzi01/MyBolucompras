@@ -80,10 +80,20 @@ export default function ViajeDetailScreen() {
             <Text style={styles.backText}>Mis Viajes</Text>
           </TouchableOpacity>
           <View style={styles.headerActions}>
-            <TouchableOpacity onPress={() => navigation.navigate('Tabs')} style={styles.optionsBtn}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Tabs')}
+              style={styles.optionsBtn}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+              accessibilityLabel="Ir al inicio"
+              accessibilityRole="button"
+            >
               <Ionicons name="home-outline" size={22} color="#fff" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowOpciones(true)} style={styles.optionsBtn}>
+            <TouchableOpacity
+              onPress={() => setShowOpciones(true)}
+              style={styles.optionsBtn}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+            >
               <Ionicons name="ellipsis-horizontal" size={22} color="#fff" />
             </TouchableOpacity>
           </View>
