@@ -60,12 +60,14 @@ export default function AgregarScreen() {
   const [viajeToggleOn, setViajeToggleOn] = useState(!!routeViajeId);
   const [splitConfig, setSplitConfig] = useState({ modoSplit: 'todos', participanteIds: [] });
   const selectedViaje = viajesActivos.find(v => v.id === selectedViajeId) || null;
+  const routeViaje = routeViajeId ? (viajesActivos.find(v => v.id === routeViajeId) || null) : null;
   const { agregar: agregarViajeGastoMutation } = useViajeGastoMutations(selectedViajeId);
 
   const [form, setForm] = useState({
     ...INITIAL,
     medio: mediosDisponibles[0] || '',
     moneda: mydata.monedaPreferida || 'ARS',
+    banco: bancosDisponibles.length === 1 ? bancosDisponibles[0] : '',
   });
   const loading = agregarMutation.isPending || agregarViajeGastoMutation.isPending;
   const [isScanning, setIsScanning] = useState(false);
@@ -391,7 +393,7 @@ export default function AgregarScreen() {
         </View>
 
         {/* Viaje Banner — Case 0: loading state */}
-        {routeViajeId && !selectedViaje && (
+        {routeViajeId && !routeViaje && (
           <View style={[s.viajeBanner, { borderColor: dark ? colors.border.dark : colors.border.light }]}>
             <ActivityIndicator size="small" color={colors.primary} />
             <Text style={[s.viajeBannerSub, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginLeft: spacing.sm }]}>
@@ -401,10 +403,10 @@ export default function AgregarScreen() {
         )}
 
         {/* Viaje Banner — Case 0: opened from FAB inside a viaje (toggle ON by default) */}
-        {routeViajeId && selectedViaje && (
+        {routeViajeId && routeViaje && (
           <View style={[s.viajeBanner, { borderColor: viajeToggleOn ? '#10B981' : (dark ? colors.border.dark : colors.border.light), backgroundColor: viajeToggleOn ? '#10B98112' : 'transparent' }]}>
             <View style={{ flex: 1 }}>
-              <Text style={[s.viajeBannerText, { color: viajeToggleOn ? '#10B981' : (dark ? colors.text.dark : colors.text.light) }]}>{selectedViaje.emoji} {selectedViaje.titulo} · Activo</Text>
+              <Text style={[s.viajeBannerText, { color: viajeToggleOn ? '#10B981' : (dark ? colors.text.dark : colors.text.light) }]}>{routeViaje.emoji} {routeViaje.titulo} · Activo</Text>
               <Text style={[s.viajeBannerSub, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
                 {viajeToggleOn ? 'Gasto del viaje' : 'Gasto personal'}
               </Text>
@@ -426,11 +428,11 @@ export default function AgregarScreen() {
 
         {/* Viaje Banner — Case 1: exactly 1 active viaje, not opened from FAB */}
         {!routeViajeId && viajesActivos.length === 1 && (
-          <View style={[s.viajeBanner, { borderColor: dark ? colors.border.dark : colors.border.light }]}>
+          <View style={[s.viajeBanner, { borderColor: viajeToggleOn ? '#10B981' : (dark ? colors.border.dark : colors.border.light), backgroundColor: viajeToggleOn ? '#10B98112' : 'transparent' }]}>
             <View style={{ flex: 1 }}>
-              <Text style={[s.viajeBannerText, { color: dark ? colors.text.dark : colors.text.light }]}>{viajesActivos[0].emoji} {viajesActivos[0].titulo} · Activo</Text>
+              <Text style={[s.viajeBannerText, { color: viajeToggleOn ? '#10B981' : (dark ? colors.text.dark : colors.text.light) }]}>{viajesActivos[0].emoji} {viajesActivos[0].titulo} · Activo</Text>
               <Text style={[s.viajeBannerSub, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
-                ¿Es del viaje?
+                {viajeToggleOn ? 'Gasto del viaje' : '¿Es del viaje?'}
               </Text>
             </View>
             <TouchableOpacity
