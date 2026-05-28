@@ -202,7 +202,7 @@ export default function ViajeDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerBg: {},
+  headerBg: { width: '100%' },
   headerInner: { paddingHorizontal: 16 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },

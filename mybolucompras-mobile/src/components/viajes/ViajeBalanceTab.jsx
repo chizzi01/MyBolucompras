@@ -36,14 +36,14 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
           <View key={p.userId} style={[styles.card, { backgroundColor: surfaceBg, borderColor }]}>
             <View style={styles.cardRow}>
               <View style={[styles.avatar, { backgroundColor: color }]}>
-                <Text style={styles.avatarText}>{p.nombre[0]?.toUpperCase()}</Text>
+                <Text style={styles.avatarText}>{p.nombre?.[0]?.toUpperCase()}</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.nombre, { color: textColor }]}>{p.nombre}</Text>
                 <Text style={[styles.sub, { color: subtextColor }]}>Pagó ${p.total.toFixed(0)} total</Text>
               </View>
               <Text style={[styles.neto, { color: netoPositive ? '#10B981' : p.neto < 0 ? colors.error : subtextColor }]}>
-                {netoPositive ? '+' : ''}{p.neto.toFixed(0)}
+                {netoPositive ? '+$' : p.neto < 0 ? '-$' : '$'}{Math.abs(p.neto).toFixed(0)}
               </Text>
             </View>
             <View style={[styles.barBg, { backgroundColor: barBgColor }]}>
@@ -63,14 +63,14 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
           {liquidacion.map((t) => (
             <View key={`${t.de}-${t.hacia}`} style={[styles.transCard, { backgroundColor: surfaceBg, borderColor }]}>
               <View style={[styles.avatar, { backgroundColor: participantColor(t.de) }]}>
-                <Text style={styles.avatarText}>{t.deNombre[0]?.toUpperCase()}</Text>
+                <Text style={styles.avatarText}>{t.deNombre?.[0]?.toUpperCase()}</Text>
               </View>
               <View style={styles.transInfo}>
                 <Text style={[styles.transNames, { color: textColor }]}>{t.deNombre} → {t.haciaNombre}</Text>
                 <Text style={[styles.transSub, { color: subtextColor }]}>debe transferir</Text>
               </View>
               <View style={[styles.avatar, { backgroundColor: participantColor(t.hacia) }]}>
-                <Text style={styles.avatarText}>{t.haciaNombre[0]?.toUpperCase()}</Text>
+                <Text style={styles.avatarText}>{t.haciaNombre?.[0]?.toUpperCase()}</Text>
               </View>
               <View style={styles.amountPill}>
                 <Text style={[styles.amountText, { color: amountColor }]}>${t.monto.toFixed(0)}</Text>
