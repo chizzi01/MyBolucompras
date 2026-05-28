@@ -167,6 +167,7 @@ export default function AgregarScreen() {
 
     setLoading(true);
     try {
+      const shouldGoBack = !!(routeViajeId && viajeToggleOn);
       const gastoData = {
         ...form,
         cuotas: parseInt(form.cuotas) || 1,
@@ -203,7 +204,7 @@ export default function AgregarScreen() {
         type: 'success',
         title: '¡Guardado!',
         message: 'El gasto fue agregado correctamente.',
-        onClose: () => (routeViajeId && viajeToggleOn) ? navigation.goBack() : navigation.navigate('Gastos'),
+        onClose: () => shouldGoBack ? navigation.goBack() : navigation.navigate('Gastos'),
       });
     } catch (err) {
       showModal({ type: 'error', title: 'Error al guardar', message: err.message });
