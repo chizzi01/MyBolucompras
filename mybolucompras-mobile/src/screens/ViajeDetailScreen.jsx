@@ -8,7 +8,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
 import { useViajeDetalle } from '../hooks/queries/useViajeDetalle';
-import { colors, spacing, radius } from '../constants/theme';
+import { colors } from '../constants/theme';
 import ViajeGastosTab from '../components/viajes/ViajeGastosTab';
 import ViajeBalanceTab from '../components/viajes/ViajeBalanceTab';
 import ViajeNotasTab from '../components/viajes/ViajeNotasTab';
@@ -105,13 +105,13 @@ export default function ViajeDetailScreen() {
         {visibleParticipants.map((p, i) => (
           <View
             key={p.userId}
-            style={[styles.av, { backgroundColor: PARTICIPANT_COLORS[i % PARTICIPANT_COLORS.length], marginLeft: i === 0 ? 0 : -7 }]}
+            style={[styles.av, { backgroundColor: PARTICIPANT_COLORS[i % PARTICIPANT_COLORS.length], marginLeft: i === 0 ? 0 : -7, zIndex: MAX_AVATARS - i }]}
           >
             <Text style={styles.avText}>{p.nombre[0]?.toUpperCase()}</Text>
           </View>
         ))}
         {overflowCount > 0 && (
-          <View style={[styles.av, styles.avOverflow, { marginLeft: -7 }]}>
+          <View style={[styles.av, styles.avOverflow, { marginLeft: -7, zIndex: 0 }]}>
             <Text style={styles.avText}>+{overflowCount}</Text>
           </View>
         )}
@@ -121,12 +121,12 @@ export default function ViajeDetailScreen() {
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>TOTAL</Text>
           <Text style={styles.statVal}>${totalGastado.toFixed(0)}</Text>
-          <Text style={styles.statSub}>{gastos.length} gastos</Text>
+          <Text style={styles.statSub}>{gastos.length} {gastos.length === 1 ? 'gasto' : 'gastos'}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>POR PERSONA</Text>
           <Text style={styles.statVal}>${porPersona}</Text>
-          <Text style={styles.statSub}>{viaje.participantes.length} personas</Text>
+          <Text style={styles.statSub}>{viaje.participantes.length} {viaje.participantes.length === 1 ? 'persona' : 'personas'}</Text>
         </View>
       </View>
 
@@ -203,7 +203,7 @@ export default function ViajeDetailScreen() {
 
 const styles = StyleSheet.create({
   headerBg: {},
-  headerInner: { paddingHorizontal: 16, paddingBottom: 0 },
+  headerInner: { paddingHorizontal: 16 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   backText: { color: '#fff', fontSize: 15 },
