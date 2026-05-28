@@ -8,7 +8,8 @@ import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import { useData } from '../context/DataContext';
+import { useConfiguracion } from '../hooks/queries/useConfiguracion';
+import { useConfiguracionMutations } from '../hooks/mutations/useConfiguracionMutations';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { formatARS } from '../utils/formatters';
@@ -49,7 +50,8 @@ function AccordionSection({ title, children, dark, defaultOpen = false }) {
 
 export default function ConfiguracionScreen() {
   const { user, signOut, biometricEnabled, biometricAvailable, enableBiometric } = useAuth();
-  const { mydata, actualizarFondos, actualizarCierre, actualizarConfig } = useData();
+  const { mydata } = useConfiguracion();
+  const { actualizar } = useConfiguracionMutations();
   const { dark, mode, setTheme } = useTheme();
   const s = styles(dark);
   const { showModal, modal } = useModal();
@@ -113,7 +115,7 @@ export default function ConfiguracionScreen() {
   const handleGuardarFondos = async () => {
     setLoadingFondos(true);
     try {
-      await actualizarFondos(Number(fondos));
+      await actualizar.mutateAsync({ ...mydata, fondos: Number(fondos) });
       showModal({ type: 'success', title: 'Fondos actualizados', message: 'Los fondos disponibles fueron guardados.' });
     } catch (err) {
       showModal({ type: 'error', title: 'Error', message: err.message });
@@ -125,12 +127,13 @@ export default function ConfiguracionScreen() {
   const handleGuardarFechas = async () => {
     setLoadingFechas(true);
     try {
-      await actualizarCierre(
-        formatDateToDB(cierreDate),
-        formatDateToDB(vencimientoDate),
-        formatDateToDB(cierreAnteriorDate),
-        formatDateToDB(vencimientoAnteriorDate)
-      );
+      await actualizar.mutateAsync({
+        ...mydata,
+        cierre: formatDateToDB(cierreDate),
+        vencimiento: formatDateToDB(vencimientoDate),
+        cierreAnterior: formatDateToDB(cierreAnteriorDate),
+        vencimientoAnterior: formatDateToDB(vencimientoAnteriorDate),
+      });
       showModal({ type: 'success', title: 'Fechas actualizadas', message: 'Las fechas de tarjeta fueron guardadas.' });
     } catch (err) {
       showModal({ type: 'error', title: 'Error', message: err.message });
@@ -144,7 +147,7 @@ export default function ConfiguracionScreen() {
       ? mediosHabilitados.filter(m => m !== medio)
       : [...mediosHabilitados, medio];
     setMediosHabilitados(next);
-    await actualizarConfig({ mediosHabilitados: next });
+    await actualizar.mutateAsync({ ...mydata, mediosHabilitados: next });
   };
 
   const toggleBanco = async (banco) => {
@@ -152,13 +155,13 @@ export default function ConfiguracionScreen() {
       ? bancosHabilitados.filter(b => b !== banco)
       : [...bancosHabilitados, banco];
     setBancosHabilitados(next);
-    await actualizarConfig({ bancosHabilitados: next });
+    await actualizar.mutateAsync({ ...mydata, bancosHabilitados: next });
   };
 
   const handleMoneda = async (moneda) => {
     setMonedaPreferida(moneda);
     setMonedaOpen(false);
-    await actualizarConfig({ monedaPreferida: moneda });
+    await actualizar.mutateAsync({ ...mydata, monedaPreferida: moneda });
   };
 
   const handleAgregarEtiqueta = async () => {
@@ -172,7 +175,7 @@ export default function ConfiguracionScreen() {
     setSavingEtiq(true);
     try {
       const next = [...etiquetas, { nombre: trimmed, color: colorEtiqueta }];
-      await actualizarConfig({ etiquetas: next });
+      await actualizar.mutateAsync({ ...mydata, etiquetas: next });
       setEtiquetas(next);
       setNuevaEtiqueta('');
     } catch (err) {
@@ -184,7 +187,7 @@ export default function ConfiguracionScreen() {
 
   const handleEliminarEtiqueta = async (nombre) => {
     const next = etiquetas.filter(e => (typeof e === 'string' ? e : e.nombre) !== nombre);
-    await actualizarConfig({ etiquetas: next });
+    await actualizar.mutateAsync({ ...mydata, etiquetas: next });
     setEtiquetas(next);
   };
 

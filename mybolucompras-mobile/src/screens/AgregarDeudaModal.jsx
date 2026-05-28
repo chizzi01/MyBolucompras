@@ -7,7 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useModal } from '../hooks/useModal';
-import { useDeudores } from '../context/DeudoresContext';
+import { useDeudaMutations } from '../hooks/mutations/useDeudaMutations';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
@@ -33,7 +33,7 @@ export default function AgregarDeudaModal({ route, navigation }) {
   const isEditing = !!deudaEdit;
   const onClose = () => navigation.goBack();
 
-  const { agregarDeuda, editarDeuda } = useDeudores();
+  const { agregar: agregarMutation, editar: editarMutation } = useDeudaMutations();
   const { dark } = useTheme();
   const s = styles(dark);
   const { showModal, modal } = useModal();
@@ -60,7 +60,7 @@ export default function AgregarDeudaModal({ route, navigation }) {
     return display;
   });
 
-  const [loading, setLoading] = useState(false);
+  const loading = agregarMutation.isPending || editarMutation.isPending;
   const [showCuotasCustom, setShowCuotasCustom] = useState(false);
 
   // Compartir
@@ -122,7 +122,6 @@ export default function AgregarDeudaModal({ route, navigation }) {
       return showModal({ type: 'warning', title: 'Campo requerido', message: 'Seleccioná un medio de pago.' });
     }
 
-    setLoading(true);
     try {
       const payload = {
         ...form,
@@ -135,9 +134,9 @@ export default function AgregarDeudaModal({ route, navigation }) {
         : null;
 
       if (isEditing) {
-        await editarDeuda(deudaEdit.id, payload);
+        await editarMutation.mutateAsync({ id: deudaEdit.id, deuda: payload });
       } else {
-        await agregarDeuda(payload, sharedWith);
+        await agregarMutation.mutateAsync({ deuda: payload, sharedWith });
         if (sharedUser) {
           await contactService.saveContact(sharedUser);
         }
@@ -145,8 +144,6 @@ export default function AgregarDeudaModal({ route, navigation }) {
       onClose();
     } catch (err) {
       showModal({ type: 'error', title: 'Error al guardar', message: err.message });
-    } finally {
-      setLoading(false);
     }
   };
 
