@@ -7,14 +7,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import { useViajes } from '../context/ViajesContext';
+import { useViajes } from '../hooks/queries/useViajes';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import ViajeCard from '../components/viajes/ViajeCard';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
 
 export default function ViajesScreen() {
   const { dark } = useTheme();
-  const { viajes, loading, cargarViajes } = useViajes();
+  const { viajes, loading, refetch } = useViajes();
   const navigation = useNavigation();
   const [showCrear, setShowCrear] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -24,7 +24,7 @@ export default function ViajesScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await cargarViajes();
+    await refetch();
     setRefreshing(false);
   };
 
