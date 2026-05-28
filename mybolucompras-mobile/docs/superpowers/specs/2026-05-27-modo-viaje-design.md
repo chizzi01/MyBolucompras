@@ -33,13 +33,17 @@ Se agrega un 5to tab **"Viajes" (✈️)** al bottom tab navigator existente. El
 `Gastos | Agregar | Dashboard | Viajes | Config`
 
 ### Stack de pantallas nuevas
+`ViajeDetailScreen` vive en el `AuthStack` (mismo nivel que `EditarGasto`), no anidado dentro del tab de Viajes. Se navega a él con `navigation.navigate('ViajeDetail', { viajeId })` desde `ViajesScreen`.
+
 ```
-Tabs
-  └── ViajesScreen          (lista de viajes)
-        └── ViajeDetailScreen   (detalle, con segmented control)
+AuthStack
+  ├── Tabs
+  │     └── ViajesScreen   (lista de viajes)
+  ├── ViajeDetail           (detalle, con segmented control)
+  └── EditarGasto           (ya existente)
 ```
 
-`ViajeDetailScreen` se abre como stack screen con animación `slide_from_right`.
+`ViajeDetailScreen` usa animación `slide_from_right`.
 
 ---
 
@@ -194,6 +198,9 @@ Aparece un **selector de radio buttons**:
 
 Tras seleccionar un viaje, aparece el mismo panel de división del Caso 1.
 
+### Caso 0: Desde el FAB dentro de ViajeDetailScreen
+`AgregarScreen` recibe el `viajeId` como param de navegación. El banner aparece ya activado (toggle ON) y el viaje está preseleccionado. El usuario no puede desactivar el viaje en este flujo.
+
 ### Caso 3: Sin viajes activos
 El formulario de `AgregarScreen` no cambia — sin banner, sin panel.
 
@@ -269,6 +276,20 @@ CREATE POLICY "participantes_only" ON viaje_gastos
 ```
 
 Para `viajes`: el creador puede actualizar/cerrar; todos los participantes pueden leer.
+
+**Nota sobre bootstrap de RLS en `viaje_participantes`:** la política de lectura no puede requerir estar en la misma tabla (loop). En cambio, se permite leer `viaje_participantes` a quien sea `created_by` del viaje O cuyo `user_id` coincida con el row.
+
+```sql
+CREATE POLICY "read_participantes" ON viaje_participantes
+  FOR SELECT USING (
+    user_id = auth.uid()
+    OR viaje_id IN (SELECT id FROM viajes WHERE created_by = auth.uid())
+  );
+```
+
+**Colores de participantes:** se asignan determinísticamente en el cliente usando el índice del usuario en el array de participantes mapeado a una paleta fija:
+`['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']`
+El índice 0 siempre es el creador del viaje.
 
 ---
 
