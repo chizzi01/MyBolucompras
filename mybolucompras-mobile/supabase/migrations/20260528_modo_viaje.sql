@@ -2,6 +2,10 @@
 -- NOTE: This migration must be run manually in the Supabase dashboard SQL Editor.
 -- It will NOT be run automatically by this code — copy-paste the entire content below
 -- into your Supabase project's SQL Editor and execute it.
+--
+-- PREREQUISITE: The public.gastos table must already exist before running this migration.
+-- This migration creates Modo Viaje (trip mode) tables that reference public.gastos via
+-- foreign key constraints in the viaje_gastos table.
 
 -- 1. viajes
 CREATE TABLE IF NOT EXISTS public.viajes (
@@ -90,3 +94,13 @@ CREATE POLICY "vc_all" ON public.viaje_checklist
 CREATE POLICY "vn_all" ON public.viaje_notas
   USING (viaje_id IN (SELECT viaje_id FROM public.viaje_participantes WHERE user_id = auth.uid()))
   WITH CHECK (viaje_id IN (SELECT viaje_id FROM public.viaje_participantes WHERE user_id = auth.uid()));
+
+-- ── INDEXES ──────────────────────────────────────────────────────────────────
+-- Indexes for RLS subquery performance. Critical for performance because every
+-- SELECT/INSERT/UPDATE/DELETE runs RLS policy checks that reference these columns.
+
+CREATE INDEX IF NOT EXISTS idx_vp_user_id ON public.viaje_participantes(user_id);
+CREATE INDEX IF NOT EXISTS idx_vp_viaje_id ON public.viaje_participantes(viaje_id);
+CREATE INDEX IF NOT EXISTS idx_vg_viaje_id ON public.viaje_gastos(viaje_id);
+CREATE INDEX IF NOT EXISTS idx_vc_viaje_id ON public.viaje_checklist(viaje_id);
+CREATE INDEX IF NOT EXISTS idx_vn_viaje_id ON public.viaje_notas(viaje_id);
