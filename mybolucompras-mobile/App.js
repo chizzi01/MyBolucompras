@@ -13,6 +13,7 @@ import * as Notifications from 'expo-notifications';
 import SpInAppUpdates, { IAUUpdateKind } from 'sp-react-native-in-app-updates';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './src/lib/queryClient';
+import { useRealtimeInvalidation } from './src/hooks/useRealtimeInvalidation';
 
 const inAppUpdates = new SpInAppUpdates(false);
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -38,6 +39,11 @@ import AgregarDeudaModal from './src/screens/AgregarDeudaModal';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
+
+function RealtimeProvider({ children }) {
+  useRealtimeInvalidation();
+  return children;
+}
 
 
 // ── Animated splash ──────────────────────────────────────────────────────────
@@ -133,46 +139,48 @@ function RootNavigator() {
             <DataProvider>
               <ViajesProvider>
               <DeudoresProvider>
-                <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-                  <AuthStack.Screen name="Tabs" component={TabNavigator} />
-                  <AuthStack.Screen
-                    name="EditarGasto"
-                    component={EditarGastoScreen}
-                    options={{
-                      animation: 'slide_from_bottom',
-                      gestureEnabled: true,
-                      gestureDirection: 'vertical',
-                    }}
-                  />
-                  <AuthStack.Screen
-                    name="ViajeDetail"
-                    component={ViajeDetailScreen}
-                    options={{ animation: 'slide_from_right' }}
-                  />
-                  <AuthStack.Screen
-                    name="Viajes"
-                    component={ViajesScreen}
-                    options={{ animation: 'slide_from_bottom' }}
-                  />
-                  <AuthStack.Screen
-                    name="AgregarDeuda"
-                    component={AgregarDeudaModal}
-                    options={{
-                      animation: 'slide_from_bottom',
-                      gestureEnabled: true,
-                      gestureDirection: 'vertical',
-                    }}
-                  />
-                  <AuthStack.Screen
-                    name="EditarDeuda"
-                    component={AgregarDeudaModal}
-                    options={{
-                      animation: 'slide_from_bottom',
-                      gestureEnabled: true,
-                      gestureDirection: 'vertical',
-                    }}
-                  />
-                </AuthStack.Navigator>
+                <RealtimeProvider>
+                  <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+                    <AuthStack.Screen name="Tabs" component={TabNavigator} />
+                    <AuthStack.Screen
+                      name="EditarGasto"
+                      component={EditarGastoScreen}
+                      options={{
+                        animation: 'slide_from_bottom',
+                        gestureEnabled: true,
+                        gestureDirection: 'vertical',
+                      }}
+                    />
+                    <AuthStack.Screen
+                      name="ViajeDetail"
+                      component={ViajeDetailScreen}
+                      options={{ animation: 'slide_from_right' }}
+                    />
+                    <AuthStack.Screen
+                      name="Viajes"
+                      component={ViajesScreen}
+                      options={{ animation: 'slide_from_bottom' }}
+                    />
+                    <AuthStack.Screen
+                      name="AgregarDeuda"
+                      component={AgregarDeudaModal}
+                      options={{
+                        animation: 'slide_from_bottom',
+                        gestureEnabled: true,
+                        gestureDirection: 'vertical',
+                      }}
+                    />
+                    <AuthStack.Screen
+                      name="EditarDeuda"
+                      component={AgregarDeudaModal}
+                      options={{
+                        animation: 'slide_from_bottom',
+                        gestureEnabled: true,
+                        gestureDirection: 'vertical',
+                      }}
+                    />
+                  </AuthStack.Navigator>
+                </RealtimeProvider>
               </DeudoresProvider>
               </ViajesProvider>
             </DataProvider>
