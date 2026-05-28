@@ -6,10 +6,11 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
+import { useGastos } from '../hooks/queries/useGastos';
+import { useConfiguracion } from '../hooks/queries/useConfiguracion';
+import { useGastoMutations } from '../hooks/mutations/useGastoMutations';
 import { useViajes } from '../context/ViajesContext';
 import { getCuotasRestantes } from '../utils/cuotas';
 import { useTheme } from '../context/ThemeContext';
@@ -24,7 +25,9 @@ const MESES = [
 ];
 
 export default function GastosScreen({ navigation }) {
-  const { gastos, mydata, loading, cargarDatos, eliminarGasto, marcarGastoPagado } = useData();
+  const { gastos, loading, refetch } = useGastos();
+  const { mydata } = useConfiguracion();
+  const { eliminar: eliminarMutation, marcarPagado: marcarPagadoMutation } = useGastoMutations();
   const { user } = useAuth();
   const { viajeActivo } = useViajes();
   const { dark } = useTheme();
@@ -48,15 +51,11 @@ export default function GastosScreen({ navigation }) {
     await AsyncStorage.setItem('@mybolu:soloEsteMes', String(next));
   }, [soloEsteMes]);
 
-  useFocusEffect(useCallback(() => {
-    cargarDatos();
-  }, [cargarDatos]));
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await cargarDatos();
+    await refetch();
     setRefreshing(false);
-  }, [cargarDatos]);
+  }, [refetch]);
 
   const gastosFiltrados = useMemo(() => {
     let lista = gastos.filter(g => tabActivo === 'fijos' ? g.isFijo : !g.isFijo);
@@ -90,7 +89,7 @@ export default function GastosScreen({ navigation }) {
       type: 'danger',
       title: 'Eliminar gasto',
       message: `¿Eliminar "${gasto.objeto}"?`,
-      onConfirm: () => eliminarGasto(gasto.id),
+      onConfirm: () => eliminarMutation.mutate(gasto.id),
     });
   };
 
@@ -104,7 +103,11 @@ export default function GastosScreen({ navigation }) {
       title: 'Marcar como pagado',
       message: `¿Confirmas el pago de "${gasto.objeto}"? Se notificará a ${gasto.compartidoConNombre}.`,
       confirmText: 'Confirmar',
-      onConfirm: () => marcarGastoPagado(gasto.id),
+      onConfirm: () => marcarPagadoMutation.mutate({
+        id: gasto.id,
+        gasto,
+        nombre: user?.user_metadata?.nombre || user?.email || 'Alguien',
+      }),
     });
   };
 
