@@ -1,98 +1,68 @@
 // src/components/viajes/ViajeNotasTab.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
 import { viajeNotasService } from '../../services/viajeNotasService';
+import { useViajeNotas } from '../../hooks/queries/useViajeNotas';
+import { useViajeNotasMutations } from '../../hooks/mutations/useViajeNotasMutations';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 
 const PARTICIPANT_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 export default function ViajeNotasTab({ viaje, dark }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const bg = dark ? colors.background.dark : colors.background.light;
   const surfaceBg = dark ? '#1E293B' : '#fff';
   const textColor = dark ? colors.text.dark : colors.text.light;
   const subtextColor = dark ? colors.textSecondary.dark : colors.textSecondary.light;
   const border = dark ? colors.border.dark : colors.border.light;
 
-  const [checklist, setChecklist] = useState([]);
-  const [notas, setNotas] = useState([]);
   const [nuevoItem, setNuevoItem] = useState('');
   const [nuevaNota, setNuevaNota] = useState('');
-  const [addingItem, setAddingItem] = useState(false);
-  const [addingNota, setAddingNota] = useState(false);
   const [showItemInput, setShowItemInput] = useState(false);
   const [showNotaInput, setShowNotaInput] = useState(false);
 
   const activo = viaje.estado === 'activo';
-
-  const cargar = useCallback(async () => {
-    const [c, n] = await Promise.all([
-      viajeNotasService.getChecklist(viaje.id),
-      viajeNotasService.getNotas(viaje.id),
-    ]);
-    setChecklist(c);
-    setNotas(n);
-  }, [viaje.id]);
+  const { checklist, notas, loading } = useViajeNotas(viaje.id);
+  const { agregarItem, toggleItem, eliminarItem, agregarNota, eliminarNota } = useViajeNotasMutations(viaje.id);
 
   useEffect(() => {
-    cargar();
-    const channel = viajeNotasService.subscribeChecklist(viaje.id, cargar);
+    const channel = viajeNotasService.subscribeChecklist(viaje.id, () => {
+      queryClient.invalidateQueries({ queryKey: ['viaje-checklist', viaje.id] });
+    });
     return () => { channel.unsubscribe(); };
-  }, [cargar]);
+  }, [viaje.id, queryClient]);
 
-  const handleToggle = async (item) => {
-    setChecklist(prev => prev.map(i => i.id === item.id ? { ...i, completado: !i.completado } : i));
-    try {
-      await viajeNotasService.toggleItem(item.id, !item.completado);
-    } catch {
-      cargar();
-    }
+  const handleToggle = (item) => {
+    const marcar = !(item.completadosPor ?? []).includes(user?.id);
+    toggleItem.mutate({ itemId: item.id, userId: user?.id, marcar });
   };
 
-  const handleAgregarItem = async () => {
+  const handleAgregarItem = () => {
     if (!nuevoItem.trim()) return;
-    setAddingItem(true);
-    try {
-      const nuevo = await viajeNotasService.agregarItem(viaje.id, nuevoItem.trim());
-      setChecklist(prev => [...prev, nuevo]);
-      setNuevoItem('');
-      setShowItemInput(false);
-    } catch (err) {
-      Alert.alert('Error', err.message);
-    } finally {
-      setAddingItem(false);
-    }
+    agregarItem.mutate(nuevoItem.trim(), {
+      onSuccess: () => { setNuevoItem(''); setShowItemInput(false); },
+      onError: (err) => Alert.alert('Error', err.message),
+    });
   };
 
-  const handleEliminarItem = async (id) => {
-    setChecklist(prev => prev.filter(i => i.id !== id));
-    await viajeNotasService.eliminarItem(id);
-  };
+  const handleEliminarItem = (id) => eliminarItem.mutate(id);
 
-  const handleAgregarNota = async () => {
+  const handleAgregarNota = () => {
     if (!nuevaNota.trim()) return;
-    setAddingNota(true);
-    try {
-      const nueva = await viajeNotasService.agregarNota(viaje.id, nuevaNota.trim());
-      setNotas(prev => [nueva, ...prev]);
-      setNuevaNota('');
-      setShowNotaInput(false);
-    } catch (err) {
-      Alert.alert('Error', err.message);
-    } finally {
-      setAddingNota(false);
-    }
+    agregarNota.mutate(nuevaNota.trim(), {
+      onSuccess: () => { setNuevaNota(''); setShowNotaInput(false); },
+      onError: (err) => Alert.alert('Error', err.message),
+    });
   };
 
-  const handleEliminarNota = async (id) => {
-    setNotas(prev => prev.filter(n => n.id !== id));
-    await viajeNotasService.eliminarNota(id);
-  };
+  const handleEliminarNota = (id) => eliminarNota.mutate(id);
 
   const participantColor = (userId) => {
     const idx = viaje.participantes.findIndex(p => p.userId === userId);
@@ -110,6 +80,14 @@ export default function ViajeNotasTab({ viaje, dark }) {
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bg }}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={{ flex: 1, backgroundColor: bg }} contentContainerStyle={{ padding: spacing.md, paddingBottom: 40 }}>
       {sectionHeader('QUÉ LLEVAR', () => setShowItemInput(v => !v))}
@@ -125,35 +103,50 @@ export default function ViajeNotasTab({ viaje, dark }) {
             onSubmitEditing={handleAgregarItem}
             autoFocus
           />
-          <TouchableOpacity style={styles.addBtn} onPress={handleAgregarItem} disabled={addingItem}>
-            {addingItem ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="checkmark" size={18} color="#fff" />}
+          <TouchableOpacity style={styles.addBtn} onPress={handleAgregarItem} disabled={agregarItem.isPending}>
+            {agregarItem.isPending ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="checkmark" size={18} color="#fff" />}
           </TouchableOpacity>
         </View>
       )}
 
-      {checklist.map(item => (
-        <TouchableOpacity
-          key={item.id}
-          style={[styles.checkItem, { backgroundColor: surfaceBg }]}
-          onPress={() => handleToggle(item)}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={item.completado ? 'checkmark-circle' : 'ellipse-outline'}
-            size={22}
-            color={item.completado ? '#10B981' : subtextColor}
-          />
-          <Text style={[styles.checkText, { color: item.completado ? subtextColor : textColor, textDecorationLine: item.completado ? 'line-through' : 'none' }]}>
-            {item.texto}
-          </Text>
-          <Text style={[styles.autor, { color: subtextColor }]}>{item.autorNombre.split(' ')[0]}</Text>
-          {item.createdBy === user?.id && activo && (
-            <TouchableOpacity onPress={() => handleEliminarItem(item.id)}>
-              <Ionicons name="trash-outline" size={16} color={colors.error} />
-            </TouchableOpacity>
-          )}
-        </TouchableOpacity>
-      ))}
+      {checklist.map(item => {
+        const completadosPor = item.completadosPor ?? [];
+        const completadoPorMi = completadosPor.includes(user?.id);
+        const pendientes = viaje.participantes.filter(p => !completadosPor.includes(p.userId));
+        const todosCompletaron = viaje.participantes.length > 0 && pendientes.length === 0;
+        const alguienMarcó = completadosPor.length > 0;
+
+        return (
+          <TouchableOpacity
+            key={item.id}
+            style={[styles.checkItem, { backgroundColor: surfaceBg }]}
+            onPress={() => handleToggle(item)}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={todosCompletaron ? 'checkmark-circle' : completadoPorMi ? 'checkmark-circle-outline' : 'ellipse-outline'}
+              size={22}
+              color={todosCompletaron || completadoPorMi ? '#10B981' : subtextColor}
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.checkText, { color: todosCompletaron ? subtextColor : textColor, textDecorationLine: todosCompletaron ? 'line-through' : 'none' }]}>
+                {item.texto}
+              </Text>
+              {!todosCompletaron && alguienMarcó && (
+                <Text style={styles.esperando}>
+                  Esperando a: {pendientes.map(p => p.nombre.split(' ')[0]).join(', ')}
+                </Text>
+              )}
+            </View>
+            <Text style={[styles.autor, { color: subtextColor }]}>{item.autorNombre.split(' ')[0]}</Text>
+            {item.createdBy === user?.id && activo && (
+              <TouchableOpacity onPress={() => handleEliminarItem(item.id)}>
+                <Ionicons name="trash-outline" size={16} color={colors.error} />
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+        );
+      })}
 
       <View style={{ height: spacing.lg }} />
 
@@ -170,8 +163,8 @@ export default function ViajeNotasTab({ viaje, dark }) {
             multiline
             autoFocus
           />
-          <TouchableOpacity style={styles.addBtn} onPress={handleAgregarNota} disabled={addingNota}>
-            {addingNota ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="checkmark" size={18} color="#fff" />}
+          <TouchableOpacity style={styles.addBtn} onPress={handleAgregarNota} disabled={agregarNota.isPending}>
+            {agregarNota.isPending ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="checkmark" size={18} color="#fff" />}
           </TouchableOpacity>
         </View>
       )}
@@ -203,7 +196,8 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 10, ...typography.body },
   addBtn: { backgroundColor: colors.primary, borderRadius: radius.md, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   checkItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderRadius: radius.md, marginBottom: 6 },
-  checkText: { ...typography.body, flex: 1 },
+  checkText: { ...typography.body },
+  esperando: { fontSize: 11, color: '#F59E0B', marginTop: 2 },
   autor: { fontSize: 11 },
   notaCard: { borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.sm },
   notaHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 6 },

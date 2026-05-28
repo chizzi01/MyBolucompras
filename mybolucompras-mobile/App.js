@@ -241,7 +241,7 @@ function AppWithTheme() {
       }
     });
     return () => {
-      Notifications.removeNotificationSubscription(responseListener.current);
+      responseListener.current?.remove();
     };
   }, []);
 

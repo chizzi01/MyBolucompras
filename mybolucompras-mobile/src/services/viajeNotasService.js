@@ -12,7 +12,7 @@ export const viajeNotasService = {
     return data.map(row => ({
       id: row.id,
       texto: row.texto,
-      completado: row.completado,
+      completadosPor: row.completados_por ?? [],
       createdBy: row.created_by,
       autorNombre: row.autor?.nombre || row.autor?.email || '',
       createdAt: row.created_at,
@@ -29,13 +29,30 @@ export const viajeNotasService = {
       .select('*, autor:created_by(id, nombre, email)')
       .single();
     if (error) throw error;
-    return { id: data.id, texto: data.texto, completado: data.completado, createdBy: data.created_by, autorNombre: data.autor?.nombre || data.autor?.email || '', createdAt: data.created_at };
+    return {
+      id: data.id,
+      texto: data.texto,
+      completadosPor: data.completados_por ?? [],
+      createdBy: data.created_by,
+      autorNombre: data.autor?.nombre || data.autor?.email || '',
+      createdAt: data.created_at,
+    };
   },
 
-  async toggleItem(itemId, completado) {
+  async toggleItem(itemId, userId, marcar) {
+    const { data, error: fetchError } = await supabase
+      .from('viaje_checklist')
+      .select('completados_por')
+      .eq('id', itemId)
+      .single();
+    if (fetchError) throw fetchError;
+    const current = data?.completados_por ?? [];
+    const updated = marcar
+      ? [...new Set([...current, userId])]
+      : current.filter(id => id !== userId);
     const { error } = await supabase
       .from('viaje_checklist')
-      .update({ completado })
+      .update({ completados_por: updated })
       .eq('id', itemId);
     if (error) throw error;
   },
