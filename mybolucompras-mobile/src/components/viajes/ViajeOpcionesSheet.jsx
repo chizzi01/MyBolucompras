@@ -35,7 +35,6 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
           onPress: async () => {
             try {
               await eliminarViaje(viaje.id);
-              onClose();
               onDeleted?.();
             } catch (err) {
               Alert.alert('Error', err.message);

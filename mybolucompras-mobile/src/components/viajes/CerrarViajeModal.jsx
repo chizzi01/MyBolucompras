@@ -17,7 +17,7 @@ export default function CerrarViajeModal({ visible, onClose, viaje, gastos, onCe
   const textColor = dark ? colors.text.dark : colors.text.light;
   const subtextColor = dark ? colors.textSecondary.dark : colors.textSecondary.light;
 
-  const totalGastado = (gastos || []).reduce((sum, g) => sum + g.precio, 0);
+  const totalGastado = (gastos || []).reduce((sum, g) => sum + (g.precio ?? 0), 0);
 
   const handleCerrar = async () => {
     setLoading(true);
