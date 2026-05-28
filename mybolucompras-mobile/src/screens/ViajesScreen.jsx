@@ -70,14 +70,16 @@ export default function ViajesScreen() {
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.newBtn}
-          onPress={() => setShowCrear(true)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="add" size={18} color="#fff" />
-          <Text style={styles.newBtnText}>Nuevo</Text>
-        </TouchableOpacity>
+        <View style={styles.rightSlot}>
+          <TouchableOpacity
+            style={styles.newBtn}
+            onPress={() => setShowCrear(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="add" size={18} color="#fff" />
+            <Text style={styles.newBtnText}>Nuevo</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -124,6 +126,10 @@ const styles = StyleSheet.create({
   },
   backBtnText: {
     fontSize: 14,
+  },
+  rightSlot: {
+    minWidth: 72,
+    alignItems: 'flex-end',
   },
   headerCenter: {
     flex: 1,
