@@ -375,9 +375,8 @@ export default function AgregarScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light }}
     >
       <SafeAreaView style={s.root} edges={['top']}>
         <ScrollView
@@ -924,7 +923,7 @@ function TipoSelector({ value, onChange, dark, s }) {
 
 function FijoSelector({ value, onChange, dark, s }) {
   const opciones = [
-    { key: false, label: 'Normal', icon: 'flash-outline' },
+    { key: false, label: 'Variable', icon: 'flash-outline' },
     { key: true, label: 'Fijo', icon: 'repeat-outline' },
   ];
   return (

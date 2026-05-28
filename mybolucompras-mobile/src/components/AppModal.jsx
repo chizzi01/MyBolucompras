@@ -11,6 +11,7 @@ const TYPE_CONFIG = {
   info:    { icon: 'information-circle', color: colors.primary, bg: 'rgba(99,102,241,0.12)', closeText: 'Entendido' },
   danger:  { icon: 'trash-outline',    color: '#EF4444', bg: 'rgba(239,68,68,0.13)',  closeText: 'Eliminar' },
   confirm: { icon: 'log-out-outline',  color: '#F59E0B', bg: 'rgba(245,158,11,0.13)', closeText: 'Salir' },
+  check:   { icon: 'checkmark-circle', color: '#10B981', bg: 'rgba(16,185,129,0.13)',  closeText: 'Confirmar' },
 };
 
 export default function AppModal({

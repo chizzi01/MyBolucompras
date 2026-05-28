@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "437896399816",
+    "project_id": "mybolucompras",
+    "storage_bucket": "mybolucompras.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:437896399816:android:9ceae8f25a04ca65c04efd",
+        "android_client_info": {
+          "package_name": "com.chizzi.mybolucomprasmobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEGvXYN5hzy1c4gXtT9dxgJFIXDsCDoaw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

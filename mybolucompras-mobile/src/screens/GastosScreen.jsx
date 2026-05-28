@@ -6,8 +6,11 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useModal } from '../hooks/useModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
+import { useViajes } from '../context/ViajesContext';
 import { getCuotasRestantes } from '../utils/cuotas';
 import { useTheme } from '../context/ThemeContext';
 import GastoCard from '../components/GastoCard';
@@ -21,14 +24,16 @@ const MESES = [
 ];
 
 export default function GastosScreen({ navigation }) {
-  const { gastos, mydata, loading, cargarDatos, eliminarGasto } = useData();
+  const { gastos, mydata, loading, cargarDatos, eliminarGasto, marcarGastoPagado } = useData();
+  const { user } = useAuth();
+  const { viajeActivo } = useViajes();
   const { dark } = useTheme();
   const s = styles(dark);
 
   const [search, setSearch] = useState('');
   const [soloEsteMes, setSoloEsteMes] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [tabActivo, setTabActivo] = useState('normales');
+  const [tabActivo, setTabActivo] = useState('variables');
   const { showModal, modal } = useModal();
 
   useEffect(() => {
@@ -43,6 +48,10 @@ export default function GastosScreen({ navigation }) {
     await AsyncStorage.setItem('@mybolu:soloEsteMes', String(next));
   }, [soloEsteMes]);
 
+  useFocusEffect(useCallback(() => {
+    cargarDatos();
+  }, [cargarDatos]));
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await cargarDatos();
@@ -56,7 +65,7 @@ export default function GastosScreen({ navigation }) {
       lista = lista.filter(g => g.objeto.toLowerCase().includes(q));
     }
     if (soloEsteMes) {
-      if (tabActivo === 'normales') {
+      if (tabActivo === 'variables') {
         lista = lista.filter(g => {
           const rest = getCuotasRestantes(g, mydata);
           return rest === 'N/A' || rest > 0;
@@ -85,6 +94,20 @@ export default function GastosScreen({ navigation }) {
     });
   };
 
+  // Cualquiera de las dos partes puede marcar el gasto compartido como pagado
+  const esCompartido = (gasto) =>
+    !!gasto.compartidoConNombre && !!gasto.compartidoConUserId;
+
+  const handleMarkPaid = (gasto) => {
+    showModal({
+      type: 'check',
+      title: 'Marcar como pagado',
+      message: `¿Confirmas el pago de "${gasto.objeto}"? Se notificará a ${gasto.compartidoConNombre}.`,
+      confirmText: 'Confirmar',
+      onConfirm: () => marcarGastoPagado(gasto.id),
+    });
+  };
+
   const handleTabChange = (tab) => {
     setTabActivo(tab);
     setSearch('');
@@ -96,6 +119,7 @@ export default function GastosScreen({ navigation }) {
       mydata={mydata}
       onPress={() => navigation.navigate('EditarGasto', { gasto: item })}
       onDelete={() => handleDelete(item)}
+      onMarkPaid={esCompartido(item) && !item.pagado ? () => handleMarkPaid(item) : undefined}
     />
   );
 
@@ -108,29 +132,45 @@ export default function GastosScreen({ navigation }) {
           <Text style={s.title}>Mis gastos</Text>
           <Text style={s.count}>{gastosFiltrados.length}</Text>
         </View>
-        <TouchableOpacity
-          style={[s.mesChip, soloEsteMes && s.mesChipActive]}
-          onPress={toggleSoloEsteMes}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={soloEsteMes ? 'calendar' : 'calendar-outline'}
-            size={13}
-            color={soloEsteMes ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
-          />
-          <Text style={[s.mesChipText, soloEsteMes && s.mesChipTextActive]}>
-            {soloEsteMes ? mesNombre : 'Todos'}
-          </Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <TouchableOpacity
+            style={[s.mesChip, viajeActivo && s.mesChipViaje]}
+            onPress={() => navigation.navigate('Viajes')}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={viajeActivo ? 'airplane' : 'airplane-outline'}
+              size={13}
+              color={viajeActivo ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+            />
+            <Text style={[s.mesChipText, viajeActivo && s.mesChipTextActive]}>
+              {viajeActivo ? viajeActivo.nombre : 'Viajes'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[s.mesChip, soloEsteMes && s.mesChipActive]}
+            onPress={toggleSoloEsteMes}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={soloEsteMes ? 'calendar' : 'calendar-outline'}
+              size={13}
+              color={soloEsteMes ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+            />
+            <Text style={[s.mesChipText, soloEsteMes && s.mesChipTextActive]}>
+              {soloEsteMes ? mesNombre : 'Todos'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={s.tabsRow}>
         <TouchableOpacity
-          style={[s.tabBtn, tabActivo === 'normales' && s.tabBtnActiveNormales]}
-          onPress={() => handleTabChange('normales')}
+          style={[s.tabBtn, tabActivo === 'variables' && s.tabBtnActiveVariables]}
+          onPress={() => handleTabChange('variables')}
           activeOpacity={0.7}
         >
-          <Text style={[s.tabBtnText, tabActivo === 'normales' && s.tabBtnTextActive]}>Normales</Text>
+          <Text style={[s.tabBtnText, tabActivo === 'variables' && s.tabBtnTextActive]}>Variables</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[s.tabBtn, tabActivo === 'fijos' && s.tabBtnActiveFijos]}
@@ -212,6 +252,7 @@ const styles = (dark) => StyleSheet.create({
     backgroundColor: dark ? colors.surface.dark : colors.surface.light,
   },
   mesChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  mesChipViaje: { backgroundColor: colors.accent, borderColor: colors.accent },
   mesChipText: {
     ...typography.captionMed,
     color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
@@ -231,7 +272,7 @@ const styles = (dark) => StyleSheet.create({
     alignItems: 'center',
     borderRadius: radius.md - 1,
   },
-  tabBtnActiveNormales: {
+  tabBtnActiveVariables: {
     backgroundColor: colors.primary,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },

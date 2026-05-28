@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { supabase } from '../lib/supabase';
+import { pushNotificationService } from '../services/pushNotificationService';
 
 const BIOMETRIC_KEY = 'biometric_enabled';
 
@@ -59,6 +60,11 @@ export function AuthProvider({ children }) {
           if (!alreadyHasData) {
             setOnboardingNeeded(true);
           }
+
+          // Registro de token push (fire-and-forget)
+          pushNotificationService.registerAndSaveToken().catch(e =>
+            console.warn('[Push] Token registration failed:', e?.message)
+          );
         }
 
         const bioOn = bioStored === 'true';
@@ -95,6 +101,11 @@ export function AuthProvider({ children }) {
               );
               if (!alreadyHasData) setOnboardingNeeded(true);
             });
+
+          // Registro de token push para nuevo login (fire-and-forget)
+          pushNotificationService.registerAndSaveToken().catch(e =>
+            console.warn('[Push] Token registration failed:', e?.message)
+          );
         }
         return prev?.id === next?.id ? prev : next;
       });

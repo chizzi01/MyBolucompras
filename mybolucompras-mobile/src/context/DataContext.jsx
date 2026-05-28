@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { gastosService } from '../services/gastosService';
 import { configuracionService } from '../services/configuracionService';
+import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
 const DataContext = createContext(null);
@@ -47,6 +48,19 @@ export function DataProvider({ children }) {
     }
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`gastos-realtime-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'gastos', filter: `user_id=eq.${user.id}` },
+        () => cargarDatos()
+      )
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [user?.id]);
+
   const agregarGasto = async (gasto, sharedWith = null) => {
     const nuevo = await gastosService.crear(gasto, sharedWith);
     setGastos(prev => [nuevo, ...prev]);
@@ -81,11 +95,20 @@ export function DataProvider({ children }) {
     setMydata(nuevaConfig);
   };
 
+  const marcarGastoPagado = async (id) => {
+    const gasto = gastos.find(g => g.id === id);
+    if (!gasto) return;
+    const currentUserName = user?.user_metadata?.nombre || user?.email || 'Alguien';
+    await gastosService.marcarPagadoConNotificacion(id, gasto, currentUserName);
+    setGastos(prev => prev.map(g => g.id === id ? { ...g, pagado: true } : g));
+  };
+
   return (
     <DataContext.Provider value={{
       gastos, mydata, loading, error, cargarDatos,
       agregarGasto, editarGasto, eliminarGasto,
       actualizarConfig, actualizarFondos, actualizarCierre,
+      marcarGastoPagado,
       setMydata,
     }}>
       {children}

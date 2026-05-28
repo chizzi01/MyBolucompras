@@ -22,15 +22,26 @@
         "backgroundColor": "#0E0B2E"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "pan",
       "package": "com.chizzi.mybolucomprasmobile",
       "compileSdkVersion": 36,
-      "versionCode": 16
+      "versionCode": 22,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/BudgetBuddy.png",
+          "color": "#6366F1",
+          "androidMode": "default",
+          "androidCollapsedTitle": "Budget Buddy"
+        }
+      ],
       [
         "expo-image-picker",
         {
