@@ -394,6 +394,16 @@ export default function AgregarScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Viaje Banner — Case 0: loading state */}
+        {routeViajeId && !selectedViaje && (
+          <View style={[s.viajeBanner, { borderColor: dark ? colors.border.dark : colors.border.light }]}>
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={[s.viajeBannerSub, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginLeft: spacing.sm }]}>
+              Cargando viaje...
+            </Text>
+          </View>
+        )}
+
         {/* Viaje Banner — Case 0: opened from FAB inside a viaje (toggle ON by default) */}
         {routeViajeId && selectedViaje && (
           <View style={[s.viajeBanner, { borderColor: viajeToggleOn ? '#10B981' : (dark ? colors.border.dark : colors.border.light), backgroundColor: viajeToggleOn ? '#10B98112' : 'transparent' }]}>
