@@ -79,9 +79,14 @@ export default function ViajeDetailScreen() {
             <Ionicons name="arrow-back" size={20} color="#fff" />
             <Text style={styles.backText}>Mis Viajes</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowOpciones(true)} style={styles.optionsBtn}>
-            <Ionicons name="ellipsis-horizontal" size={22} color="#fff" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={() => navigation.navigate('Tabs')} style={styles.optionsBtn}>
+              <Ionicons name="home-outline" size={22} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowOpciones(true)} style={styles.optionsBtn}>
+              <Ionicons name="ellipsis-horizontal" size={22} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <Text style={styles.viajeEmoji}>{viaje.emoji}</Text>
@@ -165,6 +170,11 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   backText: { color: '#fff', fontSize: 15 },
   optionsBtn: { padding: 4 },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   viajeEmoji: { fontSize: 36, marginBottom: 4 },
   viajeTitulo: { fontSize: 22, fontWeight: '700', color: '#fff', marginBottom: 4 },
   viajeParticipantes: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: spacing.md },
