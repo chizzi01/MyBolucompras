@@ -10,6 +10,7 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
   const subtextColor = dark ? colors.textSecondary.dark : colors.textSecondary.light;
   const borderColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
   const barBgColor = dark ? '#263347' : '#E2E8F0';
+  const amountColor = dark ? '#818CF8' : '#4F46E5';
 
   const { porPersona, liquidacion } = useMemo(
     () => viajeGastosService.calcularBalance(gastos, viaje.participantes),
@@ -59,8 +60,8 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
       {liquidacion.length > 0 && (
         <>
           {sectionLabel('CÓMO LIQUIDAR')}
-          {liquidacion.map((t, i) => (
-            <View key={i} style={[styles.transCard, { backgroundColor: surfaceBg, borderColor }]}>
+          {liquidacion.map((t) => (
+            <View key={`${t.de}-${t.hacia}`} style={[styles.transCard, { backgroundColor: surfaceBg, borderColor }]}>
               <View style={[styles.avatar, { backgroundColor: participantColor(t.de) }]}>
                 <Text style={styles.avatarText}>{t.deNombre[0]?.toUpperCase()}</Text>
               </View>
@@ -72,7 +73,7 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
                 <Text style={styles.avatarText}>{t.haciaNombre[0]?.toUpperCase()}</Text>
               </View>
               <View style={styles.amountPill}>
-                <Text style={styles.amountText}>${t.monto.toFixed(0)}</Text>
+                <Text style={[styles.amountText, { color: amountColor }]}>${t.monto.toFixed(0)}</Text>
               </View>
             </View>
           ))}
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
   barBg: { height: 6, borderRadius: 4, overflow: 'hidden', marginBottom: 4 },
   bar: { height: 6, borderRadius: 4 },
   barLegend: { flexDirection: 'row', justifyContent: 'space-between' },
-  barLeg: { fontSize: 9 },
+  barLeg: { fontSize: 10 },
   transCard: {
     borderRadius: 12, padding: 10, marginBottom: 5,
     borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
@@ -117,5 +118,5 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(99,102,241,0.3)',
     borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
   },
-  amountText: { fontSize: 13, fontWeight: '800', color: '#818CF8' },
+  amountText: { fontSize: 13, fontWeight: '800' },
 });
