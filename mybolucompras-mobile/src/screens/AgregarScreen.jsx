@@ -161,7 +161,7 @@ export default function AgregarScreen() {
     if (!form.precio || isNaN(Number(form.precio))) {
       return showModal({ type: 'warning', title: 'Campo requerido', message: 'Ingresá un precio válido.' });
     }
-    if (routeViajeId && !selectedViaje) {
+    if (routeViajeId && viajeToggleOn && !selectedViaje) {
       return showModal({ type: 'warning', title: 'Cargando', message: 'Los datos del viaje aún están cargando. Intentá de nuevo.' });
     }
 
