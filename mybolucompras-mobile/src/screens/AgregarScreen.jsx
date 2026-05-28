@@ -20,6 +20,11 @@ import { formatFecha, parseFecha, formatPrecioInputDisplay, formatPrecioLive, ge
 import { useModal } from '../hooks/useModal';
 import { userService } from '../services/userService';
 import { contactService } from '../services/contactService';
+import { useViajes } from '../context/ViajesContext';
+import { useRoute } from '@react-navigation/native';
+import SplitPanel from '../components/viajes/SplitPanel';
+import { useAuth } from '../context/AuthContext';
+import { viajeGastosService } from '../services/viajeGastosService';
 
 const INITIAL = {
   objeto: '', fecha: formatFecha(new Date()),
@@ -101,6 +106,31 @@ export default function AgregarScreen() {
   const [searching, setSearching] = useState(false);
   const [recentContacts, setRecentContacts] = useState([]);
 
+  const route = useRoute();
+  const { user } = useAuth();
+  const { viajesActivos } = useViajes();
+
+  // Viaje state
+  const routeViajeId = route.params?.viajeId;
+  const routeViajeNombre = route.params?.viajeNombre;
+
+  // Which viaje is selected (null = no viaje)
+  const [selectedViajeId, setSelectedViajeId] = useState(routeViajeId || null);
+  const [viajeToggleOn, setViajeToggleOn] = useState(!!routeViajeId);
+  const [splitConfig, setSplitConfig] = useState({ modoSplit: 'todos', participanteIds: [] });
+
+  const selectedViaje = viajesActivos.find(v => v.id === selectedViajeId) || null;
+
+  // Initialize split participanteIds when viaje changes
+  useEffect(() => {
+    if (selectedViaje) {
+      setSplitConfig({
+        modoSplit: 'todos',
+        participanteIds: selectedViaje.participantes.map(p => p.userId),
+      });
+    }
+  }, [selectedViajeId]);
+
   useEffect(() => {
     contactService.getRecent().then(setRecentContacts);
   }, []);
@@ -135,29 +165,43 @@ export default function AgregarScreen() {
 
     setLoading(true);
     try {
-      const sharedWith = sharedUser ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email } : null;
-      
-      await agregarGasto({
+      const gastoData = {
         ...form,
         cuotas: parseInt(form.cuotas) || 1,
         cantidad: parseInt(form.cantidad) || 1,
         precio: Number(form.precio),
-      }, sharedWith);
+      };
+
+      if (selectedViaje && viajeToggleOn) {
+        // Save via viajeGastosService (handles split + viaje_gastos registration)
+        await viajeGastosService.agregarGasto(
+          selectedViaje.id,
+          gastoData,
+          splitConfig,
+          selectedViaje.participantes
+        );
+      } else {
+        // Normal gasto (existing behavior)
+        const sharedWith = sharedUser ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email } : null;
+        await agregarGasto(gastoData, sharedWith);
+      }
 
       setForm({
         ...INITIAL,
         medio: mediosDisponibles[0] || '',
         moneda: mydata.monedaPreferida || 'ARS',
       });
-      setPrecioDisplay(''); // Resetear display del precio
+      setPrecioDisplay('');
       setSharedUser(null);
       setSearchEmail('');
-      
+      setViajeToggleOn(!!routeViajeId);
+      setSelectedViajeId(routeViajeId || null);
+
       showModal({
         type: 'success',
         title: '¡Guardado!',
         message: 'El gasto fue agregado correctamente.',
-        onClose: () => navigation.navigate('Gastos'),
+        onClose: () => navigation.navigate(routeViajeId ? 'Tabs' : 'Gastos'),
       });
     } catch (err) {
       showModal({ type: 'error', title: 'Error al guardar', message: err.message });
@@ -347,6 +391,74 @@ export default function AgregarScreen() {
             <Text style={s.scanBtnText}>Escanear</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Viaje Banner — Case 0: opened from FAB inside a viaje (locked ON) */}
+        {routeViajeId && selectedViaje && (
+          <View style={[s.viajeBanner, { borderColor: '#10B981', backgroundColor: '#10B98112' }]}>
+            <Text style={s.viajeBannerText}>{selectedViaje.emoji} {selectedViaje.titulo} · Activo</Text>
+            <Text style={[s.viajeBannerSub, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>Gasto del viaje</Text>
+          </View>
+        )}
+
+        {/* Viaje Banner — Case 1: exactly 1 active viaje, not opened from FAB */}
+        {!routeViajeId && viajesActivos.length === 1 && (
+          <View style={[s.viajeBanner, { borderColor: dark ? colors.border.dark : colors.border.light }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.viajeBannerText}>{viajesActivos[0].emoji} {viajesActivos[0].titulo} · Activo</Text>
+              <Text style={[s.viajeBannerSub, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
+                ¿Es del viaje?
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[s.toggle, viajeToggleOn && s.toggleOn]}
+              onPress={() => {
+                const next = !viajeToggleOn;
+                setViajeToggleOn(next);
+                setSelectedViajeId(next ? viajesActivos[0].id : null);
+              }}
+            >
+              <Text style={{ color: viajeToggleOn ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light), fontSize: 12, fontWeight: '600' }}>
+                {viajeToggleOn ? 'ON' : 'OFF'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Viaje Selector — Case 2: 2+ active viajes, not opened from FAB */}
+        {!routeViajeId && viajesActivos.length > 1 && (
+          <View style={[s.viajeBanner, { borderColor: dark ? colors.border.dark : colors.border.light }]}>
+            <Text style={s.viajeBannerText}>¿A qué viaje pertenece?</Text>
+            {[{ id: null, emoji: '🏠', titulo: 'Sin viaje (personal)' }, ...viajesActivos].map(v => (
+              <TouchableOpacity
+                key={v.id || 'none'}
+                style={s.radioRow}
+                onPress={() => {
+                  setSelectedViajeId(v.id);
+                  setViajeToggleOn(!!v.id);
+                }}
+              >
+                <View style={[s.radio, selectedViajeId === v.id && s.radioActive]}>
+                  {selectedViajeId === v.id && <View style={s.radioDot} />}
+                </View>
+                <Text style={[s.radioText, { color: dark ? colors.text.dark : colors.text.light }]}>
+                  {v.emoji} {v.titulo}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* SplitPanel — shown when a viaje is selected */}
+        {selectedViaje && viajeToggleOn && (
+          <SplitPanel
+            participantes={selectedViaje.participantes}
+            currentUserId={user?.id}
+            value={splitConfig}
+            onChange={setSplitConfig}
+            precio={Number(form.precio) || 0}
+            dark={dark}
+          />
+        )}
 
         <Field label="Tipo de gasto" dark={dark}>
           <FijoSelector value={form.isFijo} onChange={v => set('isFijo', v)} dark={dark} s={s} />
@@ -1222,4 +1334,24 @@ const styles = (dark) => StyleSheet.create({
   miniTabActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   miniTabText: { fontSize: 11, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
   miniTabTextActive: { color: '#fff', fontWeight: '700' },
+  viajeBanner: {
+    borderWidth: 1, borderRadius: radius.md, padding: spacing.md,
+    marginBottom: spacing.md, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  viajeBannerText: { ...typography.bodyMed, color: '#10B981', flex: 1 },
+  viajeBannerSub: { ...typography.caption, marginTop: 2 },
+  toggle: {
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.full,
+    borderWidth: 1, borderColor: '#CBD5E1',
+  },
+  toggleOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  radioRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 8, width: '100%' },
+  radio: {
+    width: 18, height: 18, borderRadius: 9, borderWidth: 2,
+    borderColor: '#CBD5E1', alignItems: 'center', justifyContent: 'center',
+  },
+  radioActive: { borderColor: colors.primary },
+  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
+  radioText: { ...typography.body },
 });
