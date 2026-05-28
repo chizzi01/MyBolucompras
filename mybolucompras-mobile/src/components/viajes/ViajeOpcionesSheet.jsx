@@ -9,12 +9,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useViajeMutations } from '../../hooks/mutations/useViajeMutations';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import CerrarViajeModal from './CerrarViajeModal';
+import ImagenGaleriaModal from './ImagenGaleriaModal';
 
 export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, onUpdated, onDeleted, dark }) {
   const { user } = useAuth();
-  const { eliminar: eliminarMutation } = useViajeMutations();
+  const { eliminar: eliminarMutation, editar: editarMutation } = useViajeMutations();
   const insets = useSafeAreaInsets();
   const [showCerrar, setShowCerrar] = useState(false);
+  const [showImagenGaleria, setShowImagenGaleria] = useState(false);
 
   const bg = dark ? '#1E293B' : '#fff';
   const textColor = dark ? colors.text.dark : colors.text.light;
@@ -41,6 +43,13 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
         },
       ]
     );
+  };
+
+  const handleCambiarImagen = (url) => {
+    editarMutation.mutate({
+      id: viaje.id,
+      campos: { titulo: viaje.titulo, emoji: viaje.emoji, imagenUrl: url },
+    });
   };
 
   const Option = ({ icon, label, onPress, color }) => (
@@ -75,6 +84,13 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
             )}
             {esCreador && (
               <Option
+                icon="image-outline"
+                label="Cambiar imagen de portada"
+                onPress={() => setShowImagenGaleria(true)}
+              />
+            )}
+            {esCreador && (
+              <Option
                 icon="trash-outline"
                 label="Eliminar viaje"
                 onPress={handleEliminar}
@@ -92,6 +108,14 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
         gastos={gastos}
         dark={dark}
         onCerrado={() => { setShowCerrar(false); onUpdated?.(); }}
+      />
+      <ImagenGaleriaModal
+        visible={showImagenGaleria}
+        onClose={() => setShowImagenGaleria(false)}
+        onSelect={handleCambiarImagen}
+        currentUrl={viaje?.imagenUrl ? viaje.imagenUrl.replace('?w=1200&q=80', '') : null}
+        previewEmoji={viaje?.emoji}
+        previewTitulo={viaje?.titulo}
       />
     </>
   );
