@@ -408,7 +408,7 @@ export default function AgregarScreen() {
         {routeViajeId && selectedViaje && (
           <View style={[s.viajeBanner, { borderColor: viajeToggleOn ? '#10B981' : (dark ? colors.border.dark : colors.border.light), backgroundColor: viajeToggleOn ? '#10B98112' : 'transparent' }]}>
             <View style={{ flex: 1 }}>
-              <Text style={[s.viajeBannerText, { color: viajeToggleOn ? '#10B981' : (dark ? colors.text.dark : colors.text.light) }]}>{selectedViaje.emoji} {selectedViaje.titulo}{viajeToggleOn ? ' · Activo' : ''}</Text>
+              <Text style={[s.viajeBannerText, { color: viajeToggleOn ? '#10B981' : (dark ? colors.text.dark : colors.text.light) }]}>{selectedViaje.emoji} {selectedViaje.titulo} · Activo</Text>
               <Text style={[s.viajeBannerSub, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
                 {viajeToggleOn ? 'Gasto del viaje' : 'Gasto personal'}
               </Text>
