@@ -25,6 +25,9 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import ConfiguracionScreen from './src/screens/ConfiguracionScreen';
 import OnboardingFlow from './src/screens/OnboardingFlow';
 import EditarGastoScreen from './src/screens/EditarGastoModal';
+import { ViajesProvider } from './src/context/ViajesContext';
+import ViajesScreen from './src/screens/ViajesScreen';
+import ViajeDetailScreen from './src/screens/ViajeDetailScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -86,6 +89,7 @@ function TabNavigator() {
             Gastos: focused ? 'list' : 'list-outline',
             Agregar: focused ? 'add-circle' : 'add-circle-outline',
             Dashboard: focused ? 'bar-chart' : 'bar-chart-outline',
+            Viajes: focused ? 'airplane' : 'airplane-outline',
             Configuracion: focused ? 'settings' : 'settings-outline',
           };
           return <Ionicons name={icons[route.name]} size={route.name === 'Agregar' ? 28 : size} color={color} />;
@@ -95,6 +99,7 @@ function TabNavigator() {
       <Tab.Screen name="Gastos" component={GastosScreen} />
       <Tab.Screen name="Agregar" component={AgregarScreen} options={{ tabBarLabel: 'Agregar', tabBarIconStyle: { marginTop: -2 } }} />
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Viajes" component={ViajesScreen} options={{ tabBarLabel: 'Viajes' }} />
       <Tab.Screen name="Configuracion" component={ConfiguracionScreen} options={{ tabBarLabel: 'Config' }} />
     </Tab.Navigator>
   );
@@ -120,18 +125,25 @@ function RootNavigator() {
         <Stack.Screen name="Main">
           {() => (
             <DataProvider>
-              <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-                <AuthStack.Screen name="Tabs" component={TabNavigator} />
-                <AuthStack.Screen
-                  name="EditarGasto"
-                  component={EditarGastoScreen}
-                  options={{
-                    animation: 'slide_from_bottom',
-                    gestureEnabled: true,
-                    gestureDirection: 'vertical',
-                  }}
-                />
-              </AuthStack.Navigator>
+              <ViajesProvider>
+                <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+                  <AuthStack.Screen name="Tabs" component={TabNavigator} />
+                  <AuthStack.Screen
+                    name="EditarGasto"
+                    component={EditarGastoScreen}
+                    options={{
+                      animation: 'slide_from_bottom',
+                      gestureEnabled: true,
+                      gestureDirection: 'vertical',
+                    }}
+                  />
+                  <AuthStack.Screen
+                    name="ViajeDetail"
+                    component={ViajeDetailScreen}
+                    options={{ animation: 'slide_from_right' }}
+                  />
+                </AuthStack.Navigator>
+              </ViajesProvider>
             </DataProvider>
           )}
         </Stack.Screen>
