@@ -2,8 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useData } from '../context/DataContext';
-import { useDeudores } from '../context/DeudoresContext';
+import { useGastos } from '../hooks/queries/useGastos';
+import { useConfiguracion } from '../hooks/queries/useConfiguracion';
+import { useDeudas } from '../hooks/queries/useDeudas';
 import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '../utils/formatters';
@@ -18,8 +19,9 @@ import { notificationService } from '../services/notificationService';
 import NotificationsModal from './NotificationsModal';
 
 export default function DashboardScreen() {
-  const { gastos, mydata } = useData();
-  const { deudas } = useDeudores();
+  const { gastos } = useGastos();
+  const { mydata } = useConfiguracion();
+  const { deudas } = useDeudas();
   const { dark } = useTheme();
   const s = styles(dark);
 
@@ -27,14 +29,10 @@ export default function DashboardScreen() {
   const [showNotifications, setShowNotifications] = useState(false);
 
   React.useEffect(() => {
-    const fetchCount = async () => {
-      try {
-        const count = await notificationService.getUnreadCount();
-        setUnreadCount(count);
-      } catch (e) {}
-    };
-    fetchCount();
-  }, [gastos]); // Refresh when gastos change (sharing might happen)
+    notificationService.getUnreadCount()
+      .then(setUnreadCount)
+      .catch(() => {});
+  }, []);
 
   const hoy = new Date();
   const [mesSel, setMesSel] = useState({ mes: hoy.getMonth(), anio: hoy.getFullYear() });
