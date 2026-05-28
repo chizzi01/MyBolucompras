@@ -112,7 +112,6 @@ export default function AgregarScreen() {
 
   // Viaje state
   const routeViajeId = route.params?.viajeId;
-  const routeViajeNombre = route.params?.viajeNombre;
 
   // Which viaje is selected (null = no viaje)
   const [selectedViajeId, setSelectedViajeId] = useState(routeViajeId || null);
@@ -161,6 +160,9 @@ export default function AgregarScreen() {
     }
     if (!form.precio || isNaN(Number(form.precio))) {
       return showModal({ type: 'warning', title: 'Campo requerido', message: 'Ingresá un precio válido.' });
+    }
+    if (routeViajeId && !selectedViaje) {
+      return showModal({ type: 'warning', title: 'Cargando', message: 'Los datos del viaje aún están cargando. Intentá de nuevo.' });
     }
 
     setLoading(true);
@@ -404,7 +406,7 @@ export default function AgregarScreen() {
         {!routeViajeId && viajesActivos.length === 1 && (
           <View style={[s.viajeBanner, { borderColor: dark ? colors.border.dark : colors.border.light }]}>
             <View style={{ flex: 1 }}>
-              <Text style={s.viajeBannerText}>{viajesActivos[0].emoji} {viajesActivos[0].titulo} · Activo</Text>
+              <Text style={[s.viajeBannerText, { color: dark ? colors.text.dark : colors.text.light }]}>{viajesActivos[0].emoji} {viajesActivos[0].titulo} · Activo</Text>
               <Text style={[s.viajeBannerSub, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
                 ¿Es del viaje?
               </Text>
@@ -427,7 +429,7 @@ export default function AgregarScreen() {
         {/* Viaje Selector — Case 2: 2+ active viajes, not opened from FAB */}
         {!routeViajeId && viajesActivos.length > 1 && (
           <View style={[s.viajeBanner, { borderColor: dark ? colors.border.dark : colors.border.light }]}>
-            <Text style={s.viajeBannerText}>¿A qué viaje pertenece?</Text>
+            <Text style={[s.viajeBannerText, { color: dark ? colors.text.dark : colors.text.light }]}>¿A qué viaje pertenece?</Text>
             {[{ id: null, emoji: '🏠', titulo: 'Sin viaje (personal)' }, ...viajesActivos].map(v => (
               <TouchableOpacity
                 key={v.id || 'none'}
