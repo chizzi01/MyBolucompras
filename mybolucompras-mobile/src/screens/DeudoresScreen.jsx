@@ -4,19 +4,23 @@ import {
   TouchableOpacity, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useModal } from '../hooks/useModal';
-import { useDeudores } from '../context/DeudoresContext';
+import { useDeudas } from '../hooks/queries/useDeudas';
+import { useDeudaMutations } from '../hooks/mutations/useDeudaMutations';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import DeudaCard from '../components/DeudaCard';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
 export default function DeudoresScreen({ navigation }) {
+  const { user } = useAuth();
+  const { deudas, loading, refetch } = useDeudas();
   const {
-    deudas, loading, cargarDeudas,
-    marcarPagadaConNotificacion, eliminarDeuda, enviarRecordatorio,
-  } = useDeudores();
+    marcarPagada: marcarPagadaMutation,
+    eliminar: eliminarMutation,
+    enviarRecordatorio: recordatorioMutation,
+  } = useDeudaMutations();
   const { dark } = useTheme();
   const s = styles(dark);
   const { showModal, modal } = useModal();
@@ -25,15 +29,11 @@ export default function DeudoresScreen({ navigation }) {
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(useCallback(() => {
-    cargarDeudas();
-  }, [cargarDeudas]));
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await cargarDeudas();
+    await refetch();
     setRefreshing(false);
-  }, [cargarDeudas]);
+  }, [refetch]);
 
   const deudoresPendientes = useMemo(() => deudas.filter(d => d.esAcreedor && !d.pagado), [deudas]);
   const misDeudas = useMemo(() => deudas.filter(d => !d.esAcreedor && !d.pagado), [deudas]);
@@ -81,7 +81,11 @@ export default function DeudoresScreen({ navigation }) {
         ? `¿Confirmas que ${deuda.nombre} te pagó "${deuda.descripcion || 'esta deuda'}"?`
         : `¿Confirmas que pagaste "${deuda.descripcion || 'esta deuda'}" a ${deuda.nombre}?`,
       confirmText: 'Confirmar',
-      onConfirm: () => marcarPagadaConNotificacion(deuda.id, deuda),
+      onConfirm: () => marcarPagadaMutation.mutate({
+        id: deuda.id,
+        deuda,
+        nombre: user?.user_metadata?.nombre || user?.email || 'Alguien',
+      }),
     });
   };
 
@@ -90,7 +94,7 @@ export default function DeudoresScreen({ navigation }) {
       type: 'danger',
       title: 'Eliminar deuda',
       message: `¿Eliminar la deuda de "${deuda.nombre}"?`,
-      onConfirm: () => eliminarDeuda(deuda.id),
+      onConfirm: () => eliminarMutation.mutate(deuda.id),
     });
   };
 
@@ -100,7 +104,10 @@ export default function DeudoresScreen({ navigation }) {
       title: 'Enviar recordatorio',
       message: `Se le enviará una notificación a ${deuda.compartidoConNombre} recordándole la deuda pendiente.`,
       confirmText: 'Enviar',
-      onConfirm: () => enviarRecordatorio(deuda),
+      onConfirm: () => recordatorioMutation.mutate({
+        deuda,
+        nombre: user?.user_metadata?.nombre || user?.email || 'Alguien',
+      }),
     });
   };
 
