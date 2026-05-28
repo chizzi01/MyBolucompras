@@ -50,12 +50,26 @@ export default function ViajesScreen() {
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: dark ? colors.background.dark : colors.background.light }]} edges={['top']}>
       <View style={styles.header}>
-        <View>
-          <Text style={[styles.title, { color: dark ? colors.text.dark : colors.text.light }]}>Mis Viajes ✈️</Text>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.navigate('Tabs')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={18} color={colors.primary} />
+          <Text style={[styles.backBtnText, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
+            Inicio
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <Text style={[styles.title, { color: dark ? colors.text.dark : colors.text.light }]}>
+            Mis Viajes ✈️
+          </Text>
           <Text style={[styles.subtitle, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
             {activos.length} activo{activos.length !== 1 ? 's' : ''} · {archivados.length} archivado{archivados.length !== 1 ? 's' : ''}
           </Text>
         </View>
+
         <TouchableOpacity
           style={styles.newBtn}
           onPress={() => setShowCrear(true)}
@@ -94,7 +108,27 @@ export default function ViajesScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.sm },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minWidth: 72,
+  },
+  backBtnText: {
+    fontSize: 14,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
   title: { ...typography.h2 },
   subtitle: { ...typography.caption, marginTop: 2 },
   newBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.primary, paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: radius.full },
