@@ -110,7 +110,7 @@ export const viajesService = {
           es_fijo: false,
           objeto: `Gastos: ${viaje.titulo}`,
           fecha: today,
-          medio: null,
+          medio: 'Transferencia',
           cuotas: 1,
           tipo: null,
           moneda: 'ARS',

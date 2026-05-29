@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { viajesService } from '../../services/viajesService';
 import { viajeGastosService } from '../../services/viajeGastosService';
+import { viajePagosService } from '../../services/viajePagosService';
 
 export function useViajeDetalle(viajeId) {
   const viaje = useQuery({
@@ -19,10 +20,24 @@ export function useViajeDetalle(viajeId) {
     enabled: !!viajeId,
   });
 
+  const pagos = useQuery({
+    queryKey: ['viaje_pagos', viajeId],
+    queryFn: () => viajePagosService.getByViaje(viajeId),
+    staleTime: 1 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    enabled: !!viajeId,
+  });
+
   return {
     viaje: viaje.data ?? null,
     gastos: gastos.data ?? [],
+    pagos: pagos.data ?? [],
     loading: viaje.isLoading || gastos.isLoading,
-    refetch: () => { viaje.refetch(); gastos.refetch(); },
+    isRefetching: viaje.isRefetching || gastos.isRefetching || pagos.isRefetching,
+    refetch: () => {
+      viaje.refetch();
+      gastos.refetch();
+      pagos.refetch();
+    },
   };
 }

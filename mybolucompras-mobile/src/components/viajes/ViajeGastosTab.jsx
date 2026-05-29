@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../constants/theme';
@@ -54,7 +54,7 @@ function groupGastos(gastos) {
   return items;
 }
 
-export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participantColor, dark }) {
+export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participantColor, dark, onRefresh, refreshing }) {
   const navigation = useNavigation();
   const activo = viaje.estado === 'activo';
   const bg = dark ? colors.background.dark : colors.background.light;
@@ -119,6 +119,7 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
         keyExtractor={item => item.key}
         renderItem={renderItem}
         contentContainerStyle={{ padding: spacing.md, paddingBottom: 100 }}
+        refreshControl={<RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={{ fontSize: 40 }}>💸</Text>

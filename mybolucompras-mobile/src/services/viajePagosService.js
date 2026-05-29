@@ -7,7 +7,7 @@ export const viajePagosService = {
       .from('viaje_pagos')
       .select('*')
       .eq('viaje_id', viajeId)
-      .order('created_at', { ascending: true });
+      .order('fecha', { ascending: true });
     if (error) throw error;
     return data.map(row => ({
       id: row.id,
@@ -16,7 +16,7 @@ export const viajePagosService = {
       receptorId: row.receptor_id,
       monto: Number(row.monto),
       fecha: row.fecha,
-      createdAt: row.created_at,
+      createdAt: row.fecha, // alias for compatibility
     }));
   },
 

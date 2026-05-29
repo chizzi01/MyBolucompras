@@ -10,13 +10,14 @@ import { viajePagosService } from '../../services/viajePagosService';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import { formatMontoEuropeo } from '../../utils/formatters';
 
-export default function RegistrarPagoModal({ visible, onClose, viaje, transaccion, dark }) {
+export default function RegistrarPagoModal({ visible, onClose, onSuccess, viaje, transaccion, dark }) {
   const [monto, setMonto] = useState('');
+  const [error, setError] = useState('');
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    if (transaccion) setMonto(String(transaccion.monto));
+    if (transaccion) { setMonto(String(transaccion.monto)); setError(''); }
   }, [transaccion]);
 
   const bg = dark ? colors.background.dark : '#fff';
@@ -30,13 +31,17 @@ export default function RegistrarPagoModal({ visible, onClose, viaje, transaccio
       viajePagosService.registrar(viaje.id, transaccion.de, transaccion.hacia, Number(monto)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['viaje_pagos', viaje.id] });
-      onClose();
+      setError('');
+      if (onSuccess) onSuccess();
+      else onClose();
     },
+    onError: (err) => setError(err.message || 'Error al registrar el pago'),
   });
 
   const handleConfirm = () => {
     const n = Number(monto);
-    if (!n || n <= 0) return;
+    if (!n || n <= 0) { setError('Ingresá un monto válido'); return; }
+    setError('');
     registrar.mutate();
   };
 
@@ -65,6 +70,10 @@ export default function RegistrarPagoModal({ visible, onClose, viaje, transaccio
             placeholderTextColor={subtextColor}
             selectTextOnFocus
           />
+
+          {!!error && (
+            <Text style={styles.error}>{error}</Text>
+          )}
 
           <TouchableOpacity
             style={[styles.btn, { backgroundColor: colors.accent }]}
@@ -107,4 +116,5 @@ const styles = StyleSheet.create({
   },
   btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   cancelBtn: { alignItems: 'center', paddingVertical: 10 },
+  error: { color: '#EF4444', fontSize: 13, textAlign: 'center', marginBottom: spacing.sm },
 });
