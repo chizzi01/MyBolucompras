@@ -1,7 +1,7 @@
 // src/components/viajes/ViajeOpcionesSheet.jsx
 import React, { useState } from 'react';
 import {
-  Modal, View, Text, TouchableOpacity, StyleSheet, Alert,
+  Modal, View, Text, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,12 +10,14 @@ import { useViajeMutations } from '../../hooks/mutations/useViajeMutations';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import CerrarViajeModal from './CerrarViajeModal';
 import ImagenGaleriaModal from './ImagenGaleriaModal';
+import EliminarViajeModal from './EliminarViajeModal';
 
 export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, onUpdated, onDeleted, dark }) {
   const { user } = useAuth();
-  const { eliminar: eliminarMutation, editar: editarMutation } = useViajeMutations();
+  const { editar: editarMutation } = useViajeMutations();
   const insets = useSafeAreaInsets();
   const [showCerrar, setShowCerrar] = useState(false);
+  const [showEliminar, setShowEliminar] = useState(false);
   const [showImagenGaleria, setShowImagenGaleria] = useState(false);
 
   const bg = dark ? '#1E293B' : '#fff';
@@ -25,24 +27,8 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
   const activo = viaje?.estado === 'activo';
   const esCreador = viaje?.createdBy === user?.id;
 
-  const handleEliminar = () => {
-    Alert.alert(
-      'Eliminar viaje',
-      '¿Estás seguro? Esta acción no se puede deshacer.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: () => {
-            eliminarMutation.mutate(viaje.id, {
-              onSuccess: () => onDeleted?.(),
-              onError: (err) => Alert.alert('Error', err.message),
-            });
-          },
-        },
-      ]
-    );
+  const handleEliminarClick = () => {
+    setShowEliminar(true);
   };
 
   const handleCambiarImagen = (url) => {
@@ -74,7 +60,7 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
             <View style={styles.handle} />
             <Text style={[styles.title, { color: textColor }]}>{viaje?.emoji} {viaje?.titulo}</Text>
 
-            {activo && (
+            {activo && esCreador && (
               <Option
                 icon="lock-closed-outline"
                 label="Cerrar viaje"
@@ -93,7 +79,7 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
               <Option
                 icon="trash-outline"
                 label="Eliminar viaje"
-                onPress={handleEliminar}
+                onPress={handleEliminarClick}
                 color={colors.error}
               />
             )}
@@ -108,6 +94,14 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
         gastos={gastos}
         dark={dark}
         onCerrado={() => { setShowCerrar(false); onUpdated?.(); }}
+      />
+      <EliminarViajeModal
+        visible={showEliminar}
+        onClose={() => setShowEliminar(false)}
+        viaje={viaje}
+        gastos={gastos}
+        dark={dark}
+        onEliminado={() => { setShowEliminar(false); onDeleted?.(); }}
       />
       <ImagenGaleriaModal
         visible={showImagenGaleria}

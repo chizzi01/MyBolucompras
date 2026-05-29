@@ -235,6 +235,7 @@ const styles = StyleSheet.create({
   },
   portadaEmptyText: { fontSize: 13 },
   portadaPreview: {
+    width: '100%',
     height: 52,
     borderRadius: radius.md,
     overflow: 'hidden',
