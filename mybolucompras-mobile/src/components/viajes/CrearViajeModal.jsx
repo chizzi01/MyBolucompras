@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, Modal, ScrollView,
-  StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Image,
+  StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Image, ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ImagenGaleriaModal from './ImagenGaleriaModal';
@@ -106,13 +106,14 @@ export default function CrearViajeModal({ visible, onClose }) {
               FOTO DE PORTADA <Text style={{ textTransform: 'none', fontWeight: '400' }}>(opcional)</Text>
             </Text>
             {imagenUrl ? (
-              <TouchableOpacity style={styles.portadaPreview} onPress={() => setShowGaleria(true)} activeOpacity={0.8}>
-                <Image source={{ uri: imagenUrl }} style={styles.portadaImg} resizeMode="cover" />
-                <View style={styles.portadaOverlay} />
-                <View style={styles.portadaChangeBtn}>
-                  <Ionicons name="image-outline" size={16} color="#fff" />
-                  <Text style={styles.portadaChangeText}>Cambiar foto</Text>
-                </View>
+              <TouchableOpacity onPress={() => setShowGaleria(true)} activeOpacity={0.8}>
+                <ImageBackground source={{ uri: imagenUrl }} style={styles.portadaPreview} resizeMode="cover">
+                  <View style={styles.portadaOverlay} />
+                  <View style={styles.portadaChangeBtn}>
+                    <Ionicons name="image-outline" size={16} color="#fff" />
+                    <Text style={styles.portadaChangeText}>Cambiar foto</Text>
+                  </View>
+                </ImageBackground>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
@@ -245,11 +246,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  portadaImg: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
   },
   portadaOverlay: {
     ...StyleSheet.absoluteFillObject,
