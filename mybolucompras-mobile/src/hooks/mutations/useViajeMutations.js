@@ -32,6 +32,7 @@ export function useViajeMutations() {
     onSettled: (_, __, id) => {
       queryClient.invalidateQueries({ queryKey: listKey });
       queryClient.invalidateQueries({ queryKey: ['viaje', id] });
+      queryClient.invalidateQueries({ queryKey: ['gastos'] });
     },
   });
 
