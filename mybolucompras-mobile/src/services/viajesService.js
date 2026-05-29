@@ -79,14 +79,15 @@ export const viajesService = {
       viajePagosService.getByViaje(id),
     ]);
 
-    // Delete any existing summary gastos (idempotency — handles cerrar retry after partial failure)
-    await supabase.from('gastos').delete().eq('viaje_id', id);
-
+    // Validate FIRST — before any destructive operations
     const { liquidacion } = viajeGastosService.calcularBalance(gastos, viaje.participantes, pagos);
     if (liquidacion.length > 0) {
       const nombres = [...new Set(liquidacion.map(l => l.deNombre))].join(', ');
       throw new Error(`Saldos pendientes: ${nombres}`);
     }
+
+    // Only delete after validation passes (idempotency for retry)
+    await supabase.from('gastos').delete().eq('viaje_id', id);
 
     const today = new Date().toISOString().split('T')[0];
     const summaryRows = viaje.participantes

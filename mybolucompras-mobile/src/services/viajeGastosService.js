@@ -94,7 +94,8 @@ export const viajeGastosService = {
       const fullAmount = g.precio; // g.precio es el total pagado (no por-persona)
       const perPersona = fullAmount / n;
 
-      nets[g.pagadoPor] = (nets[g.pagadoPor] || 0) + fullAmount - perPersona;
+      const payerInSplit = ids.includes(g.pagadoPor);
+      nets[g.pagadoPor] = (nets[g.pagadoPor] || 0) + fullAmount - (payerInSplit ? perPersona : 0);
       for (const id of ids) {
         if (id !== g.pagadoPor) {
           nets[id] = (nets[id] || 0) - perPersona;
