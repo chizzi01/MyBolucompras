@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../constants/theme';
+import { formatMontoEuropeo } from '../../utils/formatters';
 
 function isSameDay(a, b) {
   return a.getFullYear() === b.getFullYear()
@@ -96,9 +97,9 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
           </View>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={[styles.monto, { color: textColor }]}>${g.precio.toFixed(0)}</Text>
+          <Text style={[styles.monto, { color: textColor }]}>${formatMontoEuropeo(g.precio)}</Text>
           {g.modoSplit !== 'solo' && n > 1 && (
-            <Text style={styles.ppp}>${(g.precio / n).toFixed(0)} c/u</Text>
+            <Text style={styles.ppp}>${formatMontoEuropeo(g.precio / n)} c/u</Text>
           )}
         </View>
       </View>

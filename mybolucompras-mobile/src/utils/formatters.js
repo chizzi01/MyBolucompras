@@ -1,3 +1,9 @@
+export function formatMonto(amount) {
+  const n = Math.round(Number(amount));
+  if (isNaN(n)) return '0';
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
 export function parseFecha(fechaDDMMYYYY) {
   if (!fechaDDMMYYYY) return new Date(NaN);
   const [d, m, y] = fechaDDMMYYYY.split('/');
@@ -163,3 +169,22 @@ export function formatPrecioLive(val, moneda = 'ARS') {
   return { display, cleanValue };
 }
 
+/**
+ * Formatea un número crudo con puntos para miles y comas para decimales.
+ * Si tiene parte decimal, muestra hasta 2 decimales.
+ * Si es entero, no muestra decimales.
+ */
+export function formatMontoEuropeo(amount) {
+  const num = Number(amount);
+  if (isNaN(num)) return '0';
+
+  const tieneDecimales = num % 1 !== 0;
+  const partes = num.toFixed(tieneDecimales ? 2 : 0).split('.');
+  const entero = partes[0];
+  const enteroDot = entero.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  if (tieneDecimales) {
+    return `${enteroDot},${partes[1]}`;
+  }
+  return enteroDot;
+}

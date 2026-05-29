@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { viajeGastosService } from '../../services/viajeGastosService';
 import { colors, spacing, typography } from '../../constants/theme';
+import { formatMontoEuropeo } from '../../utils/formatters';
 
 export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark }) {
   const bg = dark ? colors.background.dark : colors.background.light;
@@ -40,10 +41,10 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.nombre, { color: textColor }]}>{p.nombre}</Text>
-                <Text style={[styles.sub, { color: subtextColor }]}>Pagó ${p.total.toFixed(0)} total</Text>
+                <Text style={[styles.sub, { color: subtextColor }]}>Pagó ${formatMontoEuropeo(p.total)} total</Text>
               </View>
               <Text style={[styles.neto, { color: netoPositive ? '#10B981' : p.neto < 0 ? colors.error : subtextColor }]}>
-                {netoPositive ? '+$' : p.neto < 0 ? '-$' : '$'}{Math.abs(p.neto).toFixed(0)}
+                {netoPositive ? '+$' : p.neto < 0 ? '-$' : '$'}{formatMontoEuropeo(Math.abs(p.neto))}
               </Text>
             </View>
             <View style={[styles.barBg, { backgroundColor: barBgColor }]}>
@@ -51,7 +52,7 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
             </View>
             <View style={styles.barLegend}>
               <Text style={[styles.barLeg, { color: subtextColor }]}>$0</Text>
-              <Text style={[styles.barLeg, { color: subtextColor }]}>${maxTotal.toFixed(0)}</Text>
+              <Text style={[styles.barLeg, { color: subtextColor }]}>${formatMontoEuropeo(maxTotal)}</Text>
             </View>
           </View>
         );
@@ -73,7 +74,7 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
                 <Text style={styles.avatarText}>{t.haciaNombre?.[0]?.toUpperCase()}</Text>
               </View>
               <View style={styles.amountPill}>
-                <Text style={[styles.amountText, { color: amountColor }]}>${t.monto.toFixed(0)}</Text>
+                <Text style={[styles.amountText, { color: amountColor }]}>${formatMontoEuropeo(t.monto)}</Text>
               </View>
             </View>
           ))}

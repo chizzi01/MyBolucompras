@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
 import { useViajeDetalle } from '../hooks/queries/useViajeDetalle';
 import { colors } from '../constants/theme';
+import { formatMonto, formatMontoEuropeo } from '../utils/formatters';
 import ViajeGastosTab from '../components/viajes/ViajeGastosTab';
 import ViajeBalanceTab from '../components/viajes/ViajeBalanceTab';
 import ViajeNotasTab from '../components/viajes/ViajeNotasTab';
@@ -38,8 +39,8 @@ export default function ViajeDetailScreen() {
   const totalGastado = gastos.reduce((sum, g) => sum + g.precio, 0);
   const activo = viaje?.estado === 'activo';
   const porPersona = viaje && viaje.participantes.length > 0
-    ? (totalGastado / viaje.participantes.length).toFixed(0)
-    : '0';
+    ? totalGastado / viaje.participantes.length
+    : 0;
 
   if (loading) {
     return (
@@ -120,12 +121,12 @@ export default function ViajeDetailScreen() {
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>TOTAL</Text>
-          <Text style={styles.statVal}>${totalGastado.toFixed(0)}</Text>
+          <Text style={styles.statVal}>${formatMontoEuropeo(totalGastado)}</Text>
           <Text style={styles.statSub}>{gastos.length} {gastos.length === 1 ? 'gasto' : 'gastos'}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>POR PERSONA</Text>
-          <Text style={styles.statVal}>${porPersona}</Text>
+          <Text style={styles.statVal}>${formatMontoEuropeo(porPersona)}</Text>
           <Text style={styles.statSub}>{viaje.participantes.length} {viaje.participantes.length === 1 ? 'persona' : 'personas'}</Text>
         </View>
       </View>
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   titleBlock: { flex: 1 },
-  viajeTitulo: { fontSize: 19, fontWeight: '800', color: '#fff', letterSpacing: -0.3, marginBottom: 4 },
+  viajeTitulo: { fontSize: 30, fontWeight: '800', color: '#fff', letterSpacing: -0.3, marginBottom: 4 },
   badge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     borderWidth: 1, borderRadius: 20,
@@ -247,12 +248,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
     borderRadius: 12, padding: 9,
   },
-  statLabel: { fontSize: 8, color: 'rgba(255,255,255,0.6)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 2 },
-  statVal: { fontSize: 16, color: '#fff', fontWeight: '800', marginBottom: 2 },
-  statSub: { fontSize: 8, color: 'rgba(255,255,255,0.5)' },
+  statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 2 },
+  statVal: { fontSize: 20, color: '#fff', fontWeight: '800', marginBottom: 2 },
+  statSub: { fontSize: 10, color: 'rgba(255,255,255,0.5)' },
   segmented: { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: 11, padding: 3, gap: 3 },
-  segTab: { flex: 1, paddingVertical: 7, borderRadius: 9, alignItems: 'center' },
+  segTab: { flex: 1, paddingVertical: 9, borderRadius: 9, alignItems: 'center' },
   segTabActive: { backgroundColor: '#fff' },
-  segTabText: { fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
+  segTabText: { fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
   segTabTextActive: { color: colors.primary, fontWeight: '800' },
 });
