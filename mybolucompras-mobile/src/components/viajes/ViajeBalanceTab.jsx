@@ -1,10 +1,16 @@
-import React, { useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+// src/components/viajes/ViajeBalanceTab.jsx
+import React, { useMemo, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { viajeGastosService } from '../../services/viajeGastosService';
+import { useViajePagos } from '../../hooks/queries/useViajePagos';
 import { colors, spacing, typography } from '../../constants/theme';
 import { formatMontoEuropeo } from '../../utils/formatters';
+import RegistrarPagoModal from './RegistrarPagoModal';
 
 export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark }) {
+  const [pagoModal, setPagoModal] = useState(null);
+  const { pagos } = useViajePagos(viaje.id);
+
   const bg = dark ? colors.background.dark : colors.background.light;
   const surfaceBg = dark ? '#1E293B' : '#fff';
   const textColor = dark ? colors.text.dark : colors.text.light;
@@ -14,8 +20,8 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
   const amountColor = dark ? '#818CF8' : '#4F46E5';
 
   const { porPersona, liquidacion } = useMemo(
-    () => viajeGastosService.calcularBalance(gastos, viaje.participantes),
-    [gastos, viaje.participantes]
+    () => viajeGastosService.calcularBalance(gastos, viaje.participantes, pagos),
+    [gastos, viaje.participantes, pagos]
   );
 
   const maxTotal = Math.max(...porPersona.map(p => p.total), 1);
@@ -43,7 +49,9 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
                 <Text style={[styles.nombre, { color: textColor }]}>{p.nombre}</Text>
                 <Text style={[styles.sub, { color: subtextColor }]}>Pagó ${formatMontoEuropeo(p.total)} total</Text>
               </View>
-              <Text style={[styles.neto, { color: netoPositive ? '#10B981' : p.neto < 0 ? colors.error : subtextColor }]}>
+              <Text style={[styles.neto, {
+                color: netoPositive ? '#10B981' : p.neto < 0 ? colors.error : subtextColor,
+              }]}>
                 {netoPositive ? '+$' : p.neto < 0 ? '-$' : '$'}{formatMontoEuropeo(Math.abs(p.neto))}
               </Text>
             </View>
@@ -76,6 +84,14 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
               <View style={styles.amountPill}>
                 <Text style={[styles.amountText, { color: amountColor }]}>${formatMontoEuropeo(t.monto)}</Text>
               </View>
+              {viaje.estado === 'activo' && (
+                <TouchableOpacity
+                  style={[styles.pagarBtn, { backgroundColor: dark ? '#1a3a2e' : '#D1FAE5', borderColor: '#10B981' }]}
+                  onPress={() => setPagoModal(t)}
+                >
+                  <Text style={styles.pagarText}>Registrar pago</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ))}
         </>
@@ -87,6 +103,14 @@ export default function ViajeBalanceTab({ viaje, gastos, participantColor, dark 
           <Text style={[styles.sub, { color: subtextColor, marginTop: 8 }]}>Todo está saldado</Text>
         </View>
       )}
+
+      <RegistrarPagoModal
+        visible={!!pagoModal}
+        onClose={() => setPagoModal(null)}
+        viaje={viaje}
+        transaccion={pagoModal}
+        dark={dark}
+      />
     </ScrollView>
   );
 }
@@ -109,7 +133,8 @@ const styles = StyleSheet.create({
   barLeg: { fontSize: 10 },
   transCard: {
     borderRadius: 12, padding: 10, marginBottom: 5,
-    borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    borderWidth: 1, flexDirection: 'row', alignItems: 'center',
+    gap: spacing.sm, flexWrap: 'wrap',
   },
   transInfo: { flex: 1 },
   transNames: { fontSize: 12, fontWeight: '600', marginBottom: 2 },
@@ -120,4 +145,9 @@ const styles = StyleSheet.create({
     borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
   },
   amountText: { fontSize: 13, fontWeight: '800' },
+  pagarBtn: {
+    borderWidth: 1, borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  pagarText: { color: '#10B981', fontSize: 11, fontWeight: '700' },
 });
