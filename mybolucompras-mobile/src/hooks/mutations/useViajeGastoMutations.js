@@ -11,7 +11,6 @@ export function useViajeGastoMutations(viajeId) {
       viajeGastosService.agregarGasto(viajeId, gastoData, splitConfig, viajeParticipantes),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['viaje-gastos', viajeId] });
-      queryClient.invalidateQueries({ queryKey: ['gastos', user?.id] });
     },
   });
 

@@ -134,8 +134,10 @@ Deno.serve(async (req) => {
 
     if (!fcmRes.ok) {
       console.error('[FCM] Error:', JSON.stringify(result))
+      const fcmStatus = result.error?.status
+      const tokenInvalid = fcmStatus === 'NOT_FOUND' || fcmStatus === 'UNREGISTERED'
       return new Response(
-        JSON.stringify({ error: result.error?.message ?? 'FCM error' }),
+        JSON.stringify({ error: result.error?.message ?? 'FCM error', tokenInvalid }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }

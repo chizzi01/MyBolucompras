@@ -86,7 +86,7 @@ export const pushNotificationService = {
     return data?.fcm_token ?? null;
   },
 
-  async sendPushNotification({ token, title, body, data = {} }) {
+  async sendPushNotification({ token, userId, title, body, data = {} }) {
     if (!token) return;
     console.log('[Push] Invoking edge function with token:', token.slice(0, 20) + '...');
     try {
@@ -105,6 +105,14 @@ export const pushNotificationService = {
       );
       const text = await res.text();
       console.log('[Push] Edge function status:', res.status, '| body:', text);
+
+      if (!res.ok && userId) {
+        const responseBody = JSON.parse(text);
+        if (responseBody.tokenInvalid) {
+          await supabase.from('profiles').update({ fcm_token: null }).eq('id', userId);
+          console.log('[Push] Cleared stale token for userId:', userId);
+        }
+      }
     } catch (err) {
       console.warn('[Push] Failed to send push notification:', err?.message);
     }
@@ -120,7 +128,7 @@ export function sendPushToUser(userId, { title, body, data = {} }) {
         return;
       }
       console.log('[Push] Token found, sending notification:', title);
-      return pushNotificationService.sendPushNotification({ token, title, body, data });
+      return pushNotificationService.sendPushNotification({ token, userId, title, body, data });
     })
     .catch(err => console.warn('[Push] sendPushToUser error:', err?.message));
 }

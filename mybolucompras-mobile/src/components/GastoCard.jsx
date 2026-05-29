@@ -34,6 +34,87 @@ const resolveEtiqueta = (nombre, etiquetas = []) => {
   return typeof found === 'string' ? { nombre: found, color: colors.primary } : found;
 };
 
+function BoardingPassContent({ gasto, precioDisplay, dark }) {
+  const mainBg = dark ? '#1e1b4b' : '#f8faff';
+  const titleColor = dark ? '#e2e8f0' : '#1e1b4b';
+  const priceColor = dark ? '#818cf8' : '#4338ca';
+  const labelColor = dark ? '#6366f1' : '#818cf8';
+  const dateColor = dark ? '#64748b' : '#94a3b8';
+  const dividerColor = dark ? '#4338ca' : '#c7d2fe';
+
+  return (
+    <View style={bpStyles.card}>
+      <View style={[bpStyles.main, { backgroundColor: mainBg, borderRightColor: dividerColor }]}>
+        <Text style={[bpStyles.tripLabel, { color: labelColor }]}>VIAJE</Text>
+        <Text style={[bpStyles.objeto, { color: titleColor }]} numberOfLines={2}>{gasto.objeto}</Text>
+        <Text style={[bpStyles.precio, { color: priceColor }]}>{precioDisplay}</Text>
+        <Text style={[bpStyles.fecha, { color: dateColor }]}>{gasto.fecha}</Text>
+      </View>
+      <View style={bpStyles.stub}>
+        <Text style={bpStyles.planeEmoji}>✈️</Text>
+        <Text style={bpStyles.stubText} numberOfLines={5}>{gasto.viajeNombre}</Text>
+      </View>
+    </View>
+  );
+}
+
+const bpStyles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    minHeight: 80,
+  },
+  main: {
+    flex: 1,
+    padding: 12,
+    borderRightWidth: 1,
+  },
+  tripLabel: {
+    fontSize: 8,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    marginBottom: 3,
+  },
+  objeto: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  precio: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  fecha: {
+    fontSize: 10,
+  },
+  stub: {
+    width: 64,
+    backgroundColor: '#6366f1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    padding: 8,
+  },
+  planeEmoji: {
+    fontSize: 20,
+  },
+  stubText: {
+    color: '#e0e7ff',
+    fontSize: 9,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    textAlign: 'center',
+  },
+});
+
 export default function GastoCard({ gasto, mydata, onPress, onDelete, onMarkPaid }) {
   const { dark } = useTheme();
 
@@ -109,49 +190,58 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete, onMarkPaid
         {...panResponder.panHandlers}
       >
         <TouchableOpacity
-          style={s.card}
+          style={gasto.viajeId ? null : s.card}
           onPress={() => { if (open) { close(); } else { onPress(); } }}
           activeOpacity={0.75}
         >
-          <View style={[s.left, !entraEsteMes && s.contentDimmed]}>
-            <Text style={s.objeto} numberOfLines={1}>{gasto.objeto}</Text>
-            <View style={s.meta}>
-              <MedioIcon medio={gasto.medio} dark={dark} />
-              {etiquetaObj ? (
-                <View style={[s.tag, { backgroundColor: etiquetaObj.color + '25', borderColor: etiquetaObj.color }]}>
-                  <Text style={[s.tagText, { color: etiquetaObj.color }]}>{etiquetaObj.nombre}</Text>
-                </View>
-              ) : null}
-              {isPaidShared ? (
-                <View style={s.paidBadge}>
-                  <Ionicons name="checkmark-circle" size={10} color={colors.accent} />
-                  <Text style={s.paidBadgeText}>Pagado</Text>
-                </View>
-              ) : gasto.compartidoConNombre ? (
-                <View style={s.sharedBadge}>
-                  <Ionicons name="people-outline" size={10} color={dark ? '#94A3B8' : '#64748B'} />
-                  <Text style={s.sharedBadgeText} numberOfLines={1}>{gasto.compartidoConNombre}</Text>
-                </View>
-              ) : null}
-            </View>
-          </View>
-
-          <View style={[s.right, !entraEsteMes && s.contentDimmed]}>
-            <Text style={s.precio}>{precioDisplay}</Text>
-            {precioTotal && <Text style={s.precioTotal}>{precioTotal}</Text>}
-            <View style={s.badgesRow}>
-              {!entraEsteMes && (
-                <View style={s.nextMonthBadge}>
-                  <Ionicons name="time-outline" size={11} color={dark ? '#64748B' : '#94A3B8'} />
-                </View>
-              )}
-              <View style={[s.cuotasBadge, { backgroundColor: cuotasColor.bg }]}>
-                <Text style={[s.cuotasText, { color: cuotasColor.text }]}>
-                  {gasto.isFijo ? '∞' : `${cuotasRest}/${gasto.cuotas}`}
-                </Text>
+          {gasto.viajeId ? (
+            <BoardingPassContent
+              gasto={gasto}
+              precioDisplay={precioDisplay}
+              dark={dark}
+            />
+          ) : (
+            <View style={[s.left, !entraEsteMes && s.contentDimmed]}>
+              <Text style={s.objeto} numberOfLines={1}>{gasto.objeto}</Text>
+              <View style={s.meta}>
+                <MedioIcon medio={gasto.medio} dark={dark} />
+                {etiquetaObj ? (
+                  <View style={[s.tag, { backgroundColor: etiquetaObj.color + '25', borderColor: etiquetaObj.color }]}>
+                    <Text style={[s.tagText, { color: etiquetaObj.color }]}>{etiquetaObj.nombre}</Text>
+                  </View>
+                ) : null}
+                {isPaidShared ? (
+                  <View style={s.paidBadge}>
+                    <Ionicons name="checkmark-circle" size={10} color={colors.accent} />
+                    <Text style={s.paidBadgeText}>Pagado</Text>
+                  </View>
+                ) : gasto.compartidoConNombre ? (
+                  <View style={s.sharedBadge}>
+                    <Ionicons name="people-outline" size={10} color={dark ? '#94A3B8' : '#64748B'} />
+                    <Text style={s.sharedBadgeText} numberOfLines={1}>{gasto.compartidoConNombre}</Text>
+                  </View>
+                ) : null}
               </View>
             </View>
-          </View>
+          )}
+          {!gasto.viajeId && (
+            <View style={[s.right, !entraEsteMes && s.contentDimmed]}>
+              <Text style={s.precio}>{precioDisplay}</Text>
+              {precioTotal && <Text style={s.precioTotal}>{precioTotal}</Text>}
+              <View style={s.badgesRow}>
+                {!entraEsteMes && (
+                  <View style={s.nextMonthBadge}>
+                    <Ionicons name="time-outline" size={11} color={dark ? '#64748B' : '#94A3B8'} />
+                  </View>
+                )}
+                <View style={[s.cuotasBadge, { backgroundColor: cuotasColor.bg }]}>
+                  <Text style={[s.cuotasText, { color: cuotasColor.text }]}>
+                    {gasto.isFijo ? '∞' : `${cuotasRest}/${gasto.cuotas}`}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
         </TouchableOpacity>
       </Animated.View>
     </View>

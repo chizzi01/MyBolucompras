@@ -1,6 +1,5 @@
 // src/services/viajeGastosService.js
 import { supabase } from '../lib/supabase';
-import { gastosService } from './gastosService';
 import { sendPushToUser } from './pushNotificationService';
 
 export const viajeGastosService = {
@@ -15,19 +14,26 @@ export const viajeGastosService = {
       .eq('viaje_id', viajeId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data.map(row => ({
-      id: row.id,
-      gastoId: row.gasto_id,
-      objeto: row.gastos?.objeto || '',
-      precio: Number(row.gastos?.precio || 0),
-      fecha: row.gastos?.fecha || '',
-      etiqueta: row.gastos?.etiqueta || '',
-      pagadoPor: row.pagado_por,
-      pagadorNombre: row.pagador?.nombre || row.pagador?.email || row.pagado_por,
-      modoSplit: row.modo_split,
-      participantes: row.participantes || [],
-      createdAt: row.created_at,
-    }));
+    return data.map(row => {
+      const n = row.participantes?.length || 1;
+      // New rows have precio stored directly; old rows (gasto_id not null, precio=0) fall back
+      // to the gastos join where precio was stored as per-person share (total/n).
+      const precio = row.precio > 0
+        ? Number(row.precio)
+        : Number(row.gastos?.precio || 0) * n;
+      return {
+        id: row.id,
+        objeto: row.objeto || row.gastos?.objeto || '',
+        precio,
+        fecha: row.fecha || row.gastos?.fecha || '',
+        etiqueta: row.etiqueta || row.gastos?.etiqueta || '',
+        pagadoPor: row.pagado_por,
+        pagadorNombre: row.pagador?.nombre || row.pagador?.email || row.pagado_por,
+        modoSplit: row.modo_split,
+        participantes: row.participantes || [],
+        createdAt: row.created_at,
+      };
+    });
   },
 
   // Split config: { modoSplit: 'solo'|'todos'|'algunos', participanteIds: uuid[] }
@@ -39,74 +45,35 @@ export const viajeGastosService = {
 
     const { modoSplit, participanteIds } = splitConfig;
 
-    let precioBase = Number(gastoData.precio);
-    let copias = [];
-
-    if (modoSplit === 'todos') {
-      const n = viajeParticipantes.length;
-      precioBase = Number(gastoData.precio) / n;
-      copias = viajeParticipantes
-        .filter(p => p.userId !== user.id)
-        .map(p => ({ ...gastoData, precio: precioBase, compartidoConNombre: gastoData.objeto, _userId: p.userId }));
-    } else if (modoSplit === 'algunos') {
-      const n = participanteIds.length;
-      precioBase = Number(gastoData.precio) / n;
-      copias = participanteIds
-        .filter(id => id !== user.id)
-        .map(uid => {
-          const p = viajeParticipantes.find(p => p.userId === uid);
-          return { ...gastoData, precio: precioBase, compartidoConNombre: gastoData.objeto, _userId: uid };
-        });
-    }
-
-    // Create main gasto for payer
-    const mainGasto = await gastosService.crear({ ...gastoData, precio: precioBase });
-
-    // Create copies for other participants
-    for (const copia of copias) {
-      const uid = copia._userId;
-      const { _userId, ...copiaData } = copia;
-      const { error: copiaError } = await supabase.from('gastos').insert([{
-        es_fijo: copiaData.isFijo ?? false,
-        objeto: `${copiaData.objeto} (viaje: ${copiaData.compartidoConNombre})`,
-        fecha: copiaData.fecha?.includes('/') ? copiaData.fecha.split('/').reverse().join('-') : copiaData.fecha,
-        medio: copiaData.medio,
-        cuotas: copiaData.cuotas ?? 1,
-        tipo: copiaData.tipo || null,
-        moneda: copiaData.moneda || 'ARS',
-        banco: copiaData.banco || null,
-        cantidad: 1,
-        precio: copiaData.precio,
-        etiqueta: copiaData.etiqueta || null,
-        compartido_con_nombre: copiaData.compartidoConNombre,
-        user_id: uid,
-      }]);
-      if (copiaError) throw copiaError;
-    }
-
-    // Register in viaje_gastos
     const participantesIds = modoSplit === 'todos'
       ? viajeParticipantes.map(p => p.userId)
       : modoSplit === 'algunos'
         ? participanteIds
         : [user.id];
 
+    const fechaISO = gastoData.fecha?.includes('/')
+      ? gastoData.fecha.split('/').reverse().join('-')
+      : (gastoData.fecha || new Date().toISOString().split('T')[0]);
+
     const { error } = await supabase.from('viaje_gastos').insert([{
       viaje_id: viajeId,
-      gasto_id: mainGasto.id,
+      gasto_id: null,
+      objeto: gastoData.objeto,
+      precio: Number(gastoData.precio),
+      fecha: fechaISO,
+      etiqueta: gastoData.etiqueta || null,
       pagado_por: user.id,
       modo_split: modoSplit,
       participantes: participantesIds,
     }]);
     if (error) throw error;
 
-    // Trigger push notifications in background for other participants of the trip
+    // Notificaciones push para otros participantes (sin cambios)
     const otherParticipants = (viajeParticipantes || []).filter(p => p.userId !== user.id);
     if (otherParticipants.length > 0) {
       supabase.from('viajes').select('titulo, emoji').eq('id', viajeId).single()
         .then(({ data: viaje }) => {
           if (!viaje) return;
-          // Get creator profile name
           supabase.from('profiles').select('nombre').eq('id', user.id).single()
             .then(({ data: prof }) => {
               const pagadorName = prof?.nombre || user.email?.split('@')[0] || 'Alguien';
@@ -114,20 +81,17 @@ export const viajeGastosService = {
                 sendPushToUser(p.userId, {
                   title: `${viaje.emoji || '💸'} Gasto en ${viaje.titulo}`,
                   body: `${pagadorName} agregó "${gastoData.objeto}" por $${Number(gastoData.precio).toFixed(0)}`,
-                  data: { type: 'gasto_creado', viajeId }
+                  data: { type: 'gasto_creado', viajeId },
                 });
               });
             });
         })
         .catch(err => console.warn('[Push] Error sending expense notification:', err.message));
     }
-
-    return mainGasto;
   },
 
   // Returns { porPersona: [{userId, nombre, total, neto}], liquidacion: [{de, deNombre, hacia, haciaNombre, monto}] }
-  calcularBalance(viajeGastos, participantes) {
-    // Initialize nets to 0
+  calcularBalance(viajeGastos, participantes, pagos = []) {
     const nets = {};
     for (const p of participantes) nets[p.userId] = 0;
 
@@ -136,15 +100,11 @@ export const viajeGastosService = {
 
       const ids = g.participantes.length ? g.participantes : participantes.map(p => p.userId);
       const n = ids.length;
-      // g.precio is the already-divided amount (stored as precioBase = total/n)
-      // Reconstruct full amount and per-person share
-      const fullAmount = g.precio * n;
-      const perPersona = g.precio; // = fullAmount / n
+      const fullAmount = g.precio; // g.precio es el total pagado (no por-persona)
+      const perPersona = fullAmount / n;
 
-      // Payer receives the shares of everyone else
-      nets[g.pagadoPor] = (nets[g.pagadoPor] || 0) + fullAmount - perPersona;
-
-      // Others owe their share
+      const payerInSplit = ids.includes(g.pagadoPor);
+      nets[g.pagadoPor] = (nets[g.pagadoPor] || 0) + fullAmount - (payerInSplit ? perPersona : 0);
       for (const id of ids) {
         if (id !== g.pagadoPor) {
           nets[id] = (nets[id] || 0) - perPersona;
@@ -152,17 +112,21 @@ export const viajeGastosService = {
       }
     }
 
-    // Build per-person summary
+    // Descontar pagos registrados
+    for (const p of pagos) {
+      nets[p.pagadorId] = (nets[p.pagadorId] || 0) + p.monto;
+      nets[p.receptorId] = (nets[p.receptorId] || 0) - p.monto;
+    }
+
     const porPersona = participantes.map(p => ({
       userId: p.userId,
       nombre: p.nombre,
       total: viajeGastos
-        .filter(g => g.pagadoPor === p.userId && g.modoSplit !== 'solo')
-        .reduce((sum, g) => sum + g.precio * (g.participantes.length || 1), 0),
-      neto: nets[p.userId] || 0,
+        .filter(g => g.pagadoPor === p.userId)
+        .reduce((sum, g) => sum + g.precio, 0),
+      neto: Math.round((nets[p.userId] || 0) * 100) / 100,
     }));
 
-    // Greedy liquidation: highest creditor collects from highest debtor first
     const creditors = porPersona.filter(p => p.neto > 0.01).map(p => ({ ...p }));
     const debtors   = porPersona.filter(p => p.neto < -0.01).map(p => ({ ...p }));
     creditors.sort((a, b) => b.neto - a.neto);
@@ -172,7 +136,13 @@ export const viajeGastosService = {
     let ci = 0, di = 0;
     while (ci < creditors.length && di < debtors.length) {
       const amount = Math.min(creditors[ci].neto, -debtors[di].neto);
-      liquidacion.push({ de: debtors[di].userId, deNombre: debtors[di].nombre, hacia: creditors[ci].userId, haciaNombre: creditors[ci].nombre, monto: Math.round(amount * 100) / 100 });
+      liquidacion.push({
+        de: debtors[di].userId,
+        deNombre: debtors[di].nombre,
+        hacia: creditors[ci].userId,
+        haciaNombre: creditors[ci].nombre,
+        monto: Math.round(amount * 100) / 100,
+      });
       creditors[ci].neto -= amount;
       debtors[di].neto  += amount;
       if (creditors[ci].neto < 0.01) ci++;

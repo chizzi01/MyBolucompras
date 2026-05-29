@@ -1,5 +1,5 @@
 // src/components/viajes/CerrarViajeModal.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
@@ -18,13 +18,18 @@ export default function CerrarViajeModal({ visible, onClose, viaje, gastos, onCe
 
   const totalGastado = (gastos || []).reduce((sum, g) => sum + (g.precio ?? 0), 0);
 
+  const [error, setError] = useState(null);
+
   const handleCerrar = () => {
+    setError(null);
     cerrarMutation.mutate(viaje.id, {
       onSuccess: () => {
         onClose();
         onCerrado?.();
       },
-      onError: (err) => console.warn('[CerrarViajeModal]', err.message),
+      onError: (err) => {
+        setError(err.message);
+      },
     });
   };
 
@@ -58,6 +63,12 @@ export default function CerrarViajeModal({ visible, onClose, viaje, gastos, onCe
             </View>
           </View>
 
+          {error && (
+            <View style={[styles.errorBox, { backgroundColor: dark ? '#2d1515' : '#FEE2E2' }]}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
           <TouchableOpacity
             style={[styles.btn, { backgroundColor: '#F59E0B' }]}
             onPress={handleCerrar}
@@ -89,4 +100,9 @@ const styles = StyleSheet.create({
   btn: { borderRadius: radius.md, paddingVertical: 14, alignItems: 'center', marginBottom: spacing.sm },
   btnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   cancelBtn: { alignItems: 'center', paddingVertical: 10 },
+  errorBox: {
+    borderRadius: radius.md, padding: spacing.sm,
+    marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.error,
+  },
+  errorText: { color: colors.error, fontSize: 13, textAlign: 'center' },
 });

@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ImageBackground,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
 import { useViajeDetalle } from '../hooks/queries/useViajeDetalle';
 import { colors } from '../constants/theme';
-import { formatMonto, formatMontoEuropeo } from '../utils/formatters';
+import { formatMontoEuropeo } from '../utils/formatters';
 import ViajeGastosTab from '../components/viajes/ViajeGastosTab';
 import ViajeBalanceTab from '../components/viajes/ViajeBalanceTab';
 import ViajeNotasTab from '../components/viajes/ViajeNotasTab';
@@ -26,9 +26,11 @@ export default function ViajeDetailScreen() {
   const { viajeId } = route.params;
   const insets = useSafeAreaInsets();
 
-  const { viaje, gastos, loading, refetch } = useViajeDetalle(viajeId);
+  const { viaje, gastos, pagos, loading, isRefetching, refetch } = useViajeDetalle(viajeId);
   const [tabIdx, setTabIdx] = useState(0);
   const [showOpciones, setShowOpciones] = useState(false);
+
+  useFocusEffect(useCallback(() => { refetch(); }, []));
 
   const participantColor = (userId) => {
     if (!viaje) return PARTICIPANT_COLORS[0];
@@ -172,14 +174,19 @@ export default function ViajeDetailScreen() {
           onGastoAdded={refetch}
           participantColor={participantColor}
           dark={dark}
+          onRefresh={refetch}
+          refreshing={isRefetching}
         />
       )}
       {tabIdx === 1 && (
         <ViajeBalanceTab
           viaje={viaje}
           gastos={gastos}
+          pagos={pagos}
           participantColor={participantColor}
           dark={dark}
+          onRefresh={refetch}
+          refreshing={isRefetching}
         />
       )}
       {tabIdx === 2 && (
