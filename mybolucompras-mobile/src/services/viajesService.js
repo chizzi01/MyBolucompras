@@ -1,6 +1,8 @@
 // src/services/viajesService.js
 import { supabase } from '../lib/supabase';
 import { sendPushToUser } from './pushNotificationService';
+import { viajeGastosService } from './viajeGastosService';
+import { viajePagosService } from './viajePagosService';
 
 export const viajesService = {
   async getAll() {
@@ -71,9 +73,79 @@ export const viajesService = {
   },
 
   async cerrar(id) {
+    const [viaje, gastos, pagos] = await Promise.all([
+      viajesService.getById(id),
+      viajeGastosService.getByViaje(id),
+      viajePagosService.getByViaje(id),
+    ]);
+
+    const { liquidacion } = viajeGastosService.calcularBalance(gastos, viaje.participantes, pagos);
+    if (liquidacion.length > 0) {
+      const nombres = [...new Set(liquidacion.map(l => l.deNombre))].join(', ');
+      throw new Error(`Saldos pendientes: ${nombres}`);
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const summaryRows = viaje.participantes
+      .map(p => {
+        const share = gastos
+          .filter(g => {
+            if (g.modoSplit === 'solo') return g.pagadoPor === p.userId;
+            const ids = g.participantes.length
+              ? g.participantes
+              : viaje.participantes.map(x => x.userId);
+            return ids.includes(p.userId);
+          })
+          .reduce((sum, g) => {
+            if (g.modoSplit === 'solo') return sum + g.precio;
+            const n = g.participantes.length || viaje.participantes.length;
+            return sum + g.precio / n;
+          }, 0);
+
+        return {
+          es_fijo: false,
+          objeto: `Gastos: ${viaje.titulo}`,
+          fecha: today,
+          medio: null,
+          cuotas: 1,
+          tipo: null,
+          moneda: 'ARS',
+          banco: null,
+          cantidad: 1,
+          precio: Math.round(share * 100) / 100,
+          etiqueta: null,
+          compartido_con_nombre: null,
+          compartido_con_user_id: null,
+          pagado: false,
+          viaje_id: id,
+          viaje_nombre: viaje.titulo,
+          user_id: p.userId,
+        };
+      })
+      .filter(r => r.precio > 0);
+
+    if (summaryRows.length > 0) {
+      const { error: insertError } = await supabase.from('gastos').insert(summaryRows);
+      if (insertError) throw insertError;
+    }
+
     const { error } = await supabase
       .from('viajes')
       .update({ estado: 'cerrado', fecha_cierre: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async reabrir(id) {
+    const { error: deleteError } = await supabase
+      .from('gastos')
+      .delete()
+      .eq('viaje_id', id);
+    if (deleteError) throw deleteError;
+
+    const { error } = await supabase
+      .from('viajes')
+      .update({ estado: 'activo', fecha_cierre: null })
       .eq('id', id);
     if (error) throw error;
   },
