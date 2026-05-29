@@ -7,7 +7,7 @@ export const CATEGORIAS_IMAGENES = [
       'https://images.unsplash.com/photo-1473116763249-2faaef81ccda',
       'https://images.unsplash.com/photo-1519046904884-53103b34b206',
       'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1',
-      'https://images.unsplash.com/photo-1484821582734-6692f2c2e13b',
+      'https://images.unsplash.com/photo-1506929562872-bb421503ef21',
       'https://images.unsplash.com/photo-1501785888041-af3ef285b470',
     ],
   },
@@ -44,7 +44,7 @@ export const CATEGORIAS_IMAGENES = [
       'https://images.unsplash.com/photo-1469474968028-56623f02e42e',
       'https://images.unsplash.com/photo-1426604966848-d7adac402bff',
       'https://images.unsplash.com/photo-1448375240586-882707db888b',
-      'https://images.unsplash.com/photo-1476611338391-6f395a0dd82e',
+      'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d',
     ],
   },
 ];
