@@ -79,6 +79,9 @@ export const viajesService = {
       viajePagosService.getByViaje(id),
     ]);
 
+    // Delete any existing summary gastos (idempotency — handles cerrar retry after partial failure)
+    await supabase.from('gastos').delete().eq('viaje_id', id);
+
     const { liquidacion } = viajeGastosService.calcularBalance(gastos, viaje.participantes, pagos);
     if (liquidacion.length > 0) {
       const nombres = [...new Set(liquidacion.map(l => l.deNombre))].join(', ');
