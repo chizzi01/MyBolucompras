@@ -248,6 +248,8 @@ function mapFromDB(row) {
     compartidoConNombre: row.compartido_con_nombre || null,
     compartidoConUserId: row.compartido_con_user_id || null,
     pagado: row.pagado ?? false,
+    viajeId: row.viaje_id || null,
+    viajeNombre: row.viaje_nombre || null,
   };
 }
 
