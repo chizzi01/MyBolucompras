@@ -8,23 +8,32 @@ export const viajeGastosService = {
       .from('viaje_gastos')
       .select(`
         *,
+        gastos:gasto_id(id, objeto, precio, fecha, etiqueta),
         pagador:pagado_por(id, nombre, email)
       `)
       .eq('viaje_id', viajeId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data.map(row => ({
-      id: row.id,
-      objeto: row.objeto || '',
-      precio: Number(row.precio || 0),
-      fecha: row.fecha || '',
-      etiqueta: row.etiqueta || '',
-      pagadoPor: row.pagado_por,
-      pagadorNombre: row.pagador?.nombre || row.pagador?.email || row.pagado_por,
-      modoSplit: row.modo_split,
-      participantes: row.participantes || [],
-      createdAt: row.created_at,
-    }));
+    return data.map(row => {
+      const n = row.participantes?.length || 1;
+      // New rows have precio stored directly; old rows (gasto_id not null, precio=0) fall back
+      // to the gastos join where precio was stored as per-person share (total/n).
+      const precio = row.precio > 0
+        ? Number(row.precio)
+        : Number(row.gastos?.precio || 0) * n;
+      return {
+        id: row.id,
+        objeto: row.objeto || row.gastos?.objeto || '',
+        precio,
+        fecha: row.fecha || row.gastos?.fecha || '',
+        etiqueta: row.etiqueta || row.gastos?.etiqueta || '',
+        pagadoPor: row.pagado_por,
+        pagadorNombre: row.pagador?.nombre || row.pagador?.email || row.pagado_por,
+        modoSplit: row.modo_split,
+        participantes: row.participantes || [],
+        createdAt: row.created_at,
+      };
+    });
   },
 
   // Split config: { modoSplit: 'solo'|'todos'|'algunos', participanteIds: uuid[] }

@@ -12,6 +12,19 @@ ALTER TABLE public.viaje_gastos
 ALTER TABLE public.viaje_gastos
   ALTER COLUMN gasto_id DROP NOT NULL;
 
+-- Backfill: copiar datos de gastos existentes a viaje_gastos.
+-- El precio antiguo era por-persona (total/n), así que se reconstruye el total.
+-- Corre como admin en SQL Editor → bypasea RLS de gastos.
+UPDATE public.viaje_gastos vg
+SET
+  objeto = g.objeto,
+  precio = g.precio * GREATEST(array_length(vg.participantes, 1), 1),
+  fecha  = g.fecha::date,
+  etiqueta = COALESCE(g.etiqueta, '')
+FROM public.gastos g
+WHERE vg.gasto_id = g.id
+  AND vg.objeto = '';  -- Solo filas no migradas todavía
+
 -- 2. Agregar campos viaje a gastos (para los gastos resumen al cerrar)
 ALTER TABLE public.gastos
   ADD COLUMN IF NOT EXISTS viaje_id uuid REFERENCES public.viajes(id) ON DELETE SET NULL,
