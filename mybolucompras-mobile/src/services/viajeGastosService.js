@@ -1,6 +1,5 @@
 // src/services/viajeGastosService.js
 import { supabase } from '../lib/supabase';
-import { gastosService } from './gastosService';
 import { sendPushToUser } from './pushNotificationService';
 
 export const viajeGastosService = {
