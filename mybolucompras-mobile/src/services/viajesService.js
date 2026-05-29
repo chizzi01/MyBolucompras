@@ -1,5 +1,6 @@
 // src/services/viajesService.js
 import { supabase } from '../lib/supabase';
+import { sendPushToUser } from './pushNotificationService';
 
 export const viajesService = {
   async getAll() {
@@ -48,6 +49,23 @@ export const viajesService = {
     const rows = ids.map(uid => ({ viaje_id: viaje.id, user_id: uid }));
     const { error: partError } = await supabase.from('viaje_participantes').insert(rows);
     if (partError) throw partError;
+
+    // Trigger push notifications in background for other participants
+    const otherParticipants = ids.filter(uid => uid !== user.id);
+    if (otherParticipants.length > 0) {
+      supabase.from('profiles').select('nombre').eq('id', user.id).single()
+        .then(({ data }) => {
+          const creatorName = data?.nombre || user.email?.split('@')[0] || 'Alguien';
+          otherParticipants.forEach(uid => {
+            sendPushToUser(uid, {
+              title: `${emoji} ¡Nuevo Viaje!`,
+              body: `${creatorName} te agregó al viaje "${titulo}"`,
+              data: { type: 'viaje_creado', viajeId: viaje.id }
+            });
+          });
+        })
+        .catch(err => console.warn('[Push] Error getting creator profile name:', err.message));
+    }
 
     return viajesService.getById(viaje.id);
   },

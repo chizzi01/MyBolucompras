@@ -1,6 +1,7 @@
 // src/services/viajeGastosService.js
 import { supabase } from '../lib/supabase';
 import { gastosService } from './gastosService';
+import { sendPushToUser } from './pushNotificationService';
 
 export const viajeGastosService = {
   async getByViaje(viajeId) {
@@ -98,6 +99,28 @@ export const viajeGastosService = {
       participantes: participantesIds,
     }]);
     if (error) throw error;
+
+    // Trigger push notifications in background for other participants of the trip
+    const otherParticipants = (viajeParticipantes || []).filter(p => p.userId !== user.id);
+    if (otherParticipants.length > 0) {
+      supabase.from('viajes').select('titulo, emoji').eq('id', viajeId).single()
+        .then(({ data: viaje }) => {
+          if (!viaje) return;
+          // Get creator profile name
+          supabase.from('profiles').select('nombre').eq('id', user.id).single()
+            .then(({ data: prof }) => {
+              const pagadorName = prof?.nombre || user.email?.split('@')[0] || 'Alguien';
+              otherParticipants.forEach(p => {
+                sendPushToUser(p.userId, {
+                  title: `${viaje.emoji || '💸'} Gasto en ${viaje.titulo}`,
+                  body: `${pagadorName} agregó "${gastoData.objeto}" por $${Number(gastoData.precio).toFixed(0)}`,
+                  data: { type: 'gasto_creado', viajeId }
+                });
+              });
+            });
+        })
+        .catch(err => console.warn('[Push] Error sending expense notification:', err.message));
+    }
 
     return mainGasto;
   },
