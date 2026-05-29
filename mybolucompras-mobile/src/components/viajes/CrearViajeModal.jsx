@@ -107,9 +107,12 @@ export default function CrearViajeModal({ visible, onClose }) {
             </Text>
             {imagenUrl ? (
               <TouchableOpacity style={styles.portadaPreview} onPress={() => setShowGaleria(true)} activeOpacity={0.8}>
-                <Image source={{ uri: imagenUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                <Image source={{ uri: imagenUrl }} style={styles.portadaImg} resizeMode="cover" />
                 <View style={styles.portadaOverlay} />
-                <Text style={styles.portadaChangeText}>Cambiar</Text>
+                <View style={styles.portadaChangeBtn}>
+                  <Ionicons name="image-outline" size={16} color="#fff" />
+                  <Text style={styles.portadaChangeText}>Cambiar foto</Text>
+                </View>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
@@ -236,17 +239,32 @@ const styles = StyleSheet.create({
   portadaEmptyText: { fontSize: 13 },
   portadaPreview: {
     width: '100%',
-    height: 52,
+    height: 100,
     borderRadius: radius.md,
     overflow: 'hidden',
     marginBottom: spacing.md,
     justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingRight: spacing.sm,
+    alignItems: 'center',
+  },
+  portadaImg: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
   },
   portadaOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  portadaChangeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   portadaChangeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
 });
