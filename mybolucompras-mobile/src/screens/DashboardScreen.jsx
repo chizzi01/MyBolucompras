@@ -6,7 +6,7 @@ import { useGastos } from '../hooks/queries/useGastos';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useDeudas } from '../hooks/queries/useDeudas';
 import { useTheme } from '../context/ThemeContext';
-import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
+import { getCuotasRestantes, gastoEntraEsteMes, getSingleCuotaBillingIndex } from '../utils/cuotas';
 import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '../utils/formatters';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
@@ -27,7 +27,6 @@ export default function DashboardScreen() {
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
-
   React.useEffect(() => {
     notificationService.getUnreadCount()
       .then(setUnreadCount)
@@ -70,8 +69,10 @@ export default function DashboardScreen() {
           // Multi-installment credit: active across several months
           if (targetIndex < compraIndex || targetIndex >= compraIndex + cuotas) return false;
         } else {
-          // Single-charge credit: only in purchase month
-          if (compraIndex !== targetIndex) return false;
+          // Single-charge credit: shown in its billing month (vencimientoAnterior or vencimiento),
+          // not the purchase month — matches when the credit card bill is actually paid.
+          const billingIndex = getSingleCuotaBillingIndex(g, mydata);
+          if (billingIndex !== targetIndex) return false;
         }
         // For current month, skip purchases pending for next billing cycle
         if (targetIndex === hoyIndex) return gastoEntraEsteMes(g, mydata);
@@ -354,9 +355,9 @@ export default function DashboardScreen() {
         <View style={{ height: spacing.xl }} />
       </ScrollView>
 
-      <NotificationsModal 
-        visible={showNotifications} 
-        onClose={() => setShowNotifications(false)} 
+      <NotificationsModal
+        visible={showNotifications}
+        onClose={() => setShowNotifications(false)}
         onRefresh={() => {
           notificationService.getUnreadCount().then(setUnreadCount);
         }}
