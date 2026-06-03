@@ -70,6 +70,49 @@ export default function DeudoresScreen({ navigation }) {
     return por;
   }, [misDeudas]);
 
+  // Para cada persona que aparece en ambos lados (acreedor y deudor) con la misma moneda,
+  // calcular el monto neto y pasarlo a la card para mostrarlo como compensación visual.
+  const compensaciones = useMemo(() => {
+    const result = {};
+    const pendientes = deudas.filter(d => !d.pagado);
+
+    // Agrupar por persona+moneda: clave = userId si está linkeado, sino nombre normalizado
+    const grupos = {};
+    pendientes.forEach(d => {
+      const personaKey = (d.compartidoConUserId || d.nombre.toLowerCase().trim()) + '_' + (d.moneda || 'ARS');
+      if (!grupos[personaKey]) grupos[personaKey] = { acreedor: [], deudor: [] };
+      if (d.esAcreedor) grupos[personaKey].acreedor.push(d);
+      else grupos[personaKey].deudor.push(d);
+    });
+
+    Object.values(grupos).forEach(({ acreedor, deudor }) => {
+      if (acreedor.length === 0 || deudor.length === 0) return;
+
+      const totalACobrar = acreedor.reduce((s, d) => s + d.monto, 0);
+      const totalADeberles = deudor.reduce((s, d) => s + d.monto, 0);
+      const neto = totalACobrar - totalADeberles;
+
+      acreedor.forEach(d => {
+        result[d.id] = {
+          esAcreedor: true,
+          totalCompensado: totalADeberles,
+          montoNeto: neto,
+          moneda: d.moneda || 'ARS',
+        };
+      });
+      deudor.forEach(d => {
+        result[d.id] = {
+          esAcreedor: false,
+          totalCompensado: totalACobrar,
+          montoNeto: neto,
+          moneda: d.moneda || 'ARS',
+        };
+      });
+    });
+
+    return result;
+  }, [deudas]);
+
   const formatTotal = (total) =>
     new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total);
 
@@ -114,6 +157,7 @@ export default function DeudoresScreen({ navigation }) {
   const renderItem = ({ item }) => (
     <DeudaCard
       deuda={item}
+      compensacion={compensaciones[item.id]}
       onMarkPaid={!item.pagado ? () => handleMarkPaid(item) : undefined}
       onDelete={() => handleDelete(item)}
       onRecordar={item.esAcreedor && item.compartidoConUserId && !item.pagado ? () => handleRecordar(item) : undefined}

@@ -129,30 +129,27 @@ export const deudoresService = {
       const monto = deudaActual.monto;
 
       await Promise.all([
-        // Deuda del otro usuario (lado opuesto)
+        // Deuda del otro usuario — sin filtro pagado=false para que el re-marcado mensual funcione
         supabase
           .from('deudores')
           .update({ pagado: true, fecha_pago: today })
           .eq('user_id', otroUserId)
           .eq('compartido_con_user_id', user.id)
-          .eq('monto', monto)
-          .eq('pagado', false),
-        // Gasto del otro usuario (creado cuando se compartió la deuda)
+          .eq('monto', monto),
+        // Gasto del otro usuario
         supabase
           .from('gastos')
-          .update({ pagado: true })
+          .update({ pagado: true, fecha_pago: today })
           .eq('user_id', otroUserId)
           .eq('compartido_con_user_id', user.id)
-          .eq('precio', monto)
-          .eq('pagado', false),
-        // Mi gasto si existe (en caso de que la deuda haya surgido de un gasto compartido)
+          .eq('precio', monto),
+        // Mi gasto si existe
         supabase
           .from('gastos')
-          .update({ pagado: true })
+          .update({ pagado: true, fecha_pago: today })
           .eq('user_id', user.id)
           .eq('compartido_con_user_id', otroUserId)
-          .eq('precio', monto)
-          .eq('pagado', false),
+          .eq('precio', monto),
       ]);
 
       sendPushToUser(otroUserId, {
@@ -187,6 +184,12 @@ export const deudoresService = {
 };
 
 function mapFromDB(row) {
+  const isMultiCuotaCompartida =
+    !(row.es_fijo ?? false) && (row.cuotas ?? 1) > 1 && !!row.compartido_con_user_id;
+  const pagado = isMultiCuotaCompartida && row.pagado && row.fecha_pago
+    ? isSameYearMonth(row.fecha_pago)
+    : (row.pagado ?? false);
+
   return {
     id: row.id,
     isFijo: row.es_fijo ?? false,
@@ -199,7 +202,7 @@ function mapFromDB(row) {
     tipo: row.tipo || 'transferencia',
     cuotas: row.cuotas ?? 1,
     cantidad: row.cantidad ?? 1,
-    pagado: row.pagado ?? false,
+    pagado,
     fechaDeuda: row.fecha_deuda ? row.fecha_deuda.split('-').reverse().join('/') : '',
     fechaPago: row.fecha_pago ? row.fecha_pago.split('-').reverse().join('/') : null,
     compartidoConNombre: row.compartido_con_nombre || null,
@@ -207,6 +210,13 @@ function mapFromDB(row) {
     ultimoRecordatorio: row.ultimo_recordatorio || null,
     createdAt: row.created_at,
   };
+}
+
+function isSameYearMonth(dateStr) {
+  if (!dateStr) return false;
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  return dateStr.slice(0, 7) === currentMonth;
 }
 
 function mapToDB(deuda) {

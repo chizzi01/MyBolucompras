@@ -183,9 +183,11 @@ export const gastosService = {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user ?? null;
 
+    const today = new Date().toISOString().split('T')[0];
+
     const { error } = await supabase
       .from('gastos')
-      .update({ pagado: true })
+      .update({ pagado: true, fecha_pago: today })
       .eq('id', id);
     if (error) throw error;
 
@@ -193,33 +195,29 @@ export const gastosService = {
     if (!otroUserId || !user) return;
 
     const precio = gastoActual.precioNum;
-    const today = new Date().toISOString().split('T')[0];
 
     await Promise.all([
-      // Gasto del otro usuario
+      // Gasto del otro usuario — sin filtro pagado=false para que el re-marcado mensual funcione
       supabase
         .from('gastos')
-        .update({ pagado: true })
+        .update({ pagado: true, fecha_pago: today })
         .eq('user_id', otroUserId)
         .eq('compartido_con_user_id', user.id)
-        .eq('precio', precio)
-        .eq('pagado', false),
+        .eq('precio', precio),
       // Mi deuda relacionada (si existe)
       supabase
         .from('deudores')
         .update({ pagado: true, fecha_pago: today })
         .eq('user_id', user.id)
         .eq('compartido_con_user_id', otroUserId)
-        .eq('monto', precio)
-        .eq('pagado', false),
+        .eq('monto', precio),
       // Deuda del otro usuario relacionada
       supabase
         .from('deudores')
         .update({ pagado: true, fecha_pago: today })
         .eq('user_id', otroUserId)
         .eq('compartido_con_user_id', user.id)
-        .eq('monto', precio)
-        .eq('pagado', false),
+        .eq('monto', precio),
     ]);
 
     sendPushToUser(otroUserId, {
@@ -231,6 +229,12 @@ export const gastosService = {
 };
 
 function mapFromDB(row) {
+  const isMultiCuotaCompartida =
+    !row.es_fijo && (row.cuotas ?? 1) > 1 && !!row.compartido_con_user_id;
+  const pagado = isMultiCuotaCompartida && row.pagado && row.fecha_pago
+    ? isSameYearMonth(row.fecha_pago)
+    : (row.pagado ?? false);
+
   return {
     id: row.id,
     isFijo: row.es_fijo,
@@ -247,10 +251,17 @@ function mapFromDB(row) {
     etiqueta: row.etiqueta || '',
     compartidoConNombre: row.compartido_con_nombre || null,
     compartidoConUserId: row.compartido_con_user_id || null,
-    pagado: row.pagado ?? false,
+    pagado,
     viajeId: row.viaje_id || null,
     viajeNombre: row.viaje_nombre || null,
   };
+}
+
+function isSameYearMonth(dateStr) {
+  if (!dateStr) return false;
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  return dateStr.slice(0, 7) === currentMonth;
 }
 
 function mapToDB(gasto) {

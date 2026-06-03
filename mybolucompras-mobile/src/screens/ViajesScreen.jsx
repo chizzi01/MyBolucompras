@@ -11,6 +11,7 @@ import { useViajes } from '../hooks/queries/useViajes';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import ViajeCard from '../components/viajes/ViajeCard';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
+import ViajeResumenModal from '../components/viajes/ViajeResumenModal';
 
 export default function ViajesScreen() {
   const { dark } = useTheme();
@@ -18,6 +19,7 @@ export default function ViajesScreen() {
   const navigation = useNavigation();
   const [showCrear, setShowCrear] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedCerrado, setSelectedCerrado] = useState(null);
 
   const activos = viajes.filter(v => v.estado === 'activo');
   const archivados = viajes.filter(v => v.estado === 'cerrado');
@@ -28,7 +30,7 @@ export default function ViajesScreen() {
     setRefreshing(false);
   };
 
-  const renderSection = (title, data) => {
+  const renderSection = (title, data, cerrado = false) => {
     if (!data.length) return null;
     return (
       <>
@@ -40,7 +42,9 @@ export default function ViajesScreen() {
             key={v.id}
             viaje={v}
             dark={dark}
-            onPress={() => navigation.navigate('ViajeDetail', { viajeId: v.id })}
+            onPress={cerrado
+              ? () => setSelectedCerrado(v)
+              : () => navigation.navigate('ViajeDetail', { viajeId: v.id })}
           />
         ))}
       </>
@@ -92,7 +96,7 @@ export default function ViajesScreen() {
         ListHeaderComponent={
           <View style={{ padding: spacing.md }}>
             {renderSection('ACTIVOS', activos)}
-            {renderSection('ARCHIVADOS', archivados)}
+            {renderSection('ARCHIVADOS', archivados, true)}
             {!viajes.length && !loading && (
               <View style={styles.empty}>
                 <Text style={styles.emptyEmoji}>✈️</Text>
@@ -107,6 +111,11 @@ export default function ViajesScreen() {
       />
 
       <CrearViajeModal visible={showCrear} onClose={() => setShowCrear(false)} />
+      <ViajeResumenModal
+        viaje={selectedCerrado}
+        visible={!!selectedCerrado}
+        onClose={() => setSelectedCerrado(null)}
+      />
     </SafeAreaView>
   );
 }
