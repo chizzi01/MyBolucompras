@@ -14,5 +14,12 @@ export function useViajeGastoMutations(viajeId) {
     },
   });
 
-  return { agregar };
+  const eliminar = useMutation({
+    mutationFn: (gastoId) => viajeGastosService.eliminarGasto(gastoId),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['viaje-gastos', viajeId] });
+    },
+  });
+
+  return { agregar, eliminar };
 }

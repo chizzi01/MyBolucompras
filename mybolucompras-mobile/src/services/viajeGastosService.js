@@ -90,6 +90,11 @@ export const viajeGastosService = {
     }
   },
 
+  async eliminarGasto(gastoId) {
+    const { error } = await supabase.from('viaje_gastos').delete().eq('id', gastoId);
+    if (error) throw error;
+  },
+
   // Returns { porPersona: [{userId, nombre, total, neto}], liquidacion: [{de, deNombre, hacia, haciaNombre, monto}] }
   calcularBalance(viajeGastos, participantes, pagos = []) {
     const nets = {};

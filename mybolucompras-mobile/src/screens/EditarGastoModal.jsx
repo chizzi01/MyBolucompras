@@ -134,6 +134,8 @@ export default function EditarGastoScreen({ route, navigation }) {
         gasto: {
           ...form,
           compartidoConNombre: gasto.compartidoConNombre || null,
+          compartidoConUserId: gasto.compartidoConUserId || null,
+          pagado: gasto.pagado ?? false,
           cuotas: parseInt(form.cuotas) || 1,
           cantidad: parseInt(form.cantidad) || 1,
           precio: Number(form.precio),

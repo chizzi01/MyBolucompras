@@ -1,9 +1,13 @@
-import React, { useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Animated, PanResponder } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import { formatMontoEuropeo } from '../../utils/formatters';
+import { useViajeGastoMutations } from '../../hooks/mutations/useViajeGastoMutations';
+import { useModal } from '../../hooks/useModal';
+
+const DELETE_WIDTH = 68;
 
 function isSameDay(a, b) {
   return a.getFullYear() === b.getFullYear()
@@ -54,9 +58,86 @@ function groupGastos(gastos) {
   return items;
 }
 
+function SwipeableGastoRow({ g, activo, surfaceBg, textColor, subtextColor, borderColor, dark, onDelete, participantColor, viaje }) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const [open, setOpen] = useState(false);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gs) =>
+        Math.abs(gs.dx) > 8 && Math.abs(gs.dx) > Math.abs(gs.dy),
+      onPanResponderMove: (_, gs) => {
+        const base = open ? -DELETE_WIDTH : 0;
+        const next = Math.min(0, Math.max(base + gs.dx, -DELETE_WIDTH));
+        translateX.setValue(next);
+      },
+      onPanResponderRelease: (_, gs) => {
+        if (!open && gs.dx < -DELETE_WIDTH / 2) {
+          Animated.spring(translateX, { toValue: -DELETE_WIDTH, useNativeDriver: true, bounciness: 4 }).start();
+          setOpen(true);
+        } else if (open && gs.dx > DELETE_WIDTH / 2) {
+          Animated.spring(translateX, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
+          setOpen(false);
+        } else {
+          Animated.spring(translateX, { toValue: open ? -DELETE_WIDTH : 0, useNativeDriver: true, bounciness: 4 }).start();
+        }
+      },
+    })
+  ).current;
+
+  const close = () => {
+    Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+    setOpen(false);
+  };
+
+  const color = participantColor(g.pagadoPor);
+  const initial = g.pagadorNombre?.[0]?.toUpperCase() || '?';
+  const n = g.participantes.length || viaje.participantes.length;
+  const splitText = g.modoSplit === 'solo' ? 'solo él/ella' : `÷ ${n} personas`;
+
+  return (
+    <View style={swipeStyles.row}>
+      {activo && (
+        <View style={[swipeStyles.deleteAction, { width: DELETE_WIDTH }]}>
+          <TouchableOpacity style={swipeStyles.deleteBtn} onPress={() => { close(); onDelete(g); }} activeOpacity={0.8}>
+            <Ionicons name="trash-outline" size={20} color="#fff" />
+            <Text style={swipeStyles.deleteText}>Eliminar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      <Animated.View
+        style={{ transform: [{ translateX }], flex: 1, backgroundColor: surfaceBg }}
+        {...(activo ? panResponder.panHandlers : {})}
+      >
+        <View style={[styles.item, { backgroundColor: surfaceBg, borderColor }]}>
+          <View style={[styles.avatar, { backgroundColor: color }]}>
+            <Text style={styles.avatarText}>{initial}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.objeto, { color: textColor }]} numberOfLines={1}>{g.objeto}</Text>
+            <View style={styles.metaRow}>
+              <Text style={[styles.metaText, { color: subtextColor }]}>{g.pagadorNombre}</Text>
+              <View style={[styles.metaDot, { backgroundColor: dark ? '#334155' : '#CBD5E1' }]} />
+              <Text style={[styles.metaText, { color: subtextColor }]}>{splitText}</Text>
+            </View>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={[styles.monto, { color: textColor }]}>${formatMontoEuropeo(g.precio)}</Text>
+            {g.modoSplit !== 'solo' && n > 1 && (
+              <Text style={styles.ppp}>${formatMontoEuropeo(g.precio / n)} c/u</Text>
+            )}
+          </View>
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
 export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participantColor, dark, onRefresh, refreshing }) {
   const navigation = useNavigation();
   const activo = viaje.estado === 'activo';
+  const { eliminar } = useViajeGastoMutations(viaje.id);
+  const { showModal, modal } = useModal();
   const bg = dark ? colors.background.dark : colors.background.light;
   const surfaceBg = dark ? '#1E293B' : '#fff';
   const textColor = dark ? colors.text.dark : colors.text.light;
@@ -70,6 +151,15 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
     });
   };
 
+  const handleDeleteGasto = (g) => {
+    showModal({
+      type: 'danger',
+      title: 'Eliminar gasto',
+      message: `¿Eliminar "${g.objeto}"?`,
+      onConfirm: () => eliminar.mutate(g.id),
+    });
+  };
+
   const flatItems = useMemo(() => groupGastos(gastos), [gastos]);
 
   const renderItem = ({ item }) => {
@@ -77,32 +167,19 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
       return <Text style={[styles.dateSep, { color: subtextColor }]}>{item.label}</Text>;
     }
 
-    const g = item;
-    const color = participantColor(g.pagadoPor);
-    const initial = g.pagadorNombre?.[0]?.toUpperCase() || '?';
-    const n = g.participantes.length || viaje.participantes.length;
-    const splitText = g.modoSplit === 'solo' ? 'solo él/ella' : `÷ ${n} personas`;
-
     return (
-      <View style={[styles.item, { backgroundColor: surfaceBg, borderColor }]}>
-        <View style={[styles.avatar, { backgroundColor: color }]}>
-          <Text style={styles.avatarText}>{initial}</Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.objeto, { color: textColor }]} numberOfLines={1}>{g.objeto}</Text>
-          <View style={styles.metaRow}>
-            <Text style={[styles.metaText, { color: subtextColor }]}>{g.pagadorNombre}</Text>
-            <View style={[styles.metaDot, { backgroundColor: dark ? '#334155' : '#CBD5E1' }]} />
-            <Text style={[styles.metaText, { color: subtextColor }]}>{splitText}</Text>
-          </View>
-        </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={[styles.monto, { color: textColor }]}>${formatMontoEuropeo(g.precio)}</Text>
-          {g.modoSplit !== 'solo' && n > 1 && (
-            <Text style={styles.ppp}>${formatMontoEuropeo(g.precio / n)} c/u</Text>
-          )}
-        </View>
-      </View>
+      <SwipeableGastoRow
+        g={item}
+        activo={activo}
+        surfaceBg={surfaceBg}
+        textColor={textColor}
+        subtextColor={subtextColor}
+        borderColor={borderColor}
+        dark={dark}
+        onDelete={handleDeleteGasto}
+        participantColor={participantColor}
+        viaje={viaje}
+      />
     );
   };
 
@@ -133,9 +210,32 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
           <Text style={styles.fabText}>Agregar gasto</Text>
         </TouchableOpacity>
       )}
+      {modal}
     </View>
   );
 }
+
+const swipeStyles = StyleSheet.create({
+  row: {
+    marginBottom: 5,
+    overflow: 'hidden',
+    borderRadius: 10,
+  },
+  deleteAction: {
+    position: 'absolute',
+    right: 0, top: 0, bottom: 0,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  deleteBtn: {
+    flex: 1,
+    backgroundColor: colors.error,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+  },
+  deleteText: { color: '#fff', fontSize: 11, fontWeight: '600' },
+});
 
 const styles = StyleSheet.create({
   dateSep: {
@@ -144,7 +244,7 @@ const styles = StyleSheet.create({
   },
   item: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    padding: 10, borderRadius: 10, borderWidth: 1, marginBottom: 5,
+    paddingHorizontal: 10, paddingVertical: 14, borderRadius: 10, borderWidth: 1,
   },
   avatar: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: '#fff', fontWeight: '800', fontSize: 13 },

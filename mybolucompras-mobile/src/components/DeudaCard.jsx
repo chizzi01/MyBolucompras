@@ -5,6 +5,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { useTheme } from '../context/ThemeContext';
+import { getCuotasRestantes } from '../utils/cuotas';
 
 const MEDIO_ICON_MAP = {
   'Visa':             { lib: 'fa5', name: 'cc-visa' },
@@ -31,17 +32,42 @@ const fmt = (n) =>
   new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
 function CompensacionBanner({ compensacion, dark }) {
-  const { esAcreedor, totalCompensado, montoNeto, moneda } = compensacion;
+  const { esAcreedor, totalCompensado, totalACobrar, totalADeberles, montoNeto, moneda, esUnoAUno } = compensacion;
   const sym = moneda === 'ARS' ? '$' : moneda;
 
-  const label = esAcreedor
-    ? `Tu deuda de ${sym} ${fmt(totalCompensado)} se descuenta automáticamente`
-    : montoNeto >= 0
-      ? 'Tu deuda queda saldada con lo que te deben'
-      : `Queda un saldo pendiente de ${sym} ${fmt(Math.abs(montoNeto))} a favor tuyo`;
+  let label, iconName, iconColor;
 
-  const iconName = esAcreedor ? 'swap-horizontal-outline' : montoNeto >= 0 ? 'checkmark-circle-outline' : 'information-circle-outline';
-  const iconColor = esAcreedor ? '#6366F1' : montoNeto >= 0 ? '#10B981' : '#6366F1';
+  if (esUnoAUno) {
+    // 1 a 1: el monto principal ya cambió, el banner es solo explicativo
+    if (esAcreedor) {
+      label = `Tu deuda de ${sym} ${fmt(totalCompensado)} se descuenta automáticamente`;
+      iconName = 'swap-horizontal-outline';
+      iconColor = '#6366F1';
+    } else if (montoNeto >= 0) {
+      label = 'Tu deuda queda saldada con lo que te deben';
+      iconName = 'checkmark-circle-outline';
+      iconColor = '#10B981';
+    } else {
+      label = 'Parcialmente compensado con lo que te deben';
+      iconName = 'information-circle-outline';
+      iconColor = '#6366F1';
+    }
+  } else {
+    // Múltiples registros: banner con resumen del grupo.
+    // totalCompensado = lo que está del otro lado (lo que cobro si soy deudor, lo que debo si soy acreedor)
+    const netoAbs = fmt(Math.abs(montoNeto));
+    const aCobrar = esAcreedor ? fmt(totalACobrar) : fmt(totalCompensado);
+    const aDeberles = esAcreedor ? fmt(totalCompensado) : fmt(totalADeberles);
+    if (montoNeto > 0) {
+      label = `Neto con esta persona: ${sym} ${netoAbs} a cobrar (cobrar ${sym} ${aCobrar} − deber ${sym} ${aDeberles})`;
+    } else if (montoNeto < 0) {
+      label = `Neto con esta persona: ${sym} ${netoAbs} a pagar (cobrar ${sym} ${aCobrar} − deber ${sym} ${aDeberles})`;
+    } else {
+      label = 'Las deudas con esta persona se compensan exactamente';
+    }
+    iconName = 'swap-horizontal-outline';
+    iconColor = '#6366F1';
+  }
 
   return (
     <View style={cbStyles(dark).banner}>
@@ -76,21 +102,20 @@ const cbStyles = (dark) => ({
 const TIPO_LABEL = { debito: 'Débito', credito: 'Crédito', transferencia: 'Transferencia' };
 const TIPO_COLOR = { debito: '#3B82F6', credito: '#8B5CF6', transferencia: '#10B981' };
 
-function getCuotasDeuda(deuda) {
+function getCuotasDeuda(deuda, mydata) {
   if (deuda.isFijo) return '∞';
   const cuotas = parseInt(deuda.cuotas) || 1;
   if (cuotas <= 1) return null;
-  const [, m, y] = (deuda.fechaDeuda || '').split('/');
-  if (!m || !y) return `1/${cuotas}`;
-  const startIndex = Number(y) * 12 + (Number(m) - 1);
-  const now = new Date();
-  const nowIndex = now.getFullYear() * 12 + now.getMonth();
-  const elapsed = nowIndex - startIndex + 1;
-  const current = Math.min(Math.max(elapsed, 1), cuotas);
+  // Usa la misma lógica que gastos, mapeando fechaDeuda → fecha
+  const restantes = getCuotasRestantes({ ...deuda, fecha: deuda.fechaDeuda }, mydata);
+  if (restantes === '∞') return '∞';
+  const restantesNum = Number(restantes);
+  if (isNaN(restantesNum) || restantesNum <= 0) return `${cuotas}/${cuotas}`;
+  const current = Math.max(1, cuotas - restantesNum + 1);
   return `${current}/${cuotas}`;
 }
 
-const DeudaCard = memo(function DeudaCard({ deuda, compensacion, onMarkPaid, onDelete, onRecordar, onPress }) {
+const DeudaCard = memo(function DeudaCard({ deuda, mydata, compensacion, onMarkPaid, onDelete, onRecordar, onPress }) {
   const { dark } = useTheme();
 
   // Callers already pass undefined when action is not applicable — no need to re-check pagado here
@@ -137,8 +162,8 @@ const DeudaCard = memo(function DeudaCard({ deuda, compensacion, onMarkPaid, onD
   const tipoColor = TIPO_COLOR[deuda.tipo] || colors.primary;
 
   const cuotasInfo = useMemo(
-    () => deuda.pagado ? null : getCuotasDeuda(deuda),
-    [deuda.pagado, deuda.isFijo, deuda.cuotas, deuda.fechaDeuda]
+    () => deuda.pagado ? null : getCuotasDeuda(deuda, mydata),
+    [deuda.pagado, deuda.isFijo, deuda.cuotas, deuda.fechaDeuda, deuda.tipo, mydata]
   );
   const cuotasMonto = cuotasInfo && cuotasInfo !== '∞'
     ? deuda.monto / (parseInt(deuda.cuotas) || 1)
@@ -228,7 +253,8 @@ const DeudaCard = memo(function DeudaCard({ deuda, compensacion, onMarkPaid, onD
             </View>
 
             <View style={s.right}>
-              {!!compensacion && !deuda.pagado ? (
+              {!!compensacion && !deuda.pagado && compensacion.esUnoAUno ? (
+                // 1 deuda vs 1 deuda: muestra el monto neto en lugar del original
                 <>
                   <Text style={s.montoTachado}>{simbolo} {montoFormatted}</Text>
                   <Text style={[s.monto, { color: compensacion.esAcreedor ? '#10B981' : compensacion.montoNeto >= 0 ? '#10B981' : '#EF4444' }]}>
