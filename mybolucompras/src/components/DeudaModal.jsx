@@ -9,7 +9,6 @@ import { userService } from '../services/userService';
 import { contactService } from '../services/contactService';
 import { MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
 import { formatFecha } from '../utils/formatters';
-import { useTheme } from '../context/ThemeContext';
 
 // Reutiliza los mismos sx de Modal.jsx
 const _fieldBase = {
@@ -60,7 +59,6 @@ const INITIAL = {
 };
 
 export default function DeudaModal({ deuda, onClose, onSave }) {
-  const { theme } = useTheme();
   const dialogRef = useRef(null);
   const [form, setForm] = useState(deuda ? { ...INITIAL, ...deuda, monto: String(deuda.monto) } : INITIAL);
   const [saving, setSaving] = useState(false);
@@ -70,6 +68,7 @@ export default function DeudaModal({ deuda, onClose, onSave }) {
   const [sharedUser, setSharedUser] = useState(null);
   const [searchEmail, setSearchEmail] = useState('');
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
   const [recentContacts, setRecentContacts] = useState([]);
 
   useEffect(() => {
@@ -117,6 +116,7 @@ export default function DeudaModal({ deuda, onClose, onSave }) {
   };
 
   const handleSearchUser = async () => {
+    setSearchError('');
     if (!searchEmail.trim()) return;
     setSearching(true);
     try {
@@ -124,10 +124,11 @@ export default function DeudaModal({ deuda, onClose, onSave }) {
       if (found) {
         setSharedUser(found);
         setForm(prev => ({ ...prev, nombre: found.nombre || found.email, compartidoConNombre: found.nombre, compartidoConUserId: found.userId }));
+        setSearchError('');
         const next = contactService.saveContact(found);
         setRecentContacts(next);
       } else {
-        alert('No existe un usuario con ese email.');
+        setSearchError('No existe un usuario con ese email.');
       }
     } catch (err) {
       console.error(err);
@@ -257,7 +258,7 @@ export default function DeudaModal({ deuda, onClose, onSave }) {
                 <span style={{ fontSize: 14, color: 'var(--color-primary)', fontWeight: 600 }}>
                   {sharedUser.nombre || sharedUser.email}
                 </span>
-                <button onClick={() => { setSharedUser(null); setForm(prev => ({ ...prev, nombre: '', compartidoConNombre: null, compartidoConUserId: null })); }}
+                <button onClick={() => { setSharedUser(null); setForm(prev => ({ ...prev, compartidoConNombre: null, compartidoConUserId: null })); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
                   <IoCloseCircle size={18} />
                 </button>
@@ -276,6 +277,9 @@ export default function DeudaModal({ deuda, onClose, onSave }) {
                     {searching ? '...' : <IoSearchOutline size={16} />}
                   </Button>
                 </div>
+                {searchError && (
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--color-error)' }}>{searchError}</p>
+                )}
                 {recentContacts.length > 0 && (
                   <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {recentContacts.map(c => (
