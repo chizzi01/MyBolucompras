@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useMemo } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { DataProvider } from './context/DataContext';
+import { DeudoresProvider } from './context/DeudoresContext';
 import { useTheme } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import UpdateNotification from './components/UpdateNotification';
@@ -15,6 +16,7 @@ const ForgotPasswordPage  = lazy(() => import('./pages/ForgotPasswordPage'));
 const MainPage            = lazy(() => import('./pages/MainPage'));
 const Preguntas          = lazy(() => import('./components/Preguntas'));
 const ConfiguracionPage  = lazy(() => import('./pages/ConfiguracionPage'));
+const DeudoresPage = lazy(() => import('./pages/DeudoresPage'));
 
 function AppFallback() {
   return (
@@ -87,6 +89,18 @@ function App() {
                 <ProtectedRoute>
                   <DataProvider>
                     <ConfiguracionPage />
+                  </DataProvider>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/deudores"
+              element={
+                <ProtectedRoute>
+                  <DataProvider>
+                    <DeudoresProvider>
+                      <DeudoresPage />
+                    </DeudoresProvider>
                   </DataProvider>
                 </ProtectedRoute>
               }

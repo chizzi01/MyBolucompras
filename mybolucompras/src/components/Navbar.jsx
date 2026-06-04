@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { HiHome } from "react-icons/hi2";
-import { FaCircleQuestion } from "react-icons/fa6";
+import { FaCircleQuestion, FaHandshake } from "react-icons/fa6";
 import { FiLogOut, FiSun, FiMoon, FiSettings } from "react-icons/fi";
 import { MdCalculate } from "react-icons/md";
 import { FaWallet } from "react-icons/fa";
@@ -60,6 +60,11 @@ function Header({ totalGastado, onPresupuestoClick, onFondosClick }) {
           <li className="navbar-nav-item">
             <Link to="/preguntas" className={location.pathname === '/preguntas' ? 'active' : ''}>
               <FaCircleQuestion size={16} /> Ayuda
+            </Link>
+          </li>
+          <li className="navbar-nav-item">
+            <Link to="/deudores" className={location.pathname === '/deudores' ? 'active' : ''}>
+              <FaHandshake size={16} /> Deudores
             </Link>
           </li>
         </ul>
