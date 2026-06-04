@@ -111,9 +111,9 @@ export default function DeudoresPage() {
   if (loading) return <PageSkeleton />;
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Header />
-      <main style={{ paddingTop: 'calc(var(--navbar-height) + var(--space-6))' }}>
+      <main style={{ paddingTop: 'calc(var(--navbar-height) + var(--space-6))', flex: 1 }}>
         <div className="deudores-container">
 
           {/* ── Toolbar ── */}

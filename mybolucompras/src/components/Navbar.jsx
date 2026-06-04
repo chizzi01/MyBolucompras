@@ -54,17 +54,17 @@ function Header({ totalGastado, onPresupuestoClick, onFondosClick }) {
         <ul className="navbar-nav">
           <li className="navbar-nav-item">
             <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
-              <HiHome size={17} /> Inicio
-            </Link>
-          </li>
-          <li className="navbar-nav-item">
-            <Link to="/preguntas" className={location.pathname === '/preguntas' ? 'active' : ''}>
-              <FaCircleQuestion size={16} /> Ayuda
+              <HiHome size={17} /> Mis gastos
             </Link>
           </li>
           <li className="navbar-nav-item">
             <Link to="/deudores" className={location.pathname === '/deudores' ? 'active' : ''}>
               <FaHandshake size={16} /> Deudores
+            </Link>
+          </li>
+          <li className="navbar-nav-item">
+            <Link to="/preguntas" className={location.pathname === '/preguntas' ? 'active' : ''}>
+              <FaCircleQuestion size={16} /> Ayuda
             </Link>
           </li>
         </ul>
