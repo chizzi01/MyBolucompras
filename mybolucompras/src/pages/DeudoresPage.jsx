@@ -194,7 +194,7 @@ export default function DeudoresPage() {
               const symGrupo = getCurrencySymbol(monedaGrupo);
 
               return (
-                <div key={grupo.nombre} className="deuda-grupo">
+                <div key={`${grupo.nombre}__${grupo.deudas[0]?.esAcreedor}`} className="deuda-grupo">
                   {/* Header del grupo */}
                   <div className="deuda-grupo-header">
                     <div className="deuda-grupo-info">

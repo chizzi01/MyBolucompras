@@ -122,8 +122,8 @@ export default function DeudaModal({ deuda, onClose, onSave }) {
     try {
       const found = await userService.buscarPorEmail(searchEmail);
       if (found) {
-        setSharedUser(found);
-        setForm(prev => ({ ...prev, nombre: found.nombre || found.email, compartidoConNombre: found.nombre, compartidoConUserId: found.userId }));
+        setSharedUser({ ...found, userId: found.id });
+        setForm(prev => ({ ...prev, nombre: found.nombre || found.email, compartidoConNombre: found.nombre, compartidoConUserId: found.id }));
         setSearchError('');
         const next = contactService.saveContact(found);
         setRecentContacts(next);
@@ -283,7 +283,7 @@ export default function DeudaModal({ deuda, onClose, onSave }) {
                 {recentContacts.length > 0 && (
                   <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {recentContacts.map(c => (
-                      <button key={c.userId} onClick={() => { setSharedUser(c); setForm(prev => ({ ...prev, nombre: c.nombre || c.email, compartidoConNombre: c.nombre, compartidoConUserId: c.userId })); }}
+                      <button key={c.userId} onClick={() => { setSharedUser({ ...c, userId: c.id || c.userId }); setForm(prev => ({ ...prev, nombre: c.nombre || c.email, compartidoConNombre: c.nombre, compartidoConUserId: c.id || c.userId })); }}
                         style={{ padding: '4px 10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-full)', fontSize: 12, background: 'var(--color-surface)', cursor: 'pointer', color: 'var(--color-text-secondary)' }}>
                         {c.nombre || c.email}
                       </button>

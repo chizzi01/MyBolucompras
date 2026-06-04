@@ -112,7 +112,8 @@ export const deudoresService = {
     const { error } = await supabase
       .from('deudores')
       .update({ pagado: true, fecha_pago: today })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', user.id);
     if (error) throw error;
 
     if (deudaActual.compartidoConUserId && user) {
@@ -145,7 +146,8 @@ export const deudoresService = {
   },
 
   async eliminar(id) {
-    const { error } = await supabase.from('deudores').delete().eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from('deudores').delete().eq('id', id).eq('user_id', user.id);
     if (error) throw error;
   },
 };
