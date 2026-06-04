@@ -5,7 +5,6 @@ import Footer from '../components/Footer';
 import PageSkeleton from '../components/PageSkeleton';
 import { useToast } from '../components/Toast';
 import { useDeudores } from '../context/DeudoresContext';
-import { useData } from '../context/DataContext';
 import DeudaModal from '../components/DeudaModal';
 import { getCurrencySymbol } from '../utils/formatters';
 import { calcularCuotasRestantes } from '../utils/cuotas';
@@ -15,7 +14,6 @@ import '../styles/deudores.css';
 export default function DeudoresPage() {
   const addToast = useToast();
   const { deudas, loading, agregarDeuda, editarDeuda, marcarPagada, eliminarDeuda } = useDeudores();
-  const { mydata } = useData();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editando, setEditando] = useState(null);
@@ -44,7 +42,7 @@ export default function DeudoresPage() {
   const grupos = useMemo(() => {
     const map = {};
     deudasFiltradas.forEach(d => {
-      const key = d.nombre.toLowerCase().trim();
+      const key = `${d.nombre.toLowerCase().trim()}__${d.esAcreedor}`;
       if (!map[key]) map[key] = { nombre: d.nombre, deudas: [] };
       map[key].deudas.push(d);
     });
@@ -53,12 +51,12 @@ export default function DeudoresPage() {
 
   // ── Totales resumen ──
   const { totalCobrar, totalPagar } = useMemo(() => {
-    const pendientes = deudas.filter(d => !d.pagado && d.moneda === (filtroMoneda || 'ARS'));
+    const pendientes = deudasFiltradas.filter(d => !d.pagado);
     return {
       totalCobrar: pendientes.filter(d => d.esAcreedor).reduce((s, d) => s + d.monto, 0),
       totalPagar: pendientes.filter(d => !d.esAcreedor).reduce((s, d) => s + d.monto, 0),
     };
-  }, [deudas, filtroMoneda]);
+  }, [deudasFiltradas]);
 
   const sym = getCurrencySymbol(filtroMoneda || 'ARS');
 
@@ -215,7 +213,7 @@ export default function DeudoresPage() {
                   {/* Filas */}
                   {grupo.deudas.map(deuda => {
                     const cuotasInfo = deuda.tipo === 'credito' && deuda.cuotas > 1
-                      ? ` · ${calcularCuotasRestantes(deuda.fechaDeuda, deuda.cuotas)}/${deuda.cuotas} cuotas`
+                      ? ` · ${deuda.fechaDeuda ? calcularCuotasRestantes(deuda.fechaDeuda, deuda.cuotas) : deuda.cuotas}/${deuda.cuotas} cuotas`
                       : deuda.cuotas > 1 ? ` · ${deuda.cuotas} cuotas` : '';
                     const symD = getCurrencySymbol(deuda.moneda);
 
