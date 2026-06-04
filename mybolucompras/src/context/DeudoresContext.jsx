@@ -11,9 +11,10 @@ export function DeudoresProvider({ children }) {
   const [error, setError] = useState(null);
 
   const cargarDeudas = useCallback(async () => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     setLoading(true);
     try {
+      setError(null);
       const data = await deudoresService.getAll();
       setDeudas(data);
     } catch (err) {
@@ -28,26 +29,54 @@ export function DeudoresProvider({ children }) {
   }, [cargarDeudas]);
 
   const agregarDeuda = async (deuda, sharedWith = null) => {
-    const nueva = await deudoresService.crear(deuda, sharedWith);
-    setDeudas(prev => [nueva, ...prev]);
-    return nueva;
+    try {
+      const nueva = await deudoresService.crear(deuda, sharedWith);
+      setDeudas(prev => [nueva, ...prev]);
+      return nueva;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
   };
 
   const editarDeuda = async (id, deuda) => {
-    const actualizada = await deudoresService.actualizar(id, deuda);
-    setDeudas(prev => prev.map(d => d.id === id ? actualizada : d));
+    const snapshot = deudas;
+    setDeudas(prev => prev.map(d => d.id === id ? { ...d, ...deuda } : d));
+    try {
+      const actualizada = await deudoresService.actualizar(id, deuda);
+      setDeudas(prev => prev.map(d => d.id === id ? actualizada : d));
+    } catch (err) {
+      setDeudas(snapshot);
+      setError(err.message);
+      throw err;
+    }
   };
 
   const marcarPagada = async (id, deudaActual) => {
-    await deudoresService.marcarPagada(id, deudaActual);
+    const snapshot = deudas;
+    const fechaPago = new Date().toISOString().split('T')[0].split('-').reverse().join('/');
     setDeudas(prev => prev.map(d =>
-      d.id === id ? { ...d, pagado: true, fechaPago: new Date().toLocaleDateString('es-AR') } : d
+      d.id === id ? { ...d, pagado: true, fechaPago } : d
     ));
+    try {
+      await deudoresService.marcarPagada(id, deudaActual);
+    } catch (err) {
+      setDeudas(snapshot);
+      setError(err.message);
+      throw err;
+    }
   };
 
   const eliminarDeuda = async (id) => {
-    await deudoresService.eliminar(id);
+    const snapshot = deudas;
     setDeudas(prev => prev.filter(d => d.id !== id));
+    try {
+      await deudoresService.eliminar(id);
+    } catch (err) {
+      setDeudas(snapshot);
+      setError(err.message);
+      throw err;
+    }
   };
 
   return (
