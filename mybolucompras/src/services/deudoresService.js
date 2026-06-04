@@ -2,8 +2,7 @@ import { supabase } from '../lib/supabase';
 
 export const deudoresService = {
   async getAll() {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user ?? null;
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
     const { data, error } = await supabase
       .from('deudores')
@@ -93,10 +92,14 @@ export const deudoresService = {
   },
 
   async actualizar(id, deuda) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
+
     const { data, error } = await supabase
       .from('deudores')
       .update(mapToDB(deuda))
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single();
     if (error) throw error;
@@ -104,8 +107,7 @@ export const deudoresService = {
   },
 
   async marcarPagada(id, deudaActual) {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user ?? null;
+    const { data: { user } } = await supabase.auth.getUser();
     const today = new Date().toISOString().split('T')[0];
 
     const { error } = await supabase
@@ -117,7 +119,7 @@ export const deudoresService = {
     if (deudaActual.compartidoConUserId && user) {
       const otroUserId = deudaActual.compartidoConUserId;
       const monto = deudaActual.monto;
-      await Promise.all([
+      const results = await Promise.all([
         supabase
           .from('deudores')
           .update({ pagado: true, fecha_pago: today })
@@ -137,6 +139,9 @@ export const deudoresService = {
           .eq('compartido_con_user_id', otroUserId)
           .eq('precio', monto),
       ]);
+      for (const { error } of results) {
+        if (error) throw error;
+      }
     }
   },
 
@@ -188,7 +193,7 @@ function mapToDB(deuda) {
     cuotas: parseInt(deuda.cuotas) || 1,
     cantidad: parseInt(deuda.cantidad) || 1,
     pagado: deuda.pagado ?? false,
-    fecha_deuda: fechaDeudaISO || new Date().toISOString().split('T')[0],
+    fecha_deuda: fechaDeudaISO || null,
     fecha_pago: fechaPagoISO,
     compartido_con_nombre: deuda.compartidoConNombre || null,
     compartido_con_user_id: deuda.compartidoConUserId || null,
