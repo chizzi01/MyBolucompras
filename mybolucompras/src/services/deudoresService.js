@@ -14,8 +14,7 @@ export const deudoresService = {
   },
 
   async crear(deuda, sharedWith = null) {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user ?? null;
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('No autenticado');
 
     let finalDeuda = { ...deuda };
