@@ -4,6 +4,7 @@ import { HiHome } from "react-icons/hi2";
 import { FaCircleQuestion, FaHandshake } from "react-icons/fa6";
 import { FiLogOut, FiSun, FiMoon, FiSettings } from "react-icons/fi";
 import { MdCalculate } from "react-icons/md";
+import { IoAirplaneOutline } from "react-icons/io5";
 import { FaWallet } from "react-icons/fa";
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -60,6 +61,11 @@ function Header({ totalGastado, onPresupuestoClick, onFondosClick }) {
           <li className="navbar-nav-item">
             <Link to="/deudores" className={location.pathname === '/deudores' ? 'active' : ''}>
               <FaHandshake size={16} /> Deudores
+            </Link>
+          </li>
+          <li className="navbar-nav-item">
+            <Link to="/viajes" className={location.pathname.startsWith('/viajes') ? 'active' : ''}>
+              <IoAirplaneOutline size={16} /> Viajes
             </Link>
           </li>
           <li className="navbar-nav-item">
