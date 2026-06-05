@@ -119,7 +119,9 @@ function App() {
             } />
             <Route path="/viajes/:id" element={
               <ProtectedRoute>
-                <ViajeDetallePage />
+                <DataProvider>
+                  <ViajeDetallePage />
+                </DataProvider>
               </ProtectedRoute>
             } />
           </Routes>
