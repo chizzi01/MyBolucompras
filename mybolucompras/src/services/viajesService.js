@@ -145,6 +145,7 @@ function mapViaje(row) {
     id: row.id,
     titulo: row.titulo,
     emoji: row.emoji || '✈️',
+    imagenUrl: row.imagen_url || null,
     estado: row.estado,
     createdBy: row.created_by,
     fechaCierre: row.fecha_cierre,

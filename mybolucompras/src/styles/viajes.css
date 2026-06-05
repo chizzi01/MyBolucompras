@@ -55,6 +55,16 @@
   margin: var(--space-5) 0 var(--space-3);
 }
 
+/* ── Card image thumb ── */
+.viaje-card-img-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
 /* ── Trip card ── */
 .viaje-card {
   background: var(--color-surface);
@@ -178,6 +188,16 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 0 var(--space-6) var(--space-8);
+}
+
+/* ── Cover image banner ── */
+.viaje-detalle-cover {
+  width: 100%;
+  height: 180px;
+  border-radius: var(--radius-lg);
+  background-size: cover;
+  background-position: center;
+  margin-bottom: var(--space-4);
 }
 
 /* ── Detalle header ── */

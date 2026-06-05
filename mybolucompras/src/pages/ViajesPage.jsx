@@ -9,6 +9,7 @@ import { useViajes } from '../context/ViajesContext';
 import { useAuth } from '../context/AuthContext';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
 import { IoAddOutline, IoAirplaneOutline } from 'react-icons/io5';
+import '../styles/modal.css';
 import '../styles/viajes.css';
 
 const PARTICIPANT_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
@@ -61,7 +62,11 @@ export default function ViajesPage() {
 
   const renderCard = (v) => (
     <div key={v.id} className="viaje-card" onClick={() => navigate(`/viajes/${v.id}`)}>
-      <div className="viaje-card-emoji">{v.emoji}</div>
+      {v.imagenUrl ? (
+        <div className="viaje-card-img-thumb" style={{ backgroundImage: `url(${v.imagenUrl})` }} />
+      ) : (
+        <div className="viaje-card-emoji">{v.emoji}</div>
+      )}
       <div className="viaje-card-body">
         <div className="viaje-card-titulo">{v.titulo}</div>
         <div className="viaje-card-meta">

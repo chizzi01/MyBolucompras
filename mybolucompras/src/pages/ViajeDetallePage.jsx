@@ -15,6 +15,7 @@ import RegistrarPagoModal from '../components/viajes/RegistrarPagoModal';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
 import { IoArrowBack, IoEllipsisVertical, IoAddOutline, IoTrashOutline, IoLockClosedOutline, IoAddCircleOutline, IoCheckmark, IoEllipseOutline, IoCheckmarkCircle, IoCheckmarkCircleOutline } from 'react-icons/io5';
 import { FiArrowRight } from 'react-icons/fi';
+import '../styles/modal.css';
 import '../styles/viajes.css';
 
 const PARTICIPANT_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
@@ -573,9 +574,14 @@ export default function ViajeDetallePage() {
             </div>
           </div>
 
+          {/* Cover image banner */}
+          {viaje.imagenUrl && (
+            <div className="viaje-detalle-cover" style={{ backgroundImage: `url(${viaje.imagenUrl})` }} />
+          )}
+
           {/* Header */}
           <div className="viaje-detalle-header">
-            <div className="viaje-detalle-emoji">{viaje.emoji}</div>
+            {!viaje.imagenUrl && <div className="viaje-detalle-emoji">{viaje.emoji}</div>}
             <div className="viaje-detalle-info">
               <div className="viaje-detalle-titulo">{viaje.titulo}</div>
               <div className="viaje-detalle-meta">
