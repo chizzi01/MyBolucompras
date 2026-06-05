@@ -73,8 +73,6 @@ export const viajesService = {
       throw new Error(`Saldos pendientes: ${nombres}`);
     }
 
-    await supabase.from('gastos').delete().eq('viaje_id', id);
-
     const today = new Date().toISOString().split('T')[0];
     const summaryRows = viaje.participantes
       .map(p => {
@@ -111,10 +109,14 @@ export const viajesService = {
       })
       .filter(r => r.precio > 0);
 
+    // Insert summaries FIRST to prevent data loss if insert fails
     if (summaryRows.length > 0) {
       const { error: insertError } = await supabase.from('gastos').insert(summaryRows);
       if (insertError) throw insertError;
     }
+
+    // Delete original gastos, but preserve the summaries we just inserted
+    await supabase.from('gastos').delete().eq('viaje_id', id).not('objeto', 'like', 'Gastos:%');
 
     const { error } = await supabase
       .from('viajes')
