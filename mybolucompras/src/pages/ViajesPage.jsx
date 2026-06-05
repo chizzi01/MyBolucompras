@@ -8,30 +8,57 @@ import { useToast } from '../components/Toast';
 import { useViajes } from '../context/ViajesContext';
 import { useAuth } from '../context/AuthContext';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
-import { IoAddOutline, IoAirplaneOutline } from 'react-icons/io5';
+import { IoAddOutline } from 'react-icons/io5';
 import '../styles/modal.css';
 import '../styles/viajes.css';
 
-const PARTICIPANT_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
-const MAX_AVATARS = 4;
+function ViajeCard({ v, onClick }) {
+  const activo = v.estado === 'activo';
+  const nombres = v.participantes.map(p => p.nombre.split(' ')[0]).join(', ');
 
-function getColor(idx) {
-  return PARTICIPANT_COLORS[idx % PARTICIPANT_COLORS.length];
-}
-
-function AvatarStack({ participantes }) {
-  const visible = participantes.slice(0, MAX_AVATARS);
-  const overflow = participantes.length - MAX_AVATARS;
   return (
-    <div className="viaje-avatar-stack">
-      {visible.map((p, i) => (
-        <div key={p.userId} className="viaje-avatar" style={{ background: getColor(i) }} title={p.nombre}>
-          {p.nombre?.[0]?.toUpperCase() || '?'}
+    <div
+      className={`viaje-card-mobile${activo ? '' : ' cerrado'}`}
+      onClick={onClick}
+    >
+      {/* Left accent border */}
+      <div className={`viaje-card-accent${activo ? ' activo' : ''}`} />
+
+      {/* Main content */}
+      <div className="viaje-card-content">
+        {/* Top row: emoji + title + badge */}
+        <div className="viaje-card-top">
+          {v.imagenUrl ? (
+            <div
+              className="viaje-card-img-thumb-sm"
+              style={{ backgroundImage: `url(${v.imagenUrl}?w=120&q=60)` }}
+            />
+          ) : (
+            <span className="viaje-card-emoji-sm">{v.emoji}</span>
+          )}
+          <div className="viaje-card-titulo-block">
+            <div className="viaje-card-titulo-mobile">{v.titulo}</div>
+            <div className={`viaje-card-badge${activo ? ' activo' : ' cerrado'}`}>
+              {activo ? '● Activo' : '🔒 Cerrado'}
+            </div>
+          </div>
         </div>
-      ))}
-      {overflow > 0 && (
-        <div className="viaje-avatar viaje-avatar-overflow">+{overflow}</div>
-      )}
+
+        {/* Participants */}
+        <div className="viaje-card-participantes">{nombres}</div>
+
+        {/* Chips */}
+        {(v._gastoCount > 0 || v._checklistTotal > 0) && (
+          <div className="viaje-card-chips">
+            {v._gastoCount > 0 && (
+              <span className="viaje-chip">💸 {v._gastoCount} gasto{v._gastoCount !== 1 ? 's' : ''}</span>
+            )}
+            {v._checklistTotal > 0 && (
+              <span className="viaje-chip">✅ {v._checklistDone}/{v._checklistTotal}</span>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -59,24 +86,6 @@ export default function ViajesPage() {
   };
 
   if (loading) return <PageSkeleton />;
-
-  const renderCard = (v) => (
-    <div key={v.id} className="viaje-card" onClick={() => navigate(`/viajes/${v.id}`)}>
-      {v.imagenUrl ? (
-        <div className="viaje-card-img-thumb" style={{ backgroundImage: `url(${v.imagenUrl})` }} />
-      ) : (
-        <div className="viaje-card-emoji">{v.emoji}</div>
-      )}
-      <div className="viaje-card-body">
-        <div className="viaje-card-titulo">{v.titulo}</div>
-        <div className="viaje-card-meta">
-          <AvatarStack participantes={v.participantes} />
-          <span className="viaje-card-total">{v.participantes.length} participante{v.participantes.length !== 1 ? 's' : ''}</span>
-          {v.estado === 'cerrado' && <span className="viaje-card-estado cerrado">Archivado</span>}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -109,13 +118,17 @@ export default function ViajesPage() {
               {activos.length > 0 && (
                 <>
                   <div className="viajes-section-title">Activos</div>
-                  {activos.map(renderCard)}
+                  {activos.map(v => (
+                    <ViajeCard key={v.id} v={v} onClick={() => navigate(`/viajes/${v.id}`)} />
+                  ))}
                 </>
               )}
               {archivados.length > 0 && (
                 <>
                   <div className="viajes-section-title">Archivados</div>
-                  {archivados.map(renderCard)}
+                  {archivados.map(v => (
+                    <ViajeCard key={v.id} v={v} onClick={() => navigate(`/viajes/${v.id}`)} />
+                  ))}
                 </>
               )}
             </>

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { calcularCuotasRestantesCredito, calcularCuotasRestantes } from '../utils/cuotas';
+import { getCuotasRestantes } from '../utils/cuotas';
 import { useDebounce } from './useDebounce';
 
 export function useFilters(gastos, mydata) {
@@ -13,13 +13,8 @@ export function useFilters(gastos, mydata) {
   const [isSwitchOn, setIsSwitchOn] = useState(false);
 
   const calcularCuotas = (item) => {
-    return item?.tipo === 'debito'
-      ? calcularCuotasRestantes(item?.fecha || '', item?.cuotas || 1)
-      : calcularCuotasRestantesCredito(
-        item?.fecha || '', item?.cuotas || 1,
-        mydata?.vencimiento || null, mydata?.cierre || null,
-        mydata?.vencimientoAnterior || null, mydata?.cierreAnterior || null
-      );
+    const r = getCuotasRestantes(item, mydata);
+    return r === '∞' ? Infinity : r;
   };
 
   const filteredData = useMemo(() => {

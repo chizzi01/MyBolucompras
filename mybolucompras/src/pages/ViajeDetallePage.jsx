@@ -13,8 +13,9 @@ import { viajeNotasService } from '../services/viajeNotasService';
 import ViajeGastoModal from '../components/viajes/ViajeGastoModal';
 import RegistrarPagoModal from '../components/viajes/RegistrarPagoModal';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
-import { IoArrowBack, IoEllipsisVertical, IoAddOutline, IoTrashOutline, IoLockClosedOutline, IoAddCircleOutline, IoCheckmark, IoEllipseOutline, IoCheckmarkCircle, IoCheckmarkCircleOutline } from 'react-icons/io5';
+import { IoArrowBack, IoEllipsisVertical, IoAddOutline, IoTrashOutline, IoLockClosedOutline, IoAddCircleOutline, IoCheckmark, IoEllipseOutline, IoCheckmarkCircle, IoCheckmarkCircleOutline, IoImageOutline } from 'react-icons/io5';
 import { FiArrowRight } from 'react-icons/fi';
+import ImagenGaleriaModal from '../components/viajes/ImagenGaleriaModal';
 import '../styles/modal.css';
 import '../styles/viajes.css';
 
@@ -457,6 +458,7 @@ export default function ViajeDetallePage() {
   const [tabIdx, setTabIdx] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [editModal, setEditModal] = useState(false);
+  const [galeriaModal, setGaleriaModal] = useState(false);
   const menuRef = useRef(null);
 
   const cargar = useCallback(async () => {
@@ -533,84 +535,130 @@ export default function ViajeDetallePage() {
     }
   };
 
+  const handleImagenSave = async (imagenUrl) => {
+    await viajesService.editarViaje(id, { imagenUrl });
+    addToast(imagenUrl ? 'Imagen actualizada' : 'Imagen eliminada', 'success');
+    cargar();
+  };
+
   if (loading) return <PageSkeleton />;
   if (!viaje) return null;
 
   const activo = viaje.estado === 'activo';
   const totalGastado = gastos.reduce((s, g) => s + g.precio, 0);
+  const porPersona = viaje.participantes.length > 0 ? totalGastado / viaje.participantes.length : 0;
   const visibleParticipants = viaje.participantes.slice(0, MAX_AVATARS);
   const overflowCount = viaje.participantes.length - MAX_AVATARS;
+
+  const fmtARS = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="viaje-detalle-wrap">
       <Header />
       <main className="viaje-detalle-main">
-        <div className="viaje-detalle-container">
 
-          {/* Topbar */}
-          <div className="viaje-detalle-topbar">
-            <Link to="/viajes" className="viaje-back-btn">
-              <IoArrowBack size={16} /> Mis Viajes
-            </Link>
-            <div style={{ position: 'relative' }} ref={menuRef}>
-              <button className="viaje-options-btn" onClick={() => setMenuOpen(o => !o)}>
-                <IoEllipsisVertical size={18} />
-              </button>
-              {menuOpen && (
-                <div className="viaje-options-menu">
-                  <button className="viaje-options-item" onClick={() => { setMenuOpen(false); setEditModal(true); }}>
-                    ✏️ Editar
-                  </button>
-                  {activo ? (
-                    <button className="viaje-options-item" onClick={handleCerrar}>🔒 Cerrar viaje</button>
-                  ) : (
-                    <button className="viaje-options-item" onClick={handleReabrir}>🔓 Reabrir viaje</button>
-                  )}
-                  <button className="viaje-options-item danger" onClick={handleEliminar}>
-                    <IoTrashOutline size={14} /> Eliminar
-                  </button>
+        {/* ── Full-width hero header ── */}
+        <div
+          className="viaje-hero"
+          style={viaje.imagenUrl ? { backgroundImage: `url(${viaje.imagenUrl})` } : {}}
+        >
+          {/* gradient overlay */}
+          <div className={`viaje-hero-gradient${viaje.imagenUrl ? ' img' : ''}`} />
+
+          {/* hero content */}
+          <div className="viaje-hero-content">
+            {/* top bar: back + options */}
+            <div className="viaje-hero-topbar">
+              <Link to="/viajes" className="viaje-hero-btn">
+                <IoArrowBack size={18} />
+              </Link>
+              <div style={{ position: 'relative' }} ref={menuRef}>
+                <button className="viaje-hero-btn" onClick={() => setMenuOpen(o => !o)}>
+                  <IoEllipsisVertical size={18} />
+                </button>
+                {menuOpen && (
+                  <div className="viaje-options-menu">
+                    <button className="viaje-options-item" onClick={() => { setMenuOpen(false); setEditModal(true); }}>
+                      ✏️ Editar
+                    </button>
+                    <button className="viaje-options-item" onClick={() => { setMenuOpen(false); setGaleriaModal(true); }}>
+                      <IoImageOutline size={14} /> Cambiar imagen de portada
+                    </button>
+                    {activo ? (
+                      <button className="viaje-options-item" onClick={handleCerrar}>🔒 Cerrar viaje</button>
+                    ) : (
+                      <button className="viaje-options-item" onClick={handleReabrir}>🔓 Reabrir viaje</button>
+                    )}
+                    <button className="viaje-options-item danger" onClick={handleEliminar}>
+                      <IoTrashOutline size={14} /> Eliminar
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* emoji box */}
+            <div className="viaje-hero-emoji-box">{viaje.emoji}</div>
+
+            {/* title */}
+            <div className="viaje-hero-titulo">{viaje.titulo}</div>
+
+            {/* status badge */}
+            <div className={`viaje-hero-badge${activo ? ' activo' : ' cerrado'}`}>
+              {activo ? '● Activo' : '🔒 Archivado'}
+            </div>
+
+            {/* avatars */}
+            <div className="viaje-hero-avatars">
+              {visibleParticipants.map((p) => (
+                <div
+                  key={p.userId}
+                  className="viaje-hero-avatar"
+                  style={{ background: getColor(viaje.participantes, p.userId) }}
+                  title={p.nombre}
+                >
+                  {p.nombre?.[0]?.toUpperCase()}
                 </div>
+              ))}
+              {overflowCount > 0 && (
+                <div className="viaje-hero-avatar overflow">+{overflowCount}</div>
               )}
             </div>
-          </div>
 
-          {/* Cover image banner */}
-          {viaje.imagenUrl && (
-            <div className="viaje-detalle-cover" style={{ backgroundImage: `url(${viaje.imagenUrl})` }} />
-          )}
-
-          {/* Header */}
-          <div className="viaje-detalle-header">
-            {!viaje.imagenUrl && <div className="viaje-detalle-emoji">{viaje.emoji}</div>}
-            <div className="viaje-detalle-info">
-              <div className="viaje-detalle-titulo">{viaje.titulo}</div>
-              <div className="viaje-detalle-meta">
-                <div className="viaje-avatar-stack">
-                  {visibleParticipants.map((p, i) => (
-                    <div key={p.userId} className="viaje-avatar" style={{ background: getColor(viaje.participantes, p.userId) }} title={p.nombre}>
-                      {p.nombre?.[0]?.toUpperCase()}
-                    </div>
-                  ))}
-                  {overflowCount > 0 && <div className="viaje-avatar viaje-avatar-overflow">+{overflowCount}</div>}
-                </div>
-                <span className="viaje-detalle-total">
-                  Total: ${totalGastado.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                </span>
+            {/* stat cards */}
+            <div className="viaje-hero-stats">
+              <div className="viaje-stat-card">
+                <div className="viaje-stat-label">TOTAL</div>
+                <div className="viaje-stat-value">${fmtARS(totalGastado)}</div>
+                <div className="viaje-stat-sub">{gastos.length} gasto{gastos.length !== 1 ? 's' : ''}</div>
+              </div>
+              <div className="viaje-stat-card">
+                <div className="viaje-stat-label">POR PERSONA</div>
+                <div className="viaje-stat-value">${fmtARS(porPersona)}</div>
+                <div className="viaje-stat-sub">{viaje.participantes.length} persona{viaje.participantes.length !== 1 ? 's' : ''}</div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ── Page body ── */}
+        <div className="viaje-detalle-container">
 
           {/* Readonly banner */}
           {!activo && (
-            <div className="viaje-readonly-banner">
+            <div className="viaje-readonly-banner" style={{ marginTop: 'var(--space-4)' }}>
               <IoLockClosedOutline size={14} /> Solo lectura · Viaje cerrado
             </div>
           )}
 
-          {/* Tabs */}
-          <div className="viaje-tabs">
+          {/* Segmented tabs */}
+          <div className="viaje-seg-tabs">
             {TABS.map((tab, i) => (
-              <button key={tab} className={`viaje-tab-btn${tabIdx === i ? ' active' : ''}`} onClick={() => setTabIdx(i)}>
+              <button
+                key={tab}
+                className={`viaje-seg-btn${tabIdx === i ? ' active' : ''}`}
+                onClick={() => setTabIdx(i)}
+              >
                 {tab}
               </button>
             ))}
@@ -638,6 +686,14 @@ export default function ViajeDetallePage() {
           onSave={handleEditSave}
           currentUserId={user?.id}
           currentUserNombre={user?.user_metadata?.nombre || user?.email}
+        />
+      )}
+
+      {galeriaModal && (
+        <ImagenGaleriaModal
+          viaje={viaje}
+          onClose={() => setGaleriaModal(false)}
+          onSave={handleImagenSave}
         />
       )}
     </div>

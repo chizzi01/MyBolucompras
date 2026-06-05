@@ -3,9 +3,12 @@ import { parsePrecio } from '../utils/formatters';
 
 export const gastosService = {
   async getAll() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
     const { data, error } = await supabase
       .from('gastos')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     if (error) throw error;
     return data.map(mapFromDB);
@@ -89,15 +92,20 @@ export const gastosService = {
   },
 
   async eliminar(id) {
-    const { error } = await supabase.from('gastos').delete().eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
+    const { error } = await supabase.from('gastos').delete().eq('id', id).eq('user_id', user.id);
     if (error) throw error;
   },
 
   async actualizarEtiqueta(id, etiqueta) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
     const { data, error } = await supabase
       .from('gastos')
       .update({ etiqueta })
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single();
     if (error) throw error;
@@ -105,10 +113,13 @@ export const gastosService = {
   },
 
   async quitarEtiquetaDeTodos(nombreEtiqueta) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
     const { error } = await supabase
       .from('gastos')
       .update({ etiqueta: null })
-      .eq('etiqueta', nombreEtiqueta);
+      .eq('etiqueta', nombreEtiqueta)
+      .eq('user_id', user.id);
     if (error) throw error;
   },
 };

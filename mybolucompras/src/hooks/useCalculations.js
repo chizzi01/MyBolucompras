@@ -1,54 +1,54 @@
 import { useMemo } from 'react';
-import { calcularCuotasRestantesCredito } from '../utils/cuotas';
+import { getCuotasRestantes, gastoEntraEsteMes, getSingleCuotaBillingIndex } from '../utils/cuotas';
 import { parsePrecio, parseFecha } from '../utils/formatters';
 
 export function useCalculations(gastos, mydata, filteredData) {
   const totalGastado = useMemo(() => {
     const totalesPorMoneda = {};
     const hoy = new Date();
-    const mesActual = hoy.getMonth();
-    const anioActual = hoy.getFullYear();
+    const hoyIndex = hoy.getFullYear() * 12 + hoy.getMonth();
 
-    (filteredData || []).forEach((item) => {
-      const moneda = item.moneda?.trim() || 'ARS';
-      const precioNumerico = parsePrecio(item.precio);
+    (filteredData || []).forEach((g) => {
+      const moneda = g.moneda?.trim() || 'ARS';
+      const precioNumerico = parsePrecio(g.precio);
       if (!precioNumerico) return;
 
       let sumar = false;
       let precioMensual = precioNumerico;
 
-      if (item.isFijo) {
+      if (g.isFijo) {
         sumar = true;
-      } else if (item.tipo === 'credito' && item.cuotas > 0) {
-        const fechaCompra = parseFecha(item.fecha);
-        const cierreAnterior = new Date(mydata?.cierreAnterior);
-        if (fechaCompra <= cierreAnterior) {
-          const cuotas = parseInt(item.cuotas, 10) || 1;
-          const precioPorCuota = precioNumerico / cuotas;
-          const cierreDay = cierreAnterior.getDate();
-          const firstStatementMonth = new Date(
-            fechaCompra.getFullYear(),
-            fechaCompra.getMonth() + (fechaCompra.getDate() > cierreDay ? 1 : 0), 1
-          );
-          for (let i = 0; i < cuotas; i++) {
-            const mesCuota = new Date(firstStatementMonth.getFullYear(), firstStatementMonth.getMonth() + i, 1);
-            if (mesCuota.getMonth() === mesActual && mesCuota.getFullYear() === anioActual) {
-              const cuotasRestantes = calcularCuotasRestantesCredito(
-                item.fecha, item.cuotas, mydata?.vencimiento, mydata?.cierre,
-                mydata?.vencimientoAnterior, mydata?.cierreAnterior
-              );
-              if (cuotasRestantes > 0) { sumar = true; precioMensual = precioPorCuota; break; }
+      } else if (g.tipo === 'credito') {
+        const cuotas = parseInt(g.cuotas, 10) || 1;
+        if (cuotas > 1) {
+          // Multi-installment: active in its purchase month range
+          const [, m, y] = (g.fecha || '').split('/');
+          const compraIndex = Number(y) * 12 + (Number(m) - 1);
+          if (hoyIndex >= compraIndex && hoyIndex < compraIndex + cuotas) {
+            const remaining = getCuotasRestantes(g, mydata);
+            if (remaining === 'N/A' || remaining > 0) {
+              sumar = true;
+              precioMensual = precioNumerico / cuotas;
             }
           }
+        } else {
+          // Single-charge credit: show in billing month only
+          const billingIndex = getSingleCuotaBillingIndex(g, mydata);
+          if (billingIndex === hoyIndex && gastoEntraEsteMes(g, mydata)) {
+            sumar = true;
+          }
         }
-      } else if (item.tipo === 'debito' || item.medio === 'Efectivo' || item.medio === 'Transferencia') {
-        const fechaCompra = parseFecha(item.fecha);
-        if (fechaCompra.getMonth() === mesActual && fechaCompra.getFullYear() === anioActual) sumar = true;
+      } else {
+        // Débito / Efectivo / Transferencia: only in purchase month
+        const fechaCompra = parseFecha(g.fecha);
+        if (fechaCompra && !isNaN(fechaCompra)) {
+          const compraIndex = fechaCompra.getFullYear() * 12 + fechaCompra.getMonth();
+          if (compraIndex === hoyIndex) sumar = true;
+        }
       }
 
       if (sumar) {
-        if (!totalesPorMoneda[moneda]) totalesPorMoneda[moneda] = 0;
-        totalesPorMoneda[moneda] += precioMensual;
+        totalesPorMoneda[moneda] = (totalesPorMoneda[moneda] || 0) + precioMensual;
       }
     });
 

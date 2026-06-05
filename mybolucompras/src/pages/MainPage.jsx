@@ -10,6 +10,7 @@ import Footer from '../components/Footer';
 import { useToast } from '../components/Toast';
 import { FaCalculator } from "react-icons/fa6";
 import PageSkeleton from '../components/PageSkeleton';
+import CierreChecker from '../components/CierreChecker';
 
 function MainPage() {
   const addToast = useToast();
@@ -188,6 +189,7 @@ function MainPage() {
 
   return (
     <div>
+      <CierreChecker />
       <Header totalGastado={totalGastado} onPresupuestoClick={() => openModal('presupuesto')} onFondosClick={() => openModal('fondos')} />
       <div className="main-content">
         <Table

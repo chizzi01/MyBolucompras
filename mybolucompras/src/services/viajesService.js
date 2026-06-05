@@ -56,6 +56,7 @@ export const viajesService = {
     const update = {};
     if (campos.titulo !== undefined) update.titulo = campos.titulo;
     if (campos.emoji !== undefined) update.emoji = campos.emoji;
+    if ('imagenUrl' in campos) update.imagen_url = campos.imagenUrl;
     const { error } = await supabase.from('viajes').update(update).eq('id', id);
     if (error) throw error;
   },
