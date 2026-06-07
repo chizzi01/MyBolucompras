@@ -590,14 +590,17 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                         </div>
                     )}
                     </div>
-                    <label className="switch-label" style={{ flexShrink: 0, gap: '8px' }}>
-                        <span style={{ fontSize: '12px', color: !isSwitchOn ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)', fontWeight: !isSwitchOn ? 600 : 400, transition: 'all 0.2s' }}>
-                            Del mes
+                    <div style={{ flex: 1 }} />
+                    <label className="switch-label" style={{ flexShrink: 0, gap: '10px', alignItems: 'center' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: !isSwitchOn ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)', fontWeight: !isSwitchOn ? 600 : 400, transition: 'all 0.2s' }}>
+                            <FaCalendarAlt size={13} />
+                            {mesCapitalizado}
                         </span>
                         <div className={`switch-track ${isSwitchOn ? 'on' : ''}`} onClick={handleSwitchChange}>
                             <div className="switch-thumb" />
                         </div>
-                        <span style={{ fontSize: '12px', color: isSwitchOn ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)', fontWeight: isSwitchOn ? 600 : 400, transition: 'all 0.2s' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: isSwitchOn ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)', fontWeight: isSwitchOn ? 600 : 400, transition: 'all 0.2s' }}>
+                            <FaSwatchbook size={13} />
                             Todas
                         </span>
                     </label>
