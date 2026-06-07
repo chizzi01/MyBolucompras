@@ -229,53 +229,18 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     return (
         <section id="gastos" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <div className="componentContainer">
-                <div style={{ display: 'flex', alignItems: 'center', padding: '4px 20px 10px', gap: '12px', flexWrap: 'wrap' }}>
-                    <h1 id="mesBolucompras" style={{ flex: 1, margin: '8px 0', textAlign: 'left' }}>
-                        Gastos <span className="title-separator">·</span>{' '}
-                        <span className="mes-actual">{mesCapitalizado} {añoActual}</span>
-                    </h1>
-                    <div className="switch-align" style={{ margin: 0, flexShrink: 0 }}>
-                        <div id="delMes" className={`verticalBtnSwitch-text ${!isSwitchOn ? 'iluminate' : ''}`}>
-                            <FaCalendarAlt size={24} />
-                            <label htmlFor="" className="buttonSwitch-text">DEL MES</label>
-                        </div>
-                        <label className="switch">
-                            <input type="checkbox" id="switch" checked={isSwitchOn} onChange={handleSwitchChange} />
-                            <span className="slider round"></span>
-                        </label>
-                        <div id="todas" className={`verticalBtnSwitch-text ${isSwitchOn ? 'iluminate' : ''}`}>
-                            <FaSwatchbook size={24} />
-                            <label htmlFor="" className="buttonSwitch-text">TODAS</label>
-                        </div>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '6px 16px 10px', gap: '10px' }}>
+                    <div style={{ position: 'relative', width: '260px', flexShrink: 0 }}>
+                        <FiSearch size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
+                        <input
+                            type="text"
+                            placeholder="Buscar gasto..."
+                            value={filterObject}
+                            onChange={(e) => setFilterObject(e.target.value)}
+                            style={{ width: '100%', padding: '7px 12px 7px 34px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '100px', color: 'white', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                        />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                    <div className="agregar-split-btn" ref={agregarMenuRef}>
-                    <div className="agregar-split-inner">
-                        <button className="agregar-main" onClick={() => openModal('nuevo')}>
-                            <IoMdAdd size={16} /> Agregar
-                        </button>
-                        <button className="agregar-arrow" onClick={() => setShowAgregarMenu(m => !m)}>
-                            ▾
-                        </button>
-                    </div>
-                    {showAgregarMenu && (
-                        <div className="agregar-dropdown">
-                            <button onClick={() => { openModal('nuevo'); setShowAgregarMenu(false); }}>
-                                <GiReceiveMoney size={16} /> Nuevo gasto
-                            </button>
-                            <button onClick={() => { openModal('repetitivo'); setShowAgregarMenu(false); }}>
-                                <PiRepeatBold size={16} /> Gasto fijo
-                            </button>
-                            <button onClick={() => { openModal('fondos'); setShowAgregarMenu(false); }}>
-                                <FaPiggyBank size={16} /> Agregar fondos
-                            </button>
-                            <button onClick={() => { openModal('vencimiento'); setShowAgregarMenu(false); }}>
-                                <FaMoneyCheckDollar size={16} /> Actualizar cierre
-                            </button>
-                        </div>
-                    )}
-                </div>
-                <div className='dropdownFilter' style={{ position: 'relative', top: 0, left: 0 }}>
+                    <div className='dropdownFilter' style={{ position: 'relative', top: 0, left: 0, flexShrink: 0 }}>
                     <button className="dropbtnFilter" onClick={handleFilterClick}>
                         <MdFilterListAlt size={25} />
                         {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
@@ -629,7 +594,33 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                             </div>
                         </div>
                     )}
-                </div>
+                    </div>
+                    <div style={{ flex: 1 }} />
+                    <div className="agregar-split-btn" ref={agregarMenuRef}>
+                        <div className="agregar-split-inner">
+                            <button className="agregar-main" onClick={() => openModal('nuevo')}>
+                                <IoMdAdd size={16} /> Agregar
+                            </button>
+                            <button className="agregar-arrow" onClick={() => setShowAgregarMenu(m => !m)}>
+                                ▾
+                            </button>
+                        </div>
+                        {showAgregarMenu && (
+                            <div className="agregar-dropdown">
+                                <button onClick={() => { openModal('nuevo'); setShowAgregarMenu(false); }}>
+                                    <GiReceiveMoney size={16} /> Nuevo gasto
+                                </button>
+                                <button onClick={() => { openModal('repetitivo'); setShowAgregarMenu(false); }}>
+                                    <PiRepeatBold size={16} /> Gasto fijo
+                                </button>
+                                <button onClick={() => { openModal('fondos'); setShowAgregarMenu(false); }}>
+                                    <FaPiggyBank size={16} /> Agregar fondos
+                                </button>
+                                <button onClick={() => { openModal('vencimiento'); setShowAgregarMenu(false); }}>
+                                    <FaMoneyCheckDollar size={16} /> Actualizar cierre
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
