@@ -227,7 +227,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
 
 
     return (
-        <section id="gastos">
+        <section id="gastos" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <div className="componentContainer">
                 <div className="tituloContainer">
                     <h1 id="mesBolucompras">

@@ -687,21 +687,19 @@ button,
 .componentContainer {
   background-attachment: fixed;
   width: 100%;
-  min-height: 100vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   padding-top: 10px;
 }
 
 
 .tabla {
   padding: 20px;
-  margin-bottom: 20px;
   margin-top: 10px;
   margin-bottom: 10px;
-  height: 60vh;
-  overflow: auto;
-  overflow-y: scroll;
-  /* border: #fff solid 2px; */
-  /* box-shadow: #ffffff 0px 0px 10px; */
+  flex: 1;
+  overflow-y: auto;
   border-radius: 12px;
 }
 

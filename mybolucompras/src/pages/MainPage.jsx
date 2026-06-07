@@ -188,7 +188,7 @@ function MainPage() {
   if (loading) return <PageSkeleton />;
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <CierreChecker />
       <Header
           totalGastado={totalGastado}
@@ -196,7 +196,10 @@ function MainPage() {
           onFondosClick={() => openModal('fondos')}
           onReporteClick={() => openModal('reporte')}
         />
-      <div className="main-content">
+      <div
+        className="main-content"
+        style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+      >
         <Table
           data={filteredData}
           mydata={mydata}
