@@ -11,8 +11,8 @@ const Preguntas = () => {
       <div className="faq-section">
         <h2>Preguntas Frecuentes</h2>
         <div className="faq-item">
-          <h3>¿Qué es un gasto repetitivo?</h3>
-          <p>Un gasto repetitivo es un costo que se incurre en intervalos regulares como gastos semanales de un monto fijo o suscripciones mensuales.</p>
+          <h3>¿Qué es un gasto fijo?</h3>
+          <p>Un gasto fijo es un costo que se incurre en intervalos regulares como gastos semanales de un monto fijo o suscripciones mensuales.</p>
         </div>
         <div className="faq-item">
           <h3>¿Puedo editar un gasto ya finalizado?</h3>

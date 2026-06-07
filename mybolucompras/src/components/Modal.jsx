@@ -451,7 +451,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
         aria-modal="true"
         aria-label={
           modalType === 'nuevo' ? 'Agregar Nuevo Gasto'
-          : modalType === 'repetitivo' ? 'Agregar Gasto Repetitivo'
+          : modalType === 'repetitivo' ? 'Agregar Gasto Fijo'
           : modalType === 'fondos' ? 'Administrar Fondos'
           : modalType === 'vencimiento' ? 'Fecha de Cierre de Tarjeta'
           : modalType === 'eliminar' ? 'Confirmar Eliminación'
@@ -537,7 +537,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
         >
           <h2>
             {modalType === 'nuevo' && 'Agregar Nuevo'}
-            {modalType === 'repetitivo' && 'Agregar Repetitivo'}
+            {modalType === 'repetitivo' && 'Agregar Fijo'}
             {modalType === 'fondos' && 'Fondos'}
             {modalType === 'vencimiento' && 'Cierre de Tarjeta'}
             {modalType === 'eliminar' && 'Confirmar Eliminación'}
