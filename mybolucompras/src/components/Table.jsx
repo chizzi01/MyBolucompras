@@ -190,7 +190,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
             return {
                 Objeto: item.objeto,
                 Fecha: item.fecha,
-                Tipo: item.isFijo ? 'Repetitivo' : item.tipo,
+                Tipo: item.isFijo ? 'Fijo' : item.tipo,
                 Medio: item.medio,
                 Banco: item.banco || '',
                 Cuotas: item.cuotas,
@@ -571,16 +571,16 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                         {showAgregarMenu && (
                             <div className="agregar-dropdown">
                                 <button onClick={() => { openModal('nuevo'); setShowAgregarMenu(false); }}>
-                                    <GiReceiveMoney size={16} /> Nuevo gasto
+                                    <GiReceiveMoney size={16} style={{ color: '#73e786' }} /> Nuevo gasto
                                 </button>
                                 <button onClick={() => { openModal('repetitivo'); setShowAgregarMenu(false); }}>
-                                    <PiRepeatBold size={16} /> Gasto fijo
+                                    <PiRepeatBold size={16} style={{ color: '#ffc170' }} /> Gasto fijo
                                 </button>
                                 <button onClick={() => { openModal('fondos'); setShowAgregarMenu(false); }}>
-                                    <FaPiggyBank size={16} /> Agregar fondos
+                                    <FaPiggyBank size={16} style={{ color: '#55f1f7' }} /> Agregar fondos
                                 </button>
                                 <button onClick={() => { openModal('vencimiento'); setShowAgregarMenu(false); }}>
-                                    <FaMoneyCheckDollar size={16} /> Actualizar cierre
+                                    <FaMoneyCheckDollar size={16} style={{ color: '#e773d4' }} /> Actualizar cierre
                                 </button>
                             </div>
                         )}
