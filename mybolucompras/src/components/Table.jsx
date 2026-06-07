@@ -229,15 +229,27 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     return (
         <section id="gastos" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <div className="componentContainer">
-                <div className="tituloContainer">
-                    <h1 id="mesBolucompras">
+                <div style={{ display: 'flex', alignItems: 'center', padding: '4px 20px 10px', gap: '12px', flexWrap: 'wrap' }}>
+                    <h1 id="mesBolucompras" style={{ flex: 1, margin: '8px 0', textAlign: 'left' }}>
                         Gastos <span className="title-separator">·</span>{' '}
                         <span className="mes-actual">{mesCapitalizado} {añoActual}</span>
                     </h1>
-
-                    {/* <hr /> */}
-                </div>
-                <div className="agregar-split-btn" ref={agregarMenuRef}>
+                    <div className="switch-align" style={{ margin: 0, flexShrink: 0 }}>
+                        <div id="delMes" className={`verticalBtnSwitch-text ${!isSwitchOn ? 'iluminate' : ''}`}>
+                            <FaCalendarAlt size={24} />
+                            <label htmlFor="" className="buttonSwitch-text">DEL MES</label>
+                        </div>
+                        <label className="switch">
+                            <input type="checkbox" id="switch" checked={isSwitchOn} onChange={handleSwitchChange} />
+                            <span className="slider round"></span>
+                        </label>
+                        <div id="todas" className={`verticalBtnSwitch-text ${isSwitchOn ? 'iluminate' : ''}`}>
+                            <FaSwatchbook size={24} />
+                            <label htmlFor="" className="buttonSwitch-text">TODAS</label>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    <div className="agregar-split-btn" ref={agregarMenuRef}>
                     <div className="agregar-split-inner">
                         <button className="agregar-main" onClick={() => openModal('nuevo')}>
                             <IoMdAdd size={16} /> Agregar
@@ -263,8 +275,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                         </div>
                     )}
                 </div>
-
-                <div className='dropdownFilter'>
+                <div className='dropdownFilter' style={{ position: 'relative', top: 0, left: 0 }}>
                     <button className="dropbtnFilter" onClick={handleFilterClick}>
                         <MdFilterListAlt size={25} />
                         {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
@@ -619,6 +630,8 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                         </div>
                     )}
                 </div>
+                    </div>
+                </div>
 
                 <div class="fondosAlign">
                     <h2 class="fondosTitulo">
@@ -639,20 +652,6 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                     </h2>
                 </div>
 
-                <div className="switch-align">
-                    <div id="delMes" className={`verticalBtnSwitch-text ${!isSwitchOn ? 'iluminate' : ''}`}>
-                        <FaCalendarAlt size={30} />
-                        <label htmlFor="" className="buttonSwitch-text">DEL MES</label>
-                    </div>
-                    <label className="switch">
-                        <input type="checkbox" id="switch" checked={isSwitchOn} onChange={handleSwitchChange} />
-                        <span className="slider round"></span>
-                    </label>
-                    <div id="todas" className={`verticalBtnSwitch-text ${isSwitchOn ? 'iluminate' : ''}`}>
-                        <FaSwatchbook size={30} />
-                        <label htmlFor="" className="buttonSwitch-text">TODAS</label>
-                    </div>
-                </div>
                 <div className="tabla">
                     <table className="demo" id="tabla">
                         <thead>
