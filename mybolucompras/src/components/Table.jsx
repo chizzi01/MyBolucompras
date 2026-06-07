@@ -94,7 +94,6 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
 
     const countFilters = () => {
         let count = 0;
-        if (filterObject) count++;
         if (filterType) count++;
         if (filterBank) count++;
         if (filterMedio) count++;
@@ -105,7 +104,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
 
     useEffect(() => {
         countFilters();
-    }, [filterObject, filterType, filterBank, filterMedio, filterEtiqueta, filterMoneda]);
+    }, [filterType, filterBank, filterMedio, filterEtiqueta, filterMoneda]);
 
     const ahora = new Date();
     const mesActual = ahora.toLocaleString('es-ES', { month: 'long' });
@@ -239,56 +238,11 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                     <button className="dropbtnFilter" onClick={handleFilterClick}>
                         <MdFilterListAlt size={25} />
                         {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
-                        {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterObject(''); setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); setFilterMoneda('') }} />}
+                        {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); setFilterMoneda('') }} />}
 
                     </button>
                     {showFilter && (
                         <div className="filter-container">
-                            <div className="verticalBtn-textFilters">
-                                <TextField
-                                    className="glass-filter-input"
-                                    label="Objeto"
-                                    variant="outlined"
-                                    fullWidth
-                                    margin="normal"
-                                    value={filterObject}
-                                    onChange={(e) => setFilterObject(e.target.value)}
-                                    InputProps={{
-                                        startAdornment: <InputAdornment position="end"><FiSearch color='white' style={{ marginRight: "5px" }} /></InputAdornment>
-                                    }}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            backgroundColor: filterObject ? '#5ca8ffbf' : 'transparent',
-                                            fontSize: '12px',
-                                            width: '100%',
-                                            '& fieldset': {
-                                                borderColor: 'white',
-                                            },
-                                            '&:hover fieldset': {
-                                                borderColor: 'white',
-                                                color: 'white',
-
-                                            },
-                                            '&.Mui-focused fieldset': {
-                                                borderColor: 'white',
-                                                color: 'white',
-                                            },
-                                        },
-                                        '& .MuiInputLabel-root': {
-                                            color: 'white',
-                                        },
-                                        '& .MuiInputLabel-root.Mui-focused': {
-                                            color: 'white',
-                                        },
-
-                                        '& .MuiInputBase-input': {
-                                            fontSize: '12px', // Ajusta el tamaño de la fuente
-                                            padding: '10px', // Ajusta el padding
-                                        },
-
-                                    }}
-                                />
-                            </div>
                             <div className='selectFilters-container'>
                                 <div className="verticalBtn-textFilters">
                                     <FormControl variant="outlined" fullWidth={false} margin="normal" style={{ minWidth: '90px' }}
@@ -591,16 +545,16 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                     )}
                     </div>
                     <div style={{ flex: 1 }} />
-                    <label className="switch-label" style={{ flexShrink: 0, gap: '10px', alignItems: 'center' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: !isSwitchOn ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)', fontWeight: !isSwitchOn ? 600 : 400, transition: 'all 0.2s' }}>
-                            <FaCalendarAlt size={13} />
+                    <label className="switch-label" style={{ flexShrink: 0, gap: '14px', alignItems: 'center' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: !isSwitchOn ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)', fontWeight: !isSwitchOn ? 700 : 400, transition: 'all 0.2s' }}>
+                            <FaCalendarAlt size={16} />
                             {mesCapitalizado}
                         </span>
-                        <div className={`switch-track ${isSwitchOn ? 'on' : ''}`} onClick={handleSwitchChange}>
-                            <div className="switch-thumb" />
+                        <div className={`switch-track ${isSwitchOn ? 'on' : ''}`} onClick={handleSwitchChange} style={{ width: 46, height: 26 }}>
+                            <div className="switch-thumb" style={{ width: 18, height: 18, top: 4, left: isSwitchOn ? 24 : 4 }} />
                         </div>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: isSwitchOn ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)', fontWeight: isSwitchOn ? 600 : 400, transition: 'all 0.2s' }}>
-                            <FaSwatchbook size={13} />
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: isSwitchOn ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)', fontWeight: isSwitchOn ? 700 : 400, transition: 'all 0.2s' }}>
+                            <FaSwatchbook size={16} />
                             Todas
                         </span>
                     </label>
