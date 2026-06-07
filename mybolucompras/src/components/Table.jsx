@@ -112,7 +112,6 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     const mesCapitalizado = mesActual.charAt(0).toUpperCase() + mesActual.slice(1);
     const añoActual = ahora.getFullYear();
 
-    const [isSwitchOn, setIsSwitchOn] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'default' });
     const [showAgregarMenu, setShowAgregarMenu] = useState(false);
     const agregarMenuRef = useRef(null);
@@ -127,7 +126,6 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
       return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    const handleSwitchChange = () => setIsSwitchOn(v => !v);
     const handleSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
