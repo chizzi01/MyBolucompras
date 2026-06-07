@@ -19,35 +19,31 @@ function Footer({ totalGastado, tarjetaUsada, bancoUsado }) {
   };
 
   return (
-    <div className="footer-section">
-      <div className="footer-stats">
-        <div className="footer-stat">
-          <span className="footer-stat-label">Total gastado</span>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>{renderTotales()}</div>
+    <div className="footer-compact">
+      <div className="footer-compact-stats">
+        <div className="footer-compact-stat">
+          <span className="footer-compact-label">Total gastado</span>
+          <div style={{ display: 'flex', gap: 8 }}>{renderTotales()}</div>
         </div>
-
-        <div className="footer-stat">
-          <span className="footer-stat-label">Medio más usado</span>
+        <div className="footer-compact-sep" />
+        <div className="footer-compact-stat">
+          <span className="footer-compact-label">Tarjeta</span>
           <span className="footer-stat-value warning">{tarjetaUsada || 'N/A'}</span>
         </div>
-
-        <div className="footer-stat">
-          <span className="footer-stat-label">Banco más usado</span>
+        <div className="footer-compact-sep" />
+        <div className="footer-compact-stat">
+          <span className="footer-compact-label">Banco</span>
           <span className="footer-stat-value success">{bancoUsado || 'N/A'}</span>
         </div>
-
-        <div className="footer-stat">
-          <span className="footer-stat-label">Atajo</span>
-          <span className="footer-stat-value" style={{ fontSize: 12, opacity: 0.75 }}>
-            <kbd style={{ fontFamily: 'inherit', background: 'rgba(0,0,0,0.08)', borderRadius: 4, padding: '1px 5px' }}>Esc</kbd> cierra ventanas
+        <div className="footer-compact-right">
+          <span className="footer-compact-hint">
+            <kbd>Esc</kbd> cierra ventanas
           </span>
-        </div>
-
-        <div className="footer-credit">
-          Powered by{' '}
-          <a href="https://chizzi01.github.io/Cv-React/" target="_blank" rel="noreferrer">
-            Agustin Chizzini Melo
-          </a>
+          <span className="footer-compact-credit">
+            <a href="https://chizzi01.github.io/Cv-React/" target="_blank" rel="noreferrer">
+              Agustin Chizzini Melo
+            </a>
+          </span>
         </div>
       </div>
     </div>
