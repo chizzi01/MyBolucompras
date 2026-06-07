@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import '../App.css';
 import { parseFecha, parsePrecio } from '../utils/formatters';
 import { TextField, Select, MenuItem, InputLabel, FormControl, Button, InputAdornment, IconButton, ListItemText } from '@mui/material';
@@ -116,6 +116,18 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
 
     // const [isSwitchOn, setIsSwitchOn] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'default' });
+    const [showAgregarMenu, setShowAgregarMenu] = useState(false);
+    const agregarMenuRef = useRef(null);
+
+    useEffect(() => {
+      const handler = (e) => {
+        if (agregarMenuRef.current && !agregarMenuRef.current.contains(e.target)) {
+          setShowAgregarMenu(false);
+        }
+      };
+      document.addEventListener('mousedown', handler);
+      return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
     // const handleSwitchChange = () => {
     //     setIsSwitchOn(!isSwitchOn);
@@ -227,34 +239,31 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
 
                     {/* <hr /> */}
                 </div>
-                <div className="dropdown">
-                    <button className="dropbtn"><IoMdAdd size={30} /></button>
-                    <div className="dropdown-content">
-                        <div className="verticalBtn-text">
-                            <button id="agregar-btn" onClick={() => openModal('nuevo')}>
-                                <GiReceiveMoney size={30} />
-                            </button>
-                            <div className="button-text">Nuevo</div>
-                        </div>
-                        <div className="verticalBtn-text">
-                            <button id="agregarFijo-btn" onClick={() => openModal('repetitivo')}>
-                                <PiRepeatBold size={30} />
-                            </button>
-                            <div className="button-text">Repetitivo</div>
-                        </div>
-                        <div className="verticalBtn-text">
-                            <button id="agregarFondos-btn" onClick={() => openModal('fondos')}>
-                                <FaPiggyBank size={30} />
-                            </button>
-                            <div className="button-text">Fondos</div>
-                        </div>
-                        <div className="verticalBtn-text">
-                            <button id="vencimientoTarjeta-btn" onClick={() => openModal('vencimiento')}>
-                                <FaMoneyCheckDollar size={30} />
-                            </button>
-                            <div className="button-text">Cierre</div>
-                        </div>
+                <div className="agregar-split-btn" ref={agregarMenuRef}>
+                    <div className="agregar-split-inner">
+                        <button className="agregar-main" onClick={() => openModal('nuevo')}>
+                            <IoMdAdd size={16} /> Agregar
+                        </button>
+                        <button className="agregar-arrow" onClick={() => setShowAgregarMenu(m => !m)}>
+                            ▾
+                        </button>
                     </div>
+                    {showAgregarMenu && (
+                        <div className="agregar-dropdown">
+                            <button onClick={() => { openModal('nuevo'); setShowAgregarMenu(false); }}>
+                                <GiReceiveMoney size={16} /> Nuevo gasto
+                            </button>
+                            <button onClick={() => { openModal('repetitivo'); setShowAgregarMenu(false); }}>
+                                <PiRepeatBold size={16} /> Gasto fijo
+                            </button>
+                            <button onClick={() => { openModal('fondos'); setShowAgregarMenu(false); }}>
+                                <FaPiggyBank size={16} /> Agregar fondos
+                            </button>
+                            <button onClick={() => { openModal('vencimiento'); setShowAgregarMenu(false); }}>
+                                <FaMoneyCheckDollar size={16} /> Actualizar cierre
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className='dropdownFilter'>
