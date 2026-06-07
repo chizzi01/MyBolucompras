@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Navbar';
 import Footer from '../components/Footer';
-import PageSkeleton from '../components/PageSkeleton';
+import ViajesSkeleton from '../components/ViajesSkeleton';
 import { useToast } from '../components/Toast';
 import { useViajes } from '../context/ViajesContext';
 import { useAuth } from '../context/AuthContext';
@@ -85,7 +85,7 @@ export default function ViajesPage() {
     }
   };
 
-  if (loading) return <PageSkeleton />;
+  if (loading) return <ViajesSkeleton />;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

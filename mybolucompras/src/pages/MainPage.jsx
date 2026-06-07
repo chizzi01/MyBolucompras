@@ -39,7 +39,7 @@ function MainPage() {
       objeto: formData.objeto.charAt(0).toUpperCase() + formData.objeto.slice(1),
       fecha: formData.fecha,
       medio: formData.medio,
-      cuotas: formData.tipo === 'debito' ? 1 : Number(formData.cuotas),
+      cuotas: modalType === 'repetitivo' ? Number(formData.cuotas) : (formData.tipo === 'debito' ? 1 : Number(formData.cuotas)),
       tipo: formData.medio === 'Efectivo' ? 'debito' : (modalType === 'repetitivo' ? 'debito' : formData.tipo),
       moneda: formData.moneda,
       banco: formData.banco,

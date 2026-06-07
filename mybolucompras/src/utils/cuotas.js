@@ -71,7 +71,11 @@ export const calcularCuotasRestantes = (fecha, cuotas) => {
 };
 
 export function getCuotasRestantes(gasto, mydata) {
-  if (gasto.isFijo) return '∞';
+  if (gasto.isFijo) {
+    const cuotas = parseInt(gasto.cuotas, 10);
+    if (cuotas > 1) return calcularCuotasRestantes(gasto.fecha, cuotas);
+    return '∞';
+  }
   if (gasto.tipo === 'credito') {
     return calcularCuotasRestantesCredito(
       gasto.fecha,

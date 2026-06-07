@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import Header from '../components/Navbar';
 import Footer from '../components/Footer';
-import PageSkeleton from '../components/PageSkeleton';
+import DeudoresSkeleton from '../components/DeudoresSkeleton';
 import { useToast } from '../components/Toast';
 import { useDeudores } from '../context/DeudoresContext';
 import DeudaModal from '../components/DeudaModal';
@@ -108,7 +108,7 @@ export default function DeudoresPage() {
     setEditando(null);
   };
 
-  if (loading) return <PageSkeleton />;
+  if (loading) return <DeudoresSkeleton />;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

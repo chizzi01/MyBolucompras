@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Navbar';
 import Footer from '../components/Footer';
-import PageSkeleton from '../components/PageSkeleton';
+import ViajeDetalleSkeleton from '../components/ViajeDetalleSkeleton';
 import { useToast } from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
 import { viajesService } from '../services/viajesService';
@@ -541,7 +541,7 @@ export default function ViajeDetallePage() {
     cargar();
   };
 
-  if (loading) return <PageSkeleton />;
+  if (loading) return <ViajeDetalleSkeleton />;
   if (!viaje) return null;
 
   const activo = viaje.estado === 'activo';

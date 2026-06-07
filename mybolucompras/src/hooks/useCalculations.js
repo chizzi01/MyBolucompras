@@ -17,7 +17,8 @@ export function useCalculations(gastos, mydata, filteredData) {
       let precioMensual = precioNumerico;
 
       if (g.isFijo) {
-        sumar = true;
+        const remaining = getCuotasRestantes(g, mydata);
+        if (remaining === '∞' || remaining > 0) sumar = true;
       } else if (g.tipo === 'credito') {
         const cuotas = parseInt(g.cuotas, 10) || 1;
         if (cuotas > 1) {

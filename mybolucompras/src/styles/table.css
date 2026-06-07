@@ -287,7 +287,8 @@ table.modern-table {
   background: var(--color-primary-light);
 }
 
-/* Skeleton loading */
+/* === Skeleton === */
+
 .table-skeleton {
   max-width: 1400px;
   margin: 0 auto;
@@ -302,28 +303,37 @@ table.modern-table {
   animation: skeleton-shimmer 1.4s infinite;
 }
 
-/* Header row: título + botones */
-.sk-header {
+/* Toolbar: título + botones de acción */
+.sk-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: var(--space-4) 0 var(--space-6);
 }
 .sk-title {
-  height: 22px;
-  width: 280px;
+  height: 28px;
+  width: 255px;
 }
-.sk-header-btns {
+.sk-title-sub {
+  height: 13px;
+  width: 130px;
+  margin-top: var(--space-2);
+}
+.sk-actions {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
-.sk-circle {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
+.sk-btn-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+}
+.sk-btn-primary {
+  height: 36px;
+  border-radius: var(--radius-md);
 }
 
-/* Celdas de la tabla skeleton */
+/* Celdas de tabla */
 .sk-th {
   height: 13px;
   margin: 2px auto;
@@ -333,14 +343,88 @@ table.modern-table {
   margin: 3px auto;
 }
 
-/* Footer skeleton */
+/* Celda tipo Select/pill (etiqueta) */
+.sk-pill {
+  height: 26px;
+  border-radius: var(--radius-full);
+  margin: 0 auto;
+}
+
+/* Columna de acciones: botones icono */
+.sk-action-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.sk-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+/* Footer */
 .sk-footer-label {
   height: 10px;
-  width: 60px;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 .sk-footer-value {
-  height: 16px;
+  height: 18px;
+}
+
+/* Skeleton tipo card (deudores, viajes) */
+.sk-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+  overflow: hidden;
+}
+.sk-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+.sk-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+.sk-avatar {
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sk-input {
+  height: 36px;
+  border-radius: var(--radius-md);
+}
+.sk-select {
+  height: 36px;
+  border-radius: var(--radius-md);
+}
+.sk-chip {
+  height: 32px;
+  border-radius: var(--radius-full);
+}
+
+/* Card de viaje */
+.sk-viaje-card {
+  display: flex;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-3);
+  overflow: hidden;
+}
+.sk-viaje-accent {
+  width: 4px;
+  flex-shrink: 0;
 }
 
 @keyframes skeleton-shimmer {

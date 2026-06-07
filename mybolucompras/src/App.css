@@ -1177,7 +1177,7 @@ a {
   font-weight: 600;
   font-size: 13px;
   text-align: center;
-  background-image: linear-gradient(to right, #8c52ff, #a269fc);
+  background-image: linear-gradient(to right, #6366F1, #685cff);
   background-attachment: fixed;
 }
 
@@ -2825,7 +2825,7 @@ a { color: #6366F1; }
   color: #1E293B !important;
 }
 .demo thead {
-  background: var(--color-primary-dark) !important;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
 }
 .demo th {
   color: #fff !important;
