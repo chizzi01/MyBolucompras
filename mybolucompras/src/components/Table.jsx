@@ -112,7 +112,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     const mesCapitalizado = mesActual.charAt(0).toUpperCase() + mesActual.slice(1);
     const añoActual = ahora.getFullYear();
 
-    // const [isSwitchOn, setIsSwitchOn] = useState(false);
+    const [isSwitchOn, setIsSwitchOn] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'default' });
     const [showAgregarMenu, setShowAgregarMenu] = useState(false);
     const agregarMenuRef = useRef(null);
@@ -127,9 +127,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
       return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    // const handleSwitchChange = () => {
-    //     setIsSwitchOn(!isSwitchOn);
-    // };
+    const handleSwitchChange = () => setIsSwitchOn(v => !v);
     const handleSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -180,15 +178,14 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
             : calcularCuotasRestantesCredito(item.fecha, item.cuotas, mydata.vencimiento, mydata.cierre, mydata.vencimientoAnterior, mydata.cierreAnterior);
     };
 
-    // const filteredData = sortedData.filter(item => {
-    //     return (
-    //         (filterObject === '' || item.objeto.toLowerCase().includes(filterObject.toLowerCase())) &&
-    //         (filterType === '' || item.tipo === filterType) &&
-    //         (filterBank === '' || item.banco === filterBank) &&
-    //         (filterMedio === '' || item.medio === filterMedio) &&
-    //         (isSwitchOn || calcularCuotas(item) >= 1)
-    //     );
-    // });
+    const filteredData = useMemo(() => sortedData.filter(item => {
+        if (!isSwitchOn) {
+            const fecha = parseFecha(item.fecha);
+            const now = new Date();
+            if (fecha.getFullYear() !== now.getFullYear() || fecha.getMonth() !== now.getMonth()) return false;
+        }
+        return true;
+    }), [sortedData, isSwitchOn]);
 
     const exportToExcel = () => {
         const rows = sortedData.map(item => {
@@ -595,6 +592,17 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                         </div>
                     )}
                     </div>
+                    <label className="switch-label" style={{ flexShrink: 0, gap: '8px' }}>
+                        <span style={{ fontSize: '12px', color: !isSwitchOn ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)', fontWeight: !isSwitchOn ? 600 : 400, transition: 'all 0.2s' }}>
+                            Del mes
+                        </span>
+                        <div className={`switch-track ${isSwitchOn ? 'on' : ''}`} onClick={handleSwitchChange}>
+                            <div className="switch-thumb" />
+                        </div>
+                        <span style={{ fontSize: '12px', color: isSwitchOn ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)', fontWeight: isSwitchOn ? 600 : 400, transition: 'all 0.2s' }}>
+                            Todas
+                        </span>
+                    </label>
                     <div style={{ flex: 1 }} />
                     <div className="agregar-split-btn" ref={agregarMenuRef}>
                         <div className="agregar-split-inner">
@@ -693,7 +701,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                         </thead>
 
                         <tbody>
-                            {sortedData.map((item, index) => {
+                            {filteredData.map((item, index) => {
                                 const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
                                 const fechaCierreDate = new Date(mydata.cierre);
                                 const fechaCierreAnteriorDate = new Date(mydata.cierreAnterior);
