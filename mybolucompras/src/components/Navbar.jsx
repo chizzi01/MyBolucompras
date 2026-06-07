@@ -123,6 +123,12 @@ function Header({ totalGastado, onPresupuestoClick, onFondosClick, onReporteClic
       </nav>
 
       <div className="navbar-chips">
+        {onReporteClick && (
+          <button className="navbar-reporte-chip" onClick={onReporteClick}>
+            <FaChartPie size={11} style={{ color: 'var(--color-primary)' }} />
+            <span className="navbar-presupuesto-label">Reporte</span>
+          </button>
+        )}
         {mydata?.presupuestoMensualMax > 0 && totalGastado && onPresupuestoClick && (() => {
           const gastadoUSD = parseFloat(totalGastado['USD'] || 0);
           const gastadoARS = parseFloat(totalGastado['ARS'] || 0) +
@@ -143,11 +149,6 @@ function Header({ totalGastado, onPresupuestoClick, onFondosClick, onReporteClic
             </button>
           );
         })()}
-        {onReporteClick && (
-          <button className="navbar-reporte-chip" onClick={onReporteClick}>
-            <FaChartPie size={13} /> Reporte de gastos
-          </button>
-        )}
         {mydata?.fondos != null && (
           <button className="navbar-fondos-chip" onClick={onFondosClick}>
             <FaWallet size={13} />
