@@ -310,3 +310,25 @@
   padding-top: calc(var(--navbar-height) + var(--space-6));
   min-height: 100vh;
 }
+
+.navbar-reporte-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(251, 191, 36, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-shadow: none;
+}
+
+.navbar-reporte-chip:hover {
+  background: rgba(251, 191, 36, 0.22);
+  transform: none;
+  box-shadow: none;
+}

@@ -641,16 +641,6 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                     </h2>
                 </div>
 
-                <div className="reportesAlign">
-                    <button id="report-btn" onClick={() => openModal('reporte')}>
-                        <FaChartPie size={20} /> Reporte de Gastos
-                    </button>
-                </div>
-                <div className="presupuestoAlign">
-                    <button id="presupuesto-btn" onClick={() => openModal('presupuesto')}>
-                        <CiBank size={20} /> Presupuestos
-                    </button>
-                </div>
                 <div className="switch-align">
                     <div id="delMes" className={`verticalBtnSwitch-text ${!isSwitchOn ? 'iluminate' : ''}`}>
                         <FaCalendarAlt size={30} />

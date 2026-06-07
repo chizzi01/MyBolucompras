@@ -190,7 +190,12 @@ function MainPage() {
   return (
     <div>
       <CierreChecker />
-      <Header totalGastado={totalGastado} onPresupuestoClick={() => openModal('presupuesto')} onFondosClick={() => openModal('fondos')} />
+      <Header
+          totalGastado={totalGastado}
+          onPresupuestoClick={() => openModal('presupuesto')}
+          onFondosClick={() => openModal('fondos')}
+          onReporteClick={() => openModal('reporte')}
+        />
       <div className="main-content">
         <Table
           data={filteredData}

@@ -5,14 +5,14 @@ import { FaCircleQuestion, FaHandshake } from "react-icons/fa6";
 import { FiLogOut, FiSun, FiMoon, FiSettings } from "react-icons/fi";
 import { MdCalculate } from "react-icons/md";
 import { IoAirplaneOutline } from "react-icons/io5";
-import { FaWallet } from "react-icons/fa";
+import { FaWallet, FaChartPie } from "react-icons/fa";
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useTheme } from '../context/ThemeContext';
 import { useExchangeRate } from '../hooks/useExchangeRate';
 import '../styles/navbar.css';
 
-function Header({ totalGastado, onPresupuestoClick, onFondosClick }) {
+function Header({ totalGastado, onPresupuestoClick, onFondosClick, onReporteClick }) {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const { mydata } = useData();
@@ -143,6 +143,11 @@ function Header({ totalGastado, onPresupuestoClick, onFondosClick }) {
             </button>
           );
         })()}
+        {onReporteClick && (
+          <button className="navbar-reporte-chip" onClick={onReporteClick}>
+            <FaChartPie size={13} /> Reporte de gastos
+          </button>
+        )}
         {mydata?.fondos != null && (
           <button className="navbar-fondos-chip" onClick={onFondosClick}>
             <FaWallet size={13} />
