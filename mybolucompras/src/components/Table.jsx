@@ -226,7 +226,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                 <div style={{ display: 'flex', alignItems: 'center', padding: '6px 16px 10px', gap: '10px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
                         <div className='dropdownFilter' style={{ position: 'relative' }}>
-                        <button className="dropbtnFilter" onClick={handleFilterClick} style={{ padding: '2px 8px', minHeight: 'unset', height: 'auto' }}>
+                        <button className="dropbtnFilter" onClick={handleFilterClick} style={{ width: 28, height: 28, margin: 0, padding: 0, borderRadius: '8px', boxSizing: 'border-box' }}>
                             <MdFilterListAlt size={14} />
                             {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
                             {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); setFilterMoneda('') }} />}
