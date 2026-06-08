@@ -34,17 +34,18 @@ function MainPage() {
     useCalculations(gastos, mydata, filteredData);
 
   const handleSubmit = async (sharedWith = null) => {
+    const esFijo = !!formData.isFijo;
     const gasto = {
-      isFijo: modalType === 'repetitivo',
+      isFijo: esFijo,
       objeto: formData.objeto.charAt(0).toUpperCase() + formData.objeto.slice(1),
       fecha: formData.fecha,
       medio: formData.medio,
-      cuotas: modalType === 'repetitivo' ? Number(formData.cuotas) : (formData.tipo === 'debito' ? 1 : Number(formData.cuotas)),
-      tipo: formData.medio === 'Efectivo' ? 'debito' : (modalType === 'repetitivo' ? 'debito' : formData.tipo),
+      cuotas: esFijo ? Number(formData.cuotas) : (formData.tipo === 'debito' ? 1 : Number(formData.cuotas)),
+      tipo: formData.medio === 'Efectivo' ? 'debito' : (esFijo ? 'debito' : formData.tipo),
       moneda: formData.moneda,
       banco: formData.banco,
       cantidad: Number(formData.cantidad),
-      precio: modalType === 'repetitivo'
+      precio: esFijo
         ? String(Number(formData.precio) * Number(formData.cantidad))
         : formData.precio,
     };
@@ -154,9 +155,11 @@ function MainPage() {
 
   const openModal = useCallback((type, item = {}, etiqueta = '') => {
     const defaultMoneda = mydata?.monedaPreferida || 'ARS';
-    const defaultBanco = (type === 'nuevo' && bancoMasUsado && bancoMasUsado !== 'N/A') ? bancoMasUsado : '';
-    setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: defaultBanco, cantidad: 1, precio: '', etiqueta: '', moneda: defaultMoneda });
-    setModalType(type);
+    const isFijoDefault = type === 'repetitivo';
+    const normalizedType = type === 'repetitivo' ? 'nuevo' : type;
+    const defaultBanco = (normalizedType === 'nuevo' && bancoMasUsado && bancoMasUsado !== 'N/A') ? bancoMasUsado : '';
+    setFormData({ objeto: '', fecha: '', medio: '', cuotas: 1, tipo: '', banco: defaultBanco, cantidad: 1, precio: '', etiqueta: '', moneda: defaultMoneda, isFijo: isFijoDefault });
+    setModalType(normalizedType);
     if (['eliminar', 'editar', 'crearEtiqueta', 'eliminarEtiqueta'].includes(type)) {
       if (type === 'editar') console.log('Gasto seleccionado:', item);
       setFormData({

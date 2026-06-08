@@ -3191,3 +3191,192 @@ button:hover { box-shadow: none; }
   .tabla { margin: 6px !important; }
   .filter-container { width: 260px !important; }
 }
+/* ═══════════════════════════════════════════
+   MODAL FORM — mobile-parity layout (.mf-*)
+   ═══════════════════════════════════════════ */
+
+.mf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 0 2px;
+}
+
+.mf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mf-field { display: flex; flex-direction: column; gap: 5px; }
+.mf-section-full { display: flex; flex-direction: column; gap: 5px; }
+
+.mf-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(0,0,0,0.55);
+}
+
+.mf-error { color: #ef4444; margin-left: 2px; }
+
+.mf-input, .mf-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.55);
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  backdrop-filter: blur(4px);
+  transition: border-color 0.15s, background 0.15s;
+}
+.mf-input:focus, .mf-select:focus {
+  border-color: rgba(99,102,241,0.7);
+  background: rgba(255,255,255,0.75);
+}
+.mf-input::placeholder { color: rgba(0,0,0,0.32); }
+
+.mf-input-prefix {
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.55);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.mf-input-prefix:focus-within {
+  border-color: rgba(99,102,241,0.7);
+  background: rgba(255,255,255,0.75);
+}
+.mf-prefix {
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.45);
+  border-right: 1px solid rgba(0,0,0,0.12);
+  white-space: nowrap;
+}
+.mf-input.no-left-radius {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  flex: 1;
+}
+.mf-input.no-left-radius:focus { box-shadow: none; }
+
+/* Tipo de gasto (Variable/Fijo) */
+.mf-tipo-row { display: flex; gap: 8px; }
+
+.mf-tipo-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 2px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.30);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mf-tipo-btn.active {
+  border-color: rgba(99,102,241,0.7);
+  background: rgba(255,255,255,0.65);
+  box-shadow: 0 2px 10px rgba(99,102,241,0.2);
+}
+.mf-tipo-icon { font-size: 20px; line-height: 1; }
+.mf-tipo-label { font-size: 13px; font-weight: 700; color: rgba(0,0,0,0.75); }
+.mf-tipo-desc { font-size: 10px; font-weight: 400; color: rgba(0,0,0,0.45); }
+
+/* Tipo de pago (Débito/Crédito) */
+.mf-pill-row { display: flex; gap: 8px; }
+
+.mf-pill-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.40);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.60);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mf-pill-btn.active {
+  background: #6366F1;
+  border-color: #6366F1;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.35);
+}
+
+/* Cuotas chips */
+.mf-cuotas-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.mf-cuota-chip {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.40);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.60);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mf-cuota-chip.active {
+  background: #6366F1;
+  border-color: #6366F1;
+  color: #fff;
+}
+
+/* Etiquetas */
+.mf-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.mf-tag {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1.5px solid;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+/* Dark mode overrides */
+[data-theme="dark"] .mf-label { color: rgba(255,255,255,0.55); }
+[data-theme="dark"] .mf-input,
+[data-theme="dark"] .mf-select {
+  background: rgba(15,23,42,0.55);
+  border-color: rgba(255,255,255,0.12);
+  color: #e2e8f0;
+}
+[data-theme="dark"] .mf-input:focus,
+[data-theme="dark"] .mf-select:focus {
+  border-color: rgba(129,140,248,0.7);
+  background: rgba(15,23,42,0.75);
+}
+[data-theme="dark"] .mf-input::placeholder { color: rgba(255,255,255,0.25); }
+[data-theme="dark"] .mf-input-prefix {
+  background: rgba(15,23,42,0.55);
+  border-color: rgba(255,255,255,0.12);
+}
+[data-theme="dark"] .mf-prefix { color: rgba(255,255,255,0.40); border-right-color: rgba(255,255,255,0.10); }
+[data-theme="dark"] .mf-tipo-btn { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .mf-tipo-btn.active { border-color: rgba(129,140,248,0.7); background: rgba(255,255,255,0.10); }
+[data-theme="dark"] .mf-tipo-label { color: rgba(255,255,255,0.80); }
+[data-theme="dark"] .mf-tipo-desc { color: rgba(255,255,255,0.40); }
+[data-theme="dark"] .mf-pill-btn { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.65); }
+[data-theme="dark"] .mf-cuota-chip { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.65); }

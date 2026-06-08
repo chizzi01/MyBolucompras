@@ -585,9 +585,6 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                 <button onClick={() => { openModal('nuevo'); setShowAgregarMenu(false); }}>
                                     <GiReceiveMoney size={16} style={{ color: '#73e786' }} /> Nuevo gasto
                                 </button>
-                                <button onClick={() => { openModal('repetitivo'); setShowAgregarMenu(false); }}>
-                                    <PiRepeatBold size={16} style={{ color: '#ffc170' }} /> Gasto fijo
-                                </button>
                                 <button onClick={() => { openModal('fondos'); setShowAgregarMenu(false); }}>
                                     <FaPiggyBank size={16} style={{ color: '#55f1f7' }} /> Agregar fondos
                                 </button>

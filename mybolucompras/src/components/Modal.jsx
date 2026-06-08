@@ -262,7 +262,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
     saveMyData(nuevoMyData);
   };
   const validateForm = () => {
-    if (modalType === 'nuevo' || modalType === 'repetitivo' || modalType === 'editar') {
+    if (modalType === 'nuevo' || modalType === 'editar') {
       return formData.objeto && formData.fecha && formData.medio && formData.precio;
     }
     if (modalType === 'fondos') {
@@ -315,7 +315,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
       const sharedWith = sharedUser
         ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email }
         : null;
-      if (modalType === 'nuevo' || modalType === 'repetitivo') {
+      if (modalType === 'nuevo') {
         handleSubmit(sharedWith);
       } else if (modalType === 'editar') {
         handleEdit(sharedWith);
@@ -361,71 +361,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
 
 
 
-  const renderCommonFields = () => (
-    <>
-      <TextField
-        label="Objeto"
-        variant="outlined"
-        value={formData.objeto}
-        onChange={(e) => setFormData({ ...formData, objeto: e.target.value })}
-        required
-        fullWidth={false}
-        margin="normal"
-        helperText={showHelperText && !formData.objeto ? "Ingrese el item comprado" : ""}
-        sx={fieldSx(formData.objeto)}
-      />
-      <TextField
-        label="Fecha de compra"
-        type="date"
-        variant="outlined"
-        value={formData.fecha}
-        onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
-        required
-        fullWidth={false}
-        helperText={showHelperText && !formData.fecha ? "Ingrese la fecha de compra" : ""}
-        margin="normal"
-        InputLabelProps={{ shrink: true }}
-        sx={fieldSx(formData.fecha)}
-      />
-      <FormControl variant="outlined" fullWidth={false} margin="normal" sx={fieldSx(formData.medio)}>
-        <InputLabel>Medio de pago</InputLabel>
-        <Select
-          value={formData.medio}
-          onChange={(e) => setFormData({ ...formData, medio: e.target.value })}
-          label="Medio de pago"
-          required
-          startAdornment={
-            formData.medio === 'Visa'             ? <SiVisa size={22} style={{ marginRight: 6 }} color={iconColor} />
-            : formData.medio === 'MasterCard'     ? <SiMastercard size={22} style={{ marginRight: 6 }} color={iconColor} />
-            : formData.medio === 'American Express' ? <SiAmericanexpress size={22} style={{ marginRight: 6 }} color={iconColor} />
-            : formData.medio === 'Efectivo'       ? <FaMoneyBill1Wave size={22} style={{ marginRight: 6 }} color={iconColor} />
-            : formData.medio === 'Transferencia'  ? <FaMoneyBillTransfer size={22} style={{ marginRight: 6 }} color={iconColor} />
-            : null
-          }
-        >
-          {mediosDisponibles.map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)}
-        </Select>
-        {showHelperText && !formData.medio && (
-          <FormHelperText error>Ingrese el medio</FormHelperText>
-        )}
-      </FormControl>
-      <FormControl variant="outlined" fullWidth={false} margin="normal" sx={fieldSx(formData.banco)}>
-        <InputLabel>Banco</InputLabel>
-        <Select
-          value={formData.banco}
-          onChange={(e) => setFormData({ ...formData, banco: e.target.value })}
-          label="Banco"
-          required
-          startAdornment={formData.banco ? <CiBank size={22} style={{ marginRight: 6 }} color={iconColor} /> : null}
-        >
-          {bancosDisponibles.map(b => <MenuItem key={b} value={b}>{b}</MenuItem>)}
-        </Select>
-        {showHelperText && !formData.banco && (
-          <FormHelperText error>Ingrese el banco</FormHelperText>
-        )}
-      </FormControl>
-    </>
-  );
+  // renderCommonFields removed — now inlined in mf-form grid below
 
   const bancosDisponibles = mydata?.bancosHabilitados?.length > 0 ? mydata.bancosHabilitados : BANCOS;
   const mediosDisponibles = mydata?.mediosHabilitados?.length > 0 ? mydata.mediosHabilitados : MEDIOS_DE_PAGO;
@@ -450,8 +386,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
         role="dialog"
         aria-modal="true"
         aria-label={
-          modalType === 'nuevo' ? 'Agregar Nuevo Gasto'
-          : modalType === 'repetitivo' ? 'Agregar Gasto Fijo'
+          modalType === 'nuevo' ? (formData.isFijo ? 'Agregar Gasto Fijo' : 'Agregar Nuevo Gasto')
           : modalType === 'fondos' ? 'Administrar Fondos'
           : modalType === 'vencimiento' ? 'Fecha de Cierre de Tarjeta'
           : modalType === 'eliminar' ? 'Confirmar Eliminación'
@@ -474,13 +409,12 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                     ? "90%"
                     : modalType === "presupuesto"
                       ? "90%"
-                      : modalType === "repetitivo"
-                        ? "660px"
-                        : modalType === "crearEtiqueta"
+                      : modalType === "crearEtiqueta"
                           ? "500px"
                           : (modalType === "nuevo" || modalType === "editar")
-                            ? "760px"
+                            ? "auto"
                             : "500px",
+          maxHeight: (modalType === "nuevo" || modalType === "editar") ? "90vh" : undefined,
           width: modalType === "reporte" || modalType === "presupuesto" ? "90%" : "560px",
 
           // 🎨 Fondo según tipo de modal
@@ -495,8 +429,8 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                     ? "linear-gradient(135deg, rgba(154, 129, 255, 0.67), rgba(98, 19, 255, 0.73))" // violeta pastel
                     : modalType === "presupuesto"
                       ? "linear-gradient(135deg, rgba(67, 111, 255, 0.67), rgba(19, 35, 255, 0.73))" // violeta pastel
-                      : modalType === "repetitivo"
-                        ? "linear-gradient(135deg, rgba(253, 232, 123, 0.8), rgba(253, 207, 82, 0.76))" // amarillo pastel
+                      : (modalType === "nuevo" && formData.isFijo)
+                        ? "linear-gradient(135deg, rgba(253, 232, 123, 0.8), rgba(253, 207, 82, 0.76))" // amarillo pastel fijo
                         : modalType === "crearEtiqueta"
                           ? "linear-gradient(135deg, rgba(214, 184, 255, 0.9), rgba(157, 11, 255, 0.72))" // violeta suave
                           : "linear-gradient(135deg, rgba(175, 255, 164, 0.78), rgba(100, 255, 28, 0.72))", // default
@@ -530,14 +464,13 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
               ? { flex: 1, overflowY: 'auto', justifyContent: 'flex-start', alignItems: 'center', paddingBottom: 16 }
               : modalType === 'presupuesto'
               ? { flex: 1, overflowY: 'auto', justifyContent: 'flex-start', alignItems: 'flex-start', paddingBottom: 16 }
-              : (modalType === 'nuevo' || modalType === 'editar' || modalType === 'repetitivo')
+              : (modalType === 'nuevo' || modalType === 'editar')
               ? { flex: 1, overflowY: 'auto', justifyContent: 'flex-start', alignItems: 'center', paddingBottom: 16 }
               : {}
           }
         >
           <h2>
-            {modalType === 'nuevo' && 'Agregar Nuevo'}
-            {modalType === 'repetitivo' && 'Agregar Fijo'}
+            {modalType === 'nuevo' && (formData.isFijo ? 'Agregar Fijo' : 'Agregar Nuevo')}
             {modalType === 'fondos' && 'Fondos'}
             {modalType === 'vencimiento' && 'Cierre de Tarjeta'}
             {modalType === 'eliminar' && 'Confirmar Eliminación'}
@@ -546,158 +479,189 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
             {modalType === 'eliminarEtiqueta' && 'Eliminar Grupo'}
           </h2>
           <form className='formDatos' onSubmit={(e) => e.preventDefault()}>
-            {(modalType === 'nuevo' || modalType === 'repetitivo' || modalType === 'editar') && (
-              <>
-                {renderCommonFields()}
-                {(modalType === 'nuevo' || modalType === 'editar') && (
-                  <>
-                    {formData.medio != 'Efectivo' && formData.medio != 'Transferencia' && !(modalType === 'editar' && formData.isFijo) && (
-                      <FormControl variant="outlined" fullWidth={false} margin="normal" sx={fieldSx(formData.tipo)}>
-                        <InputLabel>Tipo</InputLabel>
-                        <Select
-                          value={formData.tipo}
-                          onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                          label="Tipo"
-                          required
-                          startAdornment={
-                            formData.tipo === 'debito'  ? <BsCreditCard2Front size={22} style={{ marginRight: 6 }} color={iconColor} />
-                            : formData.tipo === 'credito' ? <FaCreditCard size={22} style={{ marginRight: 6 }} color={iconColor} />
-                            : null
-                          }
-                        >
-                          <MenuItem value="debito">Débito</MenuItem>
-                          <MenuItem value="credito">Crédito</MenuItem>
-                        </Select>
-                        {showHelperText && !formData.tipo && (
-                          <FormHelperText error>Ingrese el tipo</FormHelperText>
-                        )}
-                      </FormControl>
-                    )}
-                    {formData.tipo === 'credito' && (
-                      <TextField
-                        label="Cuotas"
-                        type="number"
-                        variant="outlined"
-                        value={formData.cuotas}
-                        onChange={(e) => setFormData({ ...formData, cuotas: e.target.value })}
-                        min="1"
-                        required
-                        fullWidth={false}
-                        margin="normal"
-                        helperText={showHelperText && !formData.cuotas ? "Ingrese las cuotas" : ""}
-                        sx={fieldSx(formData.cuotas)}
-                      />
-                    )}
-                  </>
-                )}
-                {(modalType === 'repetitivo' || formData.isFijo) && (
-                  <>
-                    <TextField
-                      label="Rep. en el mes"
-                      type="number"
-                      variant="outlined"
-                      value={formData.cantidad}
-                      onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
-                      min="1"
-                      required
-                      fullWidth={false}
-                      margin="normal"
-                      helperText={showHelperText && !formData.cantidad ? "Ingrese las repeticiones en el mes" : ""}
-                      sx={fieldSx(formData.cantidad)}
-                    />
-                    <TextField
-                      label="Periodo en meses"
-                      type="number"
-                      variant="outlined"
-                      value={formData.cuotas}
-                      onChange={(e) => setFormData({ ...formData, cuotas: e.target.value })}
-                      min="1"
-                      required
-                      helperText={showHelperText && !formData.cuotas ? "Ingrese la cantidad de meses" : ""}
-                      fullWidth={false}
-                      margin="normal"
-                      sx={fieldSx(formData.cuotas)}
-                    />
-                  </>
-                )}
-                <FormControl variant="outlined" fullWidth={false} margin="normal" sx={fieldSx(selectedCurrency)}>
-                  <InputLabel id="currency-label">Moneda</InputLabel>
-                  <Select
-                    labelId="currency-label"
-                    value={selectedCurrency}
-                    onChange={handleCurrencyChange}
-                    label="Moneda"
-                  >
-                    {MONEDAS.map((c) => (
-                      <MenuItem key={c.code} value={c.code}>
-                        {c.symbol} - {c.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <TextField
-                  label="Precio"
-                  type="number"
-                  step="0.01"
-                  variant="outlined"
-                  value={formData.precio}
-                  onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
-                  min="1"
-                  required
-                  fullWidth={false}
-                  margin="normal"
-                  helperText={showHelperText && !formData.precio ? "Ingrese el precio" : ""}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">{getCurrencySymbol(selectedCurrency)}</InputAdornment>
-                    ),
-                  }}
-                  sx={fieldSx(formData.precio)}
-                />
+            {(modalType === 'nuevo' || modalType === 'editar') && (
+              <div className="mf-form">
 
-                {/* Compartir gasto */}
-                {(modalType === 'nuevo' || modalType === 'editar') && (
-                  <div className="share-card" style={{ flexBasis: '100%' }}>
-                    <div className="share-card-title">
-                      <IoPeopleOutline size={13} />
-                      Compartir gasto
+                {/* ── 1. Tipo de gasto toggle ── */}
+                {modalType === 'nuevo' && (
+                  <div className="mf-section-full">
+                    <div className="mf-label">Tipo de gasto</div>
+                    <div className="mf-tipo-row">
+                      {[
+                        { key: false, icon: '⚡', label: 'Variable', desc: 'Un gasto puntual' },
+                        { key: true,  icon: '🔄', label: 'Fijo',     desc: 'Recurrente / suscripción' },
+                      ].map(op => {
+                        const active = !!formData.isFijo === op.key;
+                        return (
+                          <button key={String(op.key)} type="button" className={`mf-tipo-btn${active ? ' active' : ''}`}
+                            onClick={() => setFormData(prev => ({ ...prev, isFijo: op.key, cuotas: 1, tipo: op.key ? 'debito' : prev.tipo }))}>
+                            <span className="mf-tipo-icon">{op.icon}</span>
+                            <span className="mf-tipo-label">{op.label}</span>
+                            <span className="mf-tipo-desc">{op.desc}</span>
+                          </button>
+                        );
+                      })}
                     </div>
+                  </div>
+                )}
 
+                {/* ── 2. Objeto + Fecha ── */}
+                <div className="mf-row">
+                  <div className="mf-field">
+                    <div className="mf-label">Objeto {showHelperText && !formData.objeto && <span className="mf-error">*</span>}</div>
+                    <input className="mf-input" placeholder="Ej: Zapatillas" value={formData.objeto}
+                      onChange={e => setFormData({ ...formData, objeto: e.target.value })} autoFocus />
+                  </div>
+                  <div className="mf-field">
+                    <div className="mf-label">{formData.isFijo ? 'Fecha de inicio' : 'Fecha de compra'} {showHelperText && !formData.fecha && <span className="mf-error">*</span>}</div>
+                    <input className="mf-input" type="date" value={formData.fecha}
+                      onChange={e => setFormData({ ...formData, fecha: e.target.value })} />
+                  </div>
+                </div>
+
+                {/* ── 3. Medio + Banco ── */}
+                <div className="mf-row">
+                  <div className="mf-field">
+                    <div className="mf-label">Medio de pago {showHelperText && !formData.medio && <span className="mf-error">*</span>}</div>
+                    <select className="mf-select" value={formData.medio} onChange={e => setFormData({ ...formData, medio: e.target.value })}>
+                      <option value="">Seleccionar…</option>
+                      {mediosDisponibles.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  <div className="mf-field">
+                    <div className="mf-label">Banco</div>
+                    <select className="mf-select" value={formData.banco} onChange={e => setFormData({ ...formData, banco: e.target.value })}>
+                      <option value="">Sin banco</option>
+                      {bancosDisponibles.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* ── 4. Moneda + Precio ── */}
+                <div className="mf-row">
+                  <div className="mf-field">
+                    <div className="mf-label">Moneda</div>
+                    <select className="mf-select" value={selectedCurrency} onChange={handleCurrencyChange}>
+                      {MONEDAS.map(c => <option key={c.code} value={c.code}>{c.symbol} - {c.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="mf-field">
+                    <div className="mf-label">Precio {showHelperText && !formData.precio && <span className="mf-error">*</span>}</div>
+                    <div className="mf-input-prefix">
+                      <span className="mf-prefix">{getCurrencySymbol(selectedCurrency)}</span>
+                      <input className="mf-input no-left-radius" type="number" step="0.01" min="0" placeholder="0,00"
+                        value={formData.precio} onChange={e => setFormData({ ...formData, precio: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── 5a. Si fijo: Rep + Periodo ── */}
+                {formData.isFijo && (
+                  <div className="mf-row">
+                    <div className="mf-field">
+                      <div className="mf-label">Rep. en el mes</div>
+                      <input className="mf-input" type="number" min="1" placeholder="1"
+                        value={formData.cantidad} onChange={e => setFormData({ ...formData, cantidad: e.target.value })} />
+                    </div>
+                    <div className="mf-field">
+                      <div className="mf-label">Periodo en meses</div>
+                      <input className="mf-input" type="number" min="1" placeholder="12"
+                        value={formData.cuotas} onChange={e => setFormData({ ...formData, cuotas: e.target.value })} />
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 5b. Si variable: Tipo de pago ── */}
+                {!formData.isFijo && formData.medio !== 'Efectivo' && formData.medio !== 'Transferencia' && (
+                  <div className="mf-section-full">
+                    <div className="mf-label">Tipo de pago</div>
+                    <div className="mf-pill-row">
+                      {[
+                        { key: 'debito',  icon: <BsCreditCard2Front size={16} />, label: 'Débito' },
+                        { key: 'credito', icon: <FaCreditCard size={16} />,       label: 'Crédito' },
+                      ].map(op => {
+                        const active = formData.tipo === op.key;
+                        return (
+                          <button key={op.key} type="button" className={`mf-pill-btn${active ? ' active' : ''}`}
+                            onClick={() => setFormData({ ...formData, tipo: op.key, cuotas: op.key === 'debito' ? 1 : formData.cuotas })}>
+                            {op.icon} {op.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 6. Si crédito: Cuotas chips ── */}
+                {!formData.isFijo && formData.tipo === 'credito' && (
+                  <div className="mf-section-full">
+                    <div className="mf-label">Cuotas</div>
+                    <div className="mf-cuotas-row">
+                      {[1, 3, 6, 12, 18, 24].map(c => {
+                        const active = Number(formData.cuotas) === c;
+                        return (
+                          <button key={c} type="button" className={`mf-cuota-chip${active ? ' active' : ''}`}
+                            onClick={() => setFormData({ ...formData, cuotas: c })}>
+                            {c}x
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 7. Etiqueta ── */}
+                {mydata?.etiquetas?.length > 0 && (
+                  <div className="mf-section-full">
+                    <div className="mf-label">Etiqueta</div>
+                    <div className="mf-tags">
+                      {mydata.etiquetas.map(tag => {
+                        const nombre = typeof tag === 'string' ? tag : tag.nombre;
+                        const color  = typeof tag === 'string' ? 'var(--color-primary)' : (tag.color || 'var(--color-primary)');
+                        const active = formData.etiqueta === nombre;
+                        return (
+                          <button key={nombre} type="button"
+                            className="mf-tag"
+                            style={{ borderColor: color, background: active ? color : color + '22', color: active ? '#fff' : color }}
+                            onClick={() => setFormData({ ...formData, etiqueta: active ? '' : nombre })}>
+                            {nombre}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 8. Compartir gasto ── */}
+                {(
+                  <div className="share-card mf-section-full">
+                    <div className="share-card-title">
+                      <IoPeopleOutline size={13} /> Compartir gasto
+                    </div>
                     {formData.compartidoConNombre ? (
                       <p style={{ fontSize: 12, fontStyle: 'italic', margin: 0, opacity: 0.65 }}>
-                        Ya compartido con <strong>{formData.compartidoConNombre}</strong>. Cada usuario maneja su propia copia.
+                        Ya compartido con <strong>{formData.compartidoConNombre}</strong>.
                       </p>
                     ) : sharedUser ? (
                       <>
                         <div className="share-user-info">
                           <div className="share-avatar">{(sharedUser.nombre || sharedUser.email)[0].toUpperCase()}</div>
                           <span style={{ fontWeight: 600, fontSize: 14, flex: 1 }}>{sharedUser.nombre || sharedUser.email}</span>
-                          <button className="share-remove-btn" onClick={() => setSharedUser(null)}>
-                            <IoCloseCircle size={20} />
-                          </button>
+                          <button className="share-remove-btn" onClick={() => setSharedUser(null)}><IoCloseCircle size={20} /></button>
                         </div>
                         <div className="share-mode-row">
-                          <button className={`share-mode-btn${shareMode === 'dividir' ? ' active' : ''}`} onClick={() => setShareMode('dividir')}>
-                            Dividir entre 2
-                          </button>
-                          <button className={`share-mode-btn${shareMode === 'mismo' ? ' active' : ''}`} onClick={() => setShareMode('mismo')}>
-                            Mismo monto
-                          </button>
+                          <button className={`share-mode-btn${shareMode === 'dividir' ? ' active' : ''}`} onClick={() => setShareMode('dividir')}>Dividir entre 2</button>
+                          <button className={`share-mode-btn${shareMode === 'mismo' ? ' active' : ''}`} onClick={() => setShareMode('mismo')}>Mismo monto</button>
                         </div>
                       </>
                     ) : (
                       <>
                         <div className="share-search-row">
-                          <input
-                            className="share-email-input"
-                            type="email"
-                            placeholder="Email del contacto..."
-                            value={searchEmail}
-                            onChange={e => setSearchEmail(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleSearchUser()}
-                          />
+                          <input className="share-email-input" type="email" placeholder="Email del contacto..."
+                            value={searchEmail} onChange={e => setSearchEmail(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleSearchUser()} />
                           <button className="share-search-btn" onClick={handleSearchUser} disabled={searching}>
-                            {searching ? '...' : <IoSearchOutline size={16} />}
+                            {searching ? '…' : <IoSearchOutline size={16} />}
                           </button>
                         </div>
                         {recentContacts.length > 0 && (
@@ -713,7 +677,7 @@ function Modal({ data, formData, totalGastado, setFormData, mydata, setMyData, s
                     )}
                   </div>
                 )}
-              </>
+              </div>
             )}
             {modalType === 'fondos' && (
               <>
