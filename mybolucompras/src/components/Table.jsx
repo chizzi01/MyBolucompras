@@ -224,23 +224,13 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
         <section id="gastos" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <div className="componentContainer">
                 <div style={{ display: 'flex', alignItems: 'center', padding: '6px 16px 10px', gap: '10px' }}>
-                    <div style={{ position: 'relative', width: '260px', flexShrink: 0 }}>
-                        <FiSearch size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
-                        <input
-                            type="text"
-                            placeholder="Buscar gasto..."
-                            value={filterObject}
-                            onChange={(e) => setFilterObject(e.target.value)}
-                            style={{ width: '100%', padding: '7px 12px 7px 34px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '100px', color: 'white', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
-                        />
-                    </div>
-                    <div className='dropdownFilter' style={{ position: 'relative', top: 0, left: 0, flexShrink: 0 }}>
-                    <button className="dropbtnFilter" onClick={handleFilterClick}>
-                        <MdFilterListAlt size={25} />
-                        {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
-                        {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); setFilterMoneda('') }} />}
-
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
+                        <div className='dropdownFilter' style={{ position: 'relative' }}>
+                        <button className="dropbtnFilter" onClick={handleFilterClick} style={{ padding: '2px 8px', minHeight: 'unset', height: 'auto' }}>
+                            <MdFilterListAlt size={14} />
+                            {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
+                            {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); setFilterMoneda('') }} />}
+                        </button>
                     {showFilter && (
                         <div className="filter-container">
                             <div className='selectFilters-container'>
@@ -543,6 +533,17 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                             </div>
                         </div>
                     )}
+                        </div>
+                        <div style={{ position: 'relative', width: '260px' }}>
+                            <FiSearch size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
+                            <input
+                                type="text"
+                                placeholder="Buscar gasto..."
+                                value={filterObject}
+                                onChange={(e) => setFilterObject(e.target.value)}
+                                style={{ width: '100%', padding: '7px 12px 7px 34px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '100px', color: 'white', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                            />
+                        </div>
                     </div>
                     <div style={{ flex: 1 }} />
                     <label className="switch-label" style={{ flexShrink: 0, gap: '14px', alignItems: 'center' }}>
