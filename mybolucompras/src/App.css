@@ -1168,7 +1168,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 101;
-  padding: 12px;
+  padding: 8px 12px;
   font-weight: 600;
   font-size: 13px;
   text-align: center;
@@ -1177,7 +1177,7 @@ a {
 }
 
 .demo td {
-  padding: 10px;
+  padding: 6px 10px;
   font-size: 13px;
   text-align: center;
   vertical-align: middle;
@@ -1762,9 +1762,9 @@ input:checked+.slider:before {
       rgba(50, 255, 156, 0.534));
   color: #ffffff;
   font-weight: 600;
-  padding: 10px 24px;
-  font-size: 16px;
-  border-radius: 14px;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -2930,7 +2930,7 @@ a { color: #6366F1; }
   border: none !important;
   border-radius: 14px !important;
   box-shadow: none !important;
-  padding: 14px 18px !important;
+  /* padding: 14px 18px !important; */
 }
 .glass-filter-input {
   background: #F8FAFC !important;

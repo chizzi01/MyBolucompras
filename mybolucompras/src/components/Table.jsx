@@ -61,6 +61,24 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
 
     const [labels, setLabels] = useState({});
     const [editingItemId, setEditingItemId] = useState(null);
+    const [isTableLoading, setIsTableLoading] = useState(false);
+
+    const handleSwitchWithLoading = () => {
+        setIsTableLoading(true);
+    };
+
+    useEffect(() => {
+        if (!isTableLoading) return;
+        let t;
+        const frame = requestAnimationFrame(() => {
+            handleSwitchChange();
+            t = setTimeout(() => setIsTableLoading(false), 500);
+        });
+        return () => {
+            cancelAnimationFrame(frame);
+            clearTimeout(t);
+        };
+    }, [isTableLoading]);
 
     const handleLabelChange = (id, value) => {
         setLabels(prevLabels => {
@@ -175,14 +193,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
             : calcularCuotasRestantesCredito(item.fecha, item.cuotas, mydata.vencimiento, mydata.cierre, mydata.vencimientoAnterior, mydata.cierreAnterior);
     };
 
-    const filteredData = useMemo(() => sortedData.filter(item => {
-        if (!isSwitchOn) {
-            const fecha = parseFecha(item.fecha);
-            const now = new Date();
-            if (fecha.getFullYear() !== now.getFullYear() || fecha.getMonth() !== now.getMonth()) return false;
-        }
-        return true;
-    }), [sortedData, isSwitchOn]);
+    const filteredData = sortedData;
 
     const exportToExcel = () => {
         const rows = sortedData.map(item => {
@@ -224,7 +235,8 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
         <section id="gastos" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <div className="componentContainer">
                 <div style={{ display: 'flex', alignItems: 'center', padding: '6px 16px 10px', gap: '10px', position: 'relative' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0, position: 'relative' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px', marginTop: '-4px', position: 'relative', alignSelf: 'flex-start' }}>
                         <button className="dropbtnFilter" onClick={handleFilterClick} style={{ width: 36, height: 36, margin: 0, padding: 0, borderRadius: '10px', boxSizing: 'border-box' }}>
                             <MdFilterListAlt size={17} />
                             {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
@@ -234,7 +246,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                         <div className="filter-container" style={{ position: 'absolute', top: 0, left: 'calc(100% + 8px)', zIndex: 200 }}>
                             <div className='selectFilters-container'>
                                 <div className="verticalBtn-textFilters">
-                                    <FormControl variant="outlined" fullWidth={false} margin="normal" style={{ minWidth: '90px' }}
+                                    <FormControl variant="outlined" fullWidth={false} style={{ minWidth: '90px' }}
                                         className="glass-filter-input"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
@@ -292,7 +304,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                     </FormControl>
                                 </div>
                                 <div className="verticalBtn-textFilters">
-                                    <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                    <FormControl variant="outlined" fullWidth style={{ minWidth: '90px' }}
                                         className="glass-filter-input"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
@@ -351,7 +363,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                     </FormControl>
                                 </div>
                                 <div className="verticalBtn-textFilters">
-                                    <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                    <FormControl variant="outlined" fullWidth style={{ minWidth: '90px' }}
                                         className="glass-filter-input"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
@@ -411,7 +423,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                     </FormControl>
                                 </div>
                                 <div className="verticalBtn-textFilters">
-                                    <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                    <FormControl variant="outlined" fullWidth style={{ minWidth: '90px' }}
                                         className="glass-filter-input"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
@@ -470,7 +482,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                     </FormControl>
                                 </div>
                                 <div className="verticalBtn-textFilters">
-                                    <FormControl variant="outlined" fullWidth margin="normal" style={{ minWidth: '90px' }}
+                                    <FormControl variant="outlined" fullWidth style={{ minWidth: '90px' }}
                                         className="glass-filter-input"
                                         sx={{
                                             '& .MuiOutlinedInput-root': {
@@ -532,6 +544,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                             </div>
                         </div>
                     )}
+                        </div>
                         <div style={{ position: 'relative', width: '260px' }}>
                             <FiSearch size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
                             <input
@@ -549,8 +562,8 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                             <FaCalendarAlt size={16} />
                             {mesCapitalizado}
                         </span>
-                        <div className={`switch-track ${isSwitchOn ? 'on' : ''}`} onClick={handleSwitchChange} style={{ width: 46, height: 26 }}>
-                            <div className="switch-thumb" style={{ width: 18, height: 18, top: 4, left: isSwitchOn ? 24 : 4 }} />
+                        <div className={`switch-track ${isSwitchOn ? 'on' : ''}`} onClick={handleSwitchWithLoading} style={{ width: 60, height: 32 }}>
+                            <div className="switch-thumb" style={{ width: 24, height: 24, top: 4, left: isSwitchOn ? 32 : 4 }} />
                         </div>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: isSwitchOn ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)', fontWeight: isSwitchOn ? 700 : 400, transition: 'all 0.2s' }}>
                             <FaSwatchbook size={16} />
@@ -655,7 +668,21 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                         </thead>
 
                         <tbody>
-                            {filteredData.map((item, index) => {
+                            {isTableLoading ? (
+                                Array.from({ length: 8 }).map((_, i) => (
+                                    <tr key={i}>
+                                        <td><div className="skeleton-cell wide" /></td>
+                                        <td><div className="skeleton-cell short" /></td>
+                                        <td><div className="skeleton-cell short" /></td>
+                                        <td><div className="skeleton-cell short" /></td>
+                                        <td><div className="skeleton-cell short" /></td>
+                                        <td><div className="skeleton-cell short" /></td>
+                                        <td><div className="skeleton-cell short" /></td>
+                                        <td><div className="skeleton-cell short" /></td>
+                                        <td><div className="skeleton-cell short" /></td>
+                                    </tr>
+                                ))
+                            ) : filteredData.map((item, index) => {
                                 const fechaCompra = new Date(item.fecha.split('/').reverse().join('-'));
                                 const fechaCierreDate = new Date(mydata.cierre);
                                 const fechaCierreAnteriorDate = new Date(mydata.cierreAnterior);
@@ -814,11 +841,11 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                                     </tr>
                                 );
                             })}
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
                 <div className="export-align">
-                    <button id="export-btn" onClick={exportToExcel}><PiMicrosoftExcelLogoFill size={20} /> Exportar a Excel</button>
+                    <button id="export-btn" onClick={exportToExcel}><PiMicrosoftExcelLogoFill size={14} /> Exportar a Excel</button>
                 </div>
             </div>
         </section >

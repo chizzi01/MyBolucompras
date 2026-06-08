@@ -463,27 +463,47 @@ table.modern-table {
 }
 
 .switch-track {
-  width: 36px;
-  height: 20px;
+  width: 60px;
+  height: 32px;
   border-radius: var(--radius-full);
   background: var(--color-border);
   position: relative;
   transition: background 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 .switch-track.on { background: var(--color-primary); }
 
 .switch-thumb {
-  width: 14px;
-  height: 14px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: #fff;
   position: absolute;
-  top: 3px;
-  left: 3px;
+  top: 4px;
+  left: 4px;
   transition: left 0.2s;
   box-shadow: var(--shadow-xs);
 }
-.switch-track.on .switch-thumb { left: 19px; }
+.switch-track.on .switch-thumb { left: 32px; }
+
+/* Skeleton loading */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton-cell {
+  height: 16px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.08) 75%);
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.2s infinite linear;
+  margin: auto;
+}
+
+.skeleton-cell.wide  { width: 80%; }
+.skeleton-cell.short { width: 50%; }
 
 /* Paginación */
 .table-pagination {
