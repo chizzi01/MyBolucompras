@@ -223,16 +223,15 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
     return (
         <section id="gastos" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <div className="componentContainer">
-                <div style={{ display: 'flex', alignItems: 'center', padding: '6px 16px 10px', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '6px 16px 10px', gap: '10px', position: 'relative' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-                        <div className='dropdownFilter' style={{ position: 'relative', top: 0, left: 0 }}>
-                        <button className="dropbtnFilter" onClick={handleFilterClick} style={{ width: 28, height: 28, margin: 0, padding: 0, borderRadius: '8px', boxSizing: 'border-box' }}>
-                            <MdFilterListAlt size={14} />
+                        <button className="dropbtnFilter" onClick={handleFilterClick} style={{ width: 36, height: 36, margin: 0, padding: 0, borderRadius: '10px', boxSizing: 'border-box' }}>
+                            <MdFilterListAlt size={17} />
                             {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
                             {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); setFilterMoneda('') }} />}
                         </button>
                     {showFilter && (
-                        <div className="filter-container">
+                        <div className="filter-container" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 200 }}>
                             <div className='selectFilters-container'>
                                 <div className="verticalBtn-textFilters">
                                     <FormControl variant="outlined" fullWidth={false} margin="normal" style={{ minWidth: '90px' }}
@@ -533,7 +532,6 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                             </div>
                         </div>
                     )}
-                        </div>
                         <div style={{ position: 'relative', width: '260px' }}>
                             <FiSearch size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', pointerEvents: 'none' }} />
                             <input
