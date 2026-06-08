@@ -224,14 +224,14 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
         <section id="gastos" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <div className="componentContainer">
                 <div style={{ display: 'flex', alignItems: 'center', padding: '6px 16px 10px', gap: '10px', position: 'relative' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0, position: 'relative' }}>
                         <button className="dropbtnFilter" onClick={handleFilterClick} style={{ width: 36, height: 36, margin: 0, padding: 0, borderRadius: '10px', boxSizing: 'border-box' }}>
                             <MdFilterListAlt size={17} />
                             {filterCount > 0 && <span className="filterCount">{filterCount}</span>}
                             {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); setFilterMoneda('') }} />}
                         </button>
                     {showFilter && (
-                        <div className="filter-container" style={{ position: 'absolute', top: '50%', left: 290, transform: 'translateY(-50%)', zIndex: 200 }}>
+                        <div className="filter-container" style={{ position: 'absolute', top: 0, left: 'calc(100% + 8px)', zIndex: 200 }}>
                             <div className='selectFilters-container'>
                                 <div className="verticalBtn-textFilters">
                                     <FormControl variant="outlined" fullWidth={false} margin="normal" style={{ minWidth: '90px' }}
