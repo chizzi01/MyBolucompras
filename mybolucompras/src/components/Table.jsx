@@ -231,7 +231,7 @@ function Table({ data, mydata, openModal, total, filters, uniqueBanks, uniqueMed
                             {filterCount > 0 && <IoMdTrash size={5} className="filterClose" onClick={() => { setFilterType(''); setFilterBank(''); setFilterMedio(''); setFilterEtiqueta(''); setFilterMoneda('') }} />}
                         </button>
                     {showFilter && (
-                        <div className="filter-container" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 200 }}>
+                        <div className="filter-container" style={{ position: 'absolute', top: '50%', left: 290, transform: 'translateY(-50%)', zIndex: 200 }}>
                             <div className='selectFilters-container'>
                                 <div className="verticalBtn-textFilters">
                                     <FormControl variant="outlined" fullWidth={false} margin="normal" style={{ minWidth: '90px' }}
