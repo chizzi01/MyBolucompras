@@ -7,7 +7,7 @@ import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useDeudas } from '../hooks/queries/useDeudas';
 import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes } from '../utils/cuotas';
-import { getGastosMes, getCostoMes, calcularTotalesPorMoneda } from '../utils/proyeccion';
+import { getGastosMes, getCostoMes, calcularTotalesPorMoneda, formatAmountShort } from '../utils/proyeccion';
 import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '../utils/formatters';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
@@ -83,6 +83,17 @@ export default function DashboardScreen() {
     const fijosMes = gastosMes.filter(g => g.isFijo).length;
 
     return { totalesPorMoneda, cuotasActivas, masCaro, porEtiqueta, maxEtiqueta, gastosMes, cuotasPendientes, fijosMes };
+  }, [gastos, mydata, mesSel]);
+
+  const statsProxMes = useMemo(() => {
+    const proxMesSel = mesSel.mes === 11
+      ? { mes: 0, anio: mesSel.anio + 1 }
+      : { mes: mesSel.mes + 1, anio: mesSel.anio };
+    const gastosProx = getGastosMes(gastos, proxMesSel, mydata);
+    return {
+      totalesPorMoneda: calcularTotalesPorMoneda(gastosProx),
+      mesNombre: MESES[proxMesSel.mes],
+    };
   }, [gastos, mydata, mesSel]);
 
   const deudaStats = useMemo(() => {
@@ -274,6 +285,14 @@ export default function DashboardScreen() {
               />
             </>
           )}
+          {!esMesLimite && (
+            <ProxMesKPI
+              totales={statsProxMes.totalesPorMoneda}
+              mesNombre={statsProxMes.mesNombre}
+              onPress={nextMes}
+              dark={dark}
+            />
+          )}
         </View>
 
         {/* Gasto más caro */}
@@ -381,6 +400,38 @@ function KPICard({ label, value, dark, accent }) {
       <Text style={s.val}>{value}</Text>
       <Text style={s.lbl}>{label}</Text>
     </View>
+  );
+}
+
+function ProxMesKPI({ totales, mesNombre, onPress, dark }) {
+  const arsTotal = totales['ARS'];
+  const firstEntry = Object.entries(totales)[0];
+  const displayText = arsTotal != null
+    ? formatAmountShort(arsTotal, 'ARS')
+    : firstEntry
+      ? formatAmountShort(firstEntry[1], firstEntry[0])
+      : '$ 0';
+
+  const s = StyleSheet.create({
+    card: {
+      flex: 1,
+      backgroundColor: dark ? colors.surface.dark : colors.surface.light,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: '#F9731640',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    val: { fontSize: 13, fontWeight: '700', color: '#F97316', marginBottom: 2, textAlign: 'center' },
+    lbl: { fontSize: 10, fontWeight: '500', color: '#F97316', textAlign: 'center', opacity: 0.8 },
+  });
+
+  return (
+    <TouchableOpacity style={s.card} onPress={onPress} activeOpacity={0.7}>
+      <Text style={s.val}>{displayText}</Text>
+      <Text style={s.lbl}>{mesNombre} →</Text>
+    </TouchableOpacity>
   );
 }
 
