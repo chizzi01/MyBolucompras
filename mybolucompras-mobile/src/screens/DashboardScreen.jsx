@@ -154,32 +154,34 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           </View>
           <View style={s.monthNav}>
-            <TouchableOpacity
-              onPress={prevMes}
-              style={s.monthNavBtn}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={18}
-                color={dark ? colors.textSecondary.dark : colors.textSecondary.light}
-              />
-            </TouchableOpacity>
-            <Text style={[s.monthLabel, esMesFuturo && { color: '#F97316' }]}>
-              {MESES[mesSel.mes]} {mesSel.anio}
-            </Text>
-            <TouchableOpacity
-              onPress={nextMes}
-              style={s.monthNavBtn}
-              disabled={esMesLimite}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={esMesLimite ? 'transparent' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
-              />
-            </TouchableOpacity>
+            <View style={s.monthNavRow}>
+              <TouchableOpacity
+                onPress={prevMes}
+                style={s.monthNavBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={18}
+                  color={dark ? colors.textSecondary.dark : colors.textSecondary.light}
+                />
+              </TouchableOpacity>
+              <Text style={[s.monthLabel, esMesFuturo && { color: '#F97316' }]}>
+                {MESES[mesSel.mes]} {mesSel.anio}
+              </Text>
+              <TouchableOpacity
+                onPress={nextMes}
+                style={s.monthNavBtn}
+                disabled={esMesLimite}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={esMesLimite ? 'transparent' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+                />
+              </TouchableOpacity>
+            </View>
             {esMesFuturo && (
               <View style={s.proyectadoBadge}>
                 <Text style={s.proyectadoBadgeText}>Proyectado</Text>
@@ -476,7 +478,8 @@ const styles = (dark) => StyleSheet.create({
     marginBottom: spacing.md,
   },
   pageTitle: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light },
-  monthNav: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  monthNav: { flexDirection: 'column', alignItems: 'flex-end', gap: 4 },
+  monthNavRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   monthNavBtn: { padding: 4 },
   monthLabel: {
     ...typography.bodyMed,
