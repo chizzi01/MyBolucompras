@@ -221,7 +221,7 @@ export default function DashboardScreen() {
             </>
           )}
 
-          {deudaStats.count > 0 && (
+          {!esMesFuturo && deudaStats.count > 0 && (
             <>
               <View style={s.totalHeroDivider} />
               <View style={s.totalHeroBreakdownRow}>
@@ -238,7 +238,7 @@ export default function DashboardScreen() {
             </>
           )}
 
-          {misDeudaStats.count > 0 && (
+          {!esMesFuturo && misDeudaStats.count > 0 && (
             <>
               <View style={s.totalHeroDivider} />
               {Object.entries(misDeudaStats.porMoneda).map(([moneda, total]) => (
