@@ -6,7 +6,8 @@ import { useGastos } from '../hooks/queries/useGastos';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useDeudas } from '../hooks/queries/useDeudas';
 import { useTheme } from '../context/ThemeContext';
-import { getCuotasRestantes, gastoEntraEsteMes, getSingleCuotaBillingIndex } from '../utils/cuotas';
+import { getCuotasRestantes } from '../utils/cuotas';
+import { getGastosMes, getCostoMes, calcularTotalesPorMoneda } from '../utils/proyeccion';
 import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '../utils/formatters';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
@@ -48,56 +49,8 @@ export default function DashboardScreen() {
   };
 
   const stats = useMemo(() => {
-    const targetIndex = mesSel.anio * 12 + mesSel.mes;
-    const hoyIndex = hoy.getFullYear() * 12 + hoy.getMonth();
-
-    // Returns the cost this expense contributes to the selected month
-    const getCostoMes = (g) => {
-      if (g.isFijo) return parsePrecio(g.precio) * (parseInt(g.cantidad) || 1);
-      if (g.tipo === 'credito' && Number(g.cuotas) > 1) return parsePrecio(g.precio) / Number(g.cuotas);
-      return parsePrecio(g.precio);
-    };
-
-    const gastosVariablesMes = gastos.filter(g => {
-      if (g.isFijo) return false;
-      const [, m, y] = (g.fecha || '').split('/');
-      const compraIndex = Number(y) * 12 + (Number(m) - 1);
-      const cuotas = parseInt(g.cuotas) || 1;
-
-      if (g.tipo === 'credito') {
-        if (cuotas > 1) {
-          // Multi-installment credit: active across several months
-          if (targetIndex < compraIndex || targetIndex >= compraIndex + cuotas) return false;
-        } else {
-          // Single-charge credit: shown in its billing month (vencimientoAnterior or vencimiento),
-          // not the purchase month — matches when the credit card bill is actually paid.
-          const billingIndex = getSingleCuotaBillingIndex(g, mydata);
-          if (billingIndex !== targetIndex) return false;
-        }
-        // For current month, skip purchases pending for next billing cycle
-        if (targetIndex === hoyIndex) return gastoEntraEsteMes(g, mydata);
-        return true;
-      }
-      // Non-credit: only counts in the purchase month
-      return compraIndex === targetIndex;
-    });
-
-    const gastosFijosMes = gastos.filter(g => {
-      if (!g.isFijo) return false;
-      const [, m, y] = (g.fecha || '').split('/');
-      const startIndex = Number(y) * 12 + (Number(m) - 1);
-      if (targetIndex < startIndex) return false;
-      const period = parseInt(g.cuotas) || 0;
-      return period === 0 || targetIndex < startIndex + period;
-    });
-
-    const gastosMes = [...gastosVariablesMes, ...gastosFijosMes];
-
-    const totalesPorMoneda = {};
-    gastosMes.forEach(g => {
-      const moneda = g.moneda || 'ARS';
-      totalesPorMoneda[moneda] = (totalesPorMoneda[moneda] || 0) + getCostoMes(g);
-    });
+    const gastosMes = getGastosMes(gastos, mesSel, mydata);
+    const totalesPorMoneda = calcularTotalesPorMoneda(gastosMes);
 
     const cuotasActivas = gastos.filter(g => {
       if (g.isFijo) return true;
@@ -116,10 +69,14 @@ export default function DashboardScreen() {
       const etiq = g.etiqueta || 'Sin etiqueta';
       porEtiqueta[etiq] = (porEtiqueta[etiq] || 0) + getCostoMes(g);
     });
-
     const maxEtiqueta = Math.max(...Object.values(porEtiqueta), 1);
 
-    return { totalesPorMoneda, cuotasActivas, masCaro, porEtiqueta, maxEtiqueta, gastosMes };
+    const cuotasPendientes = gastosMes.filter(
+      g => !g.isFijo && g.tipo === 'credito' && Number(g.cuotas) > 1
+    ).length;
+    const fijosMes = gastosMes.filter(g => g.isFijo).length;
+
+    return { totalesPorMoneda, cuotasActivas, masCaro, porEtiqueta, maxEtiqueta, gastosMes, cuotasPendientes, fijosMes };
   }, [gastos, mydata, mesSel]);
 
   const deudaStats = useMemo(() => {
