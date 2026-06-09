@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { Modal, View, Text, ScrollView, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { formatPrecioEuropeo } from '../utils/formatters';
 import { getCostoMes } from '../utils/proyeccion';
@@ -18,8 +18,11 @@ export default function ProyeccionModal({ visible, onClose, gastos, mes }) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <TouchableOpacity style={s.backdrop} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity activeOpacity={1} style={s.sheet}>
+      <View style={s.container}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={s.backdrop} />
+        </TouchableWithoutFeedback>
+        <View style={s.sheet}>
           <View style={s.handle} />
           <Text style={s.title}>
             Desglose · {MESES[mes.mes]} {mes.anio}
@@ -39,6 +42,8 @@ export default function ProyeccionModal({ visible, onClose, gastos, mes }) {
                   g => !g.isFijo && !(g.tipo === 'credito' && Number(g.cuotas) > 1)
                 );
                 const total = gastosMon.reduce((sum, g) => sum + getCostoMes(g), 0);
+                const totalFijo = fijos.reduce((sum, g) => sum + getCostoMes(g), 0);
+                const totalVariable = [...cuotas, ...otros].reduce((sum, g) => sum + getCostoMes(g), 0);
 
                 return (
                   <View key={moneda} style={s.currencyBlock}>
@@ -73,13 +78,28 @@ export default function ProyeccionModal({ visible, onClose, gastos, mes }) {
                         ))}
                       </>
                     )}
+
+                    <View style={s.subtotalsRow}>
+                      {totalFijo > 0 && (
+                        <View style={s.subtotalItem}>
+                          <Text style={s.subtotalLabel}>Total fijo</Text>
+                          <Text style={s.subtotalValue}>{formatPrecioEuropeo(totalFijo, moneda)}</Text>
+                        </View>
+                      )}
+                      {totalVariable > 0 && (
+                        <View style={s.subtotalItem}>
+                          <Text style={s.subtotalLabel}>Total variable</Text>
+                          <Text style={s.subtotalValue}>{formatPrecioEuropeo(totalVariable, moneda)}</Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
                 );
               })
             )}
           </ScrollView>
-        </TouchableOpacity>
-      </TouchableOpacity>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -144,10 +164,13 @@ function ExpenseRow({ gasto, mes, dark }) {
 }
 
 const styles = (dark) => StyleSheet.create({
-  backdrop: {
+  container: {
     flex: 1,
-    backgroundColor: dark ? 'rgba(0,0,0,0.72)' : 'rgba(0,0,0,0.52)',
     justifyContent: 'flex-end',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: dark ? 'rgba(0,0,0,0.72)' : 'rgba(0,0,0,0.52)',
   },
   sheet: {
     backgroundColor: dark ? colors.surface.dark : '#fff',
@@ -217,5 +240,28 @@ const styles = (dark) => StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: spacing.sm,
     marginBottom: 2,
+  },
+  subtotalsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.md,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: dark ? '#1e293b' : '#F1F5F9',
+  },
+  subtotalItem: {
+    alignItems: 'flex-end',
+  },
+  subtotalLabel: {
+    ...typography.caption,
+    color: dark ? '#475569' : '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  subtotalValue: {
+    ...typography.bodyMed,
+    color: dark ? colors.text.dark : colors.text.light,
+    marginTop: 1,
   },
 });
