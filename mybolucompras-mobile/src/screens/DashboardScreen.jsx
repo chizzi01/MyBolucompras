@@ -39,11 +39,17 @@ export default function DashboardScreen() {
 
   const isHoy = mesSel.mes === hoy.getMonth() && mesSel.anio === hoy.getFullYear();
 
+  const mesSelIndex = mesSel.anio * 12 + mesSel.mes;
+  const hoyIndex = hoy.getFullYear() * 12 + hoy.getMonth();
+  const esMesFuturo = mesSelIndex > hoyIndex;
+  const esMesLimite = mesSelIndex >= hoyIndex + 6;
+  const [showProyeccionModal, setShowProyeccionModal] = useState(false);
+
   const prevMes = () => setMesSel(p =>
     p.mes === 0 ? { mes: 11, anio: p.anio - 1 } : { mes: p.mes - 1, anio: p.anio }
   );
   const nextMes = () => {
-    if (!isHoy) setMesSel(p =>
+    if (!esMesLimite) setMesSel(p =>
       p.mes === 11 ? { mes: 0, anio: p.anio + 1 } : { mes: p.mes + 1, anio: p.anio }
     );
   };
@@ -100,12 +106,13 @@ export default function DashboardScreen() {
   }, [deudas]);
 
   const heroTotales = useMemo(() => {
+    if (esMesFuturo) return stats.totalesPorMoneda;
     const combined = { ...stats.totalesPorMoneda };
     Object.entries(deudaStats.porMoneda).forEach(([moneda, monto]) => {
       combined[moneda] = (combined[moneda] || 0) + monto;
     });
     return combined;
-  }, [stats.totalesPorMoneda, deudaStats.porMoneda]);
+  }, [esMesFuturo, stats.totalesPorMoneda, deudaStats.porMoneda]);
 
   const hayTotal = Object.keys(heroTotales).length > 0;
 
@@ -146,29 +153,40 @@ export default function DashboardScreen() {
                 color={dark ? colors.textSecondary.dark : colors.textSecondary.light}
               />
             </TouchableOpacity>
-            <Text style={s.monthLabel}>{MESES[mesSel.mes]} {mesSel.anio}</Text>
+            <Text style={[s.monthLabel, esMesFuturo && { color: '#F97316' }]}>
+              {MESES[mesSel.mes]} {mesSel.anio}
+            </Text>
             <TouchableOpacity
               onPress={nextMes}
               style={s.monthNavBtn}
-              disabled={isHoy}
+              disabled={esMesLimite}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Ionicons
                 name="chevron-forward"
                 size={18}
-                color={isHoy ? 'transparent' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+                color={esMesLimite ? 'transparent' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
               />
             </TouchableOpacity>
+            {esMesFuturo && (
+              <View style={s.proyectadoBadge}>
+                <Text style={s.proyectadoBadgeText}>Proyectado</Text>
+              </View>
+            )}
           </View>
         </View>
 
         {/* Total del mes — H1 hero */}
-        <View style={s.totalHero}>
+        <TouchableOpacity
+          style={[s.totalHero, esMesFuturo && s.totalHeroFuturo]}
+          onPress={esMesFuturo ? () => setShowProyeccionModal(true) : undefined}
+          activeOpacity={esMesFuturo ? 0.85 : 1}
+        >
           {hayTotal ? (
             <>
               {Object.entries(heroTotales).map(([moneda, total]) => (
                 <View key={moneda} style={s.totalHeroRow}>
-                  <Text style={s.totalHeroAmount}>
+                  <Text style={[s.totalHeroAmount, esMesFuturo && { color: '#F97316' }]}>
                     {formatPrecioEuropeo(total, moneda)}
                   </Text>
                   {Object.keys(heroTotales).length > 1 && (
@@ -177,9 +195,11 @@ export default function DashboardScreen() {
                 </View>
               ))}
               <Text style={s.totalHeroLabel}>
-                {deudaStats.count > 0
-                  ? `gastado + pendiente de cobro · ${MESES[mesSel.mes].toLowerCase()}`
-                  : `gastado en ${MESES[mesSel.mes].toLowerCase()}`}
+                {esMesFuturo
+                  ? 'proyectado · tocá para ver el desglose'
+                  : deudaStats.count > 0
+                    ? `gastado + pendiente de cobro · ${MESES[mesSel.mes].toLowerCase()}`
+                    : `gastado en ${MESES[mesSel.mes].toLowerCase()}`}
               </Text>
             </>
           ) : (
@@ -219,22 +239,41 @@ export default function DashboardScreen() {
               </Text>
             </>
           )}
-        </View>
+        </TouchableOpacity>
 
         {/* KPI cards */}
         <View style={s.kpiRow}>
-          <KPICard
-            label="Gastos del mes"
-            value={stats.gastosMes.length}
-            dark={dark}
-            accent={colors.primary}
-          />
-          <KPICard
-            label="Cuotas activas"
-            value={stats.cuotasActivas}
-            dark={dark}
-            accent={colors.accent}
-          />
+          {esMesFuturo ? (
+            <>
+              <KPICard
+                label="Cuotas pendientes"
+                value={stats.cuotasPendientes}
+                dark={dark}
+                accent="#F97316"
+              />
+              <KPICard
+                label="Fijos activos"
+                value={stats.fijosMes}
+                dark={dark}
+                accent="#F97316"
+              />
+            </>
+          ) : (
+            <>
+              <KPICard
+                label="Gastos del mes"
+                value={stats.gastosMes.length}
+                dark={dark}
+                accent={colors.primary}
+              />
+              <KPICard
+                label="Cuotas activas"
+                value={stats.cuotasActivas}
+                dark={dark}
+                accent={colors.accent}
+              />
+            </>
+          )}
         </View>
 
         {/* Gasto más caro */}
@@ -270,7 +309,7 @@ export default function DashboardScreen() {
         )}
 
         {/* Deudas pendientes */}
-        {deudaStats.count > 0 && (
+        {!esMesFuturo && deudaStats.count > 0 && (
           <>
             <Text style={s.section}>Deudas pendientes de cobro</Text>
             <View style={s.deudaCard}>
@@ -290,7 +329,7 @@ export default function DashboardScreen() {
         )}
 
         {/* Mis deudas pendientes */}
-        {misDeudaStats.count > 0 && (
+        {!esMesFuturo && misDeudaStats.count > 0 && (
           <>
             <Text style={s.section}>Lo que debo</Text>
             <View style={s.miDeudaCard}>
@@ -532,4 +571,23 @@ const styles = (dark) => StyleSheet.create({
   deudaAmounts: { alignItems: 'flex-end', justifyContent: 'center' },
   deudaAmount: { fontSize: 18, fontWeight: '800', color: colors.warning, letterSpacing: -0.5 },
   miDeudaAmount: { fontSize: 18, fontWeight: '800', color: colors.error, letterSpacing: -0.5 },
+  proyectadoBadge: {
+    backgroundColor: '#F9731620',
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: '#F9731650',
+  },
+  proyectadoBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#F97316',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  totalHeroFuturo: {
+    borderColor: '#F9731650',
+    shadowColor: '#F97316',
+  },
 });
