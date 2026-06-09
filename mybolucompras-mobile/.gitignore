@@ -46,3 +46,6 @@ android/keystore.properties
 # generated native folders
 /ios
 /android
+
+# brainstorming sessions
+.superpowers/
