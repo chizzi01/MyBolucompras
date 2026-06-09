@@ -37,7 +37,7 @@ Cuando `mesSel > mesActual`:
 
 ### Modal de desglose (`ProyeccionModal`)
 
-Accesible tocando el hero card en cualquier mes futuro (o en el mes actual si se agrega en el futuro).
+Accesible tocando el hero card en cualquier mes futuro.
 
 Estructura:
 - Un bloque por moneda (solo monedas con al menos un gasto ese mes).
@@ -62,14 +62,15 @@ Estructura:
 ### Archivos a crear
 
 **`src/utils/proyeccion.js`** *(nuevo)*
-- `getGastosMes(gastos, mesSel, mydata)`: filtra los gastos que aplican a un mes dado, reutilizando la lógica de `cuotas.js` (`gastoEntraEsteMes` / similar). Retorna el array de gastos para ese mes.
-- `calcularTotalesPorMoneda(gastos)`: agrupa y suma `precio` por `moneda`. Retorna `{ ARS: 284500, USD: 25, ... }`.
+- Extrae la lógica de filtrado que ya existe en el `stats` useMemo de `DashboardScreen.jsx` (la cual ya funciona para cualquier mes, incluyendo futuros). La extracción permite calcular el mes siguiente de forma independiente para el KPI "próximo mes" sin duplicar la lógica.
+- `getGastosMes(gastos, mesSel, mydata)`: filtra los gastos que aplican a un mes dado. Retorna `{ gastosMes, gastosFijos, gastosVariables }`.
+- `calcularTotalesPorMoneda(gastos, getCostoMes)`: agrupa y suma por `moneda`. Retorna `{ ARS: 284500, USD: 25, ... }`.
 
 **`src/components/ProyeccionModal.jsx`** *(nuevo)*
 - Bottom sheet que recibe `gastos` (ya filtrados para el mes) y `mes` (objeto `{mes, anio}`).
 - Agrupa internamente por `moneda`, luego por tipo (`cuota` vs `fijo`).
 - Renderiza los bloques de moneda con sus secciones.
-- Usa el componente `Modal` existente o `BottomSheet` del proyecto.
+- Usa React Native `Modal` con `animationType="slide"` y fondo semitransparente (igual que `AppModal.jsx`).
 
 ### Sin cambios en
 
@@ -90,7 +91,6 @@ Estructura:
 
 ## Fuera de alcance (esta iteración)
 
-- KPI "próximo mes" tocable en el mes actual — incluido.
-- Notificaciones push de gastos proyectados — fuera de alcance.
-- Exportar proyección — fuera de alcance.
-- Conversión multi-moneda a una sola divisa — fuera de alcance.
+- Notificaciones push de gastos proyectados.
+- Exportar proyección.
+- Conversión multi-moneda a una sola divisa.
