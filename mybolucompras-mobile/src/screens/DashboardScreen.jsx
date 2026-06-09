@@ -18,6 +18,7 @@ const MESES = [
 
 import { notificationService } from '../services/notificationService';
 import NotificationsModal from './NotificationsModal';
+import ProyeccionModal from '../components/ProyeccionModal';
 
 export default function DashboardScreen() {
   const { gastos } = useGastos();
@@ -376,6 +377,13 @@ export default function DashboardScreen() {
         onRefresh={() => {
           notificationService.getUnreadCount().then(setUnreadCount);
         }}
+      />
+
+      <ProyeccionModal
+        visible={showProyeccionModal}
+        onClose={() => setShowProyeccionModal(false)}
+        gastos={stats.gastosMes}
+        mes={mesSel}
       />
     </SafeAreaView>
   );
