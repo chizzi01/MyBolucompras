@@ -236,7 +236,7 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete, onMarkPaid
                 )}
                 <View style={[s.cuotasBadge, { backgroundColor: cuotasColor.bg }]}>
                   <Text style={[s.cuotasText, { color: cuotasColor.text }]}>
-                    {gasto.isFijo ? '∞' : `${cuotasRest}/${gasto.cuotas}`}
+                    {gasto.isFijo ? '∞' : typeof cuotasRest === 'number' ? `${Math.min(Number(gasto.cuotas), Number(gasto.cuotas) - cuotasRest + 1)}/${gasto.cuotas}` : cuotasRest}
                   </Text>
                 </View>
               </View>

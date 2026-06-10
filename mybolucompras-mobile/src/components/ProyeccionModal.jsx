@@ -3,6 +3,7 @@ import { Modal, View, Text, ScrollView, TouchableOpacity, StyleSheet, TouchableW
 import { useTheme } from '../context/ThemeContext';
 import { formatPrecioEuropeo } from '../utils/formatters';
 import { getCostoMes } from '../utils/proyeccion';
+import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
 const MESES = [
@@ -10,7 +11,7 @@ const MESES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-export default function ProyeccionModal({ visible, onClose, gastos, mes }) {
+export default function ProyeccionModal({ visible, onClose, gastos, mes, mydata }) {
   const { dark } = useTheme();
   const s = styles(dark);
 
@@ -56,7 +57,7 @@ export default function ProyeccionModal({ visible, onClose, gastos, mes }) {
                       <>
                         <Text style={s.groupLabel}>Cuotas</Text>
                         {cuotas.map(g => (
-                          <ExpenseRow key={g.id} gasto={g} mes={mes} dark={dark} />
+                          <ExpenseRow key={g.id} gasto={g} mes={mes} mydata={mydata} dark={dark} />
                         ))}
                       </>
                     )}
@@ -65,7 +66,7 @@ export default function ProyeccionModal({ visible, onClose, gastos, mes }) {
                       <>
                         <Text style={s.groupLabel}>Fijos</Text>
                         {fijos.map(g => (
-                          <ExpenseRow key={g.id} gasto={g} mes={mes} dark={dark} />
+                          <ExpenseRow key={g.id} gasto={g} mes={mes} mydata={mydata} dark={dark} />
                         ))}
                       </>
                     )}
@@ -74,7 +75,7 @@ export default function ProyeccionModal({ visible, onClose, gastos, mes }) {
                       <>
                         <Text style={s.groupLabel}>Otros</Text>
                         {otros.map(g => (
-                          <ExpenseRow key={g.id} gasto={g} mes={mes} dark={dark} />
+                          <ExpenseRow key={g.id} gasto={g} mes={mes} mydata={mydata} dark={dark} />
                         ))}
                       </>
                     )}
@@ -104,19 +105,26 @@ export default function ProyeccionModal({ visible, onClose, gastos, mes }) {
   );
 }
 
-function ExpenseRow({ gasto, mes, dark }) {
+function ExpenseRow({ gasto, mes, mydata, dark }) {
   const cost = getCostoMes(gasto);
 
   let badge = '';
   let metaText = gasto.medio || '';
 
   if (!gasto.isFijo && gasto.tipo === 'credito' && Number(gasto.cuotas) > 1) {
-    const [, m, y] = (gasto.fecha || '').split('/');
-    const compraIndex = Number(y) * 12 + (Number(m) - 1);
+    const hoy = new Date();
+    const hoyIndex = hoy.getFullYear() * 12 + hoy.getMonth();
     const targetIndex = mes.anio * 12 + mes.mes;
-    const cuotaNum = targetIndex - compraIndex + 1;
-    badge = `${cuotaNum}/${gasto.cuotas}`;
-    metaText = `${gasto.medio || ''} · cuota ${cuotaNum} de ${gasto.cuotas}`.replace(/^·\s*/, '');
+    const d = targetIndex - hoyIndex;
+    const cuotasTotal = Number(gasto.cuotas);
+    const restToday = getCuotasRestantes(gasto, mydata);
+    if (typeof restToday === 'number' && restToday > 0) {
+      const currentCuota = Math.min(cuotasTotal, cuotasTotal - restToday + 1);
+      const inCurrentMonth = gastoEntraEsteMes(gasto, mydata);
+      const cuotaNum = inCurrentMonth ? currentCuota + d : currentCuota + d - 1;
+      badge = `${cuotaNum}/${cuotasTotal}`;
+      metaText = `${gasto.medio || ''} · cuota ${cuotaNum} de ${cuotasTotal}`.replace(/^·\s*/, '');
+    }
   } else if (gasto.isFijo) {
     badge = 'fijo';
     metaText = `${gasto.medio || ''} · mensual`.replace(/^·\s*/, '');

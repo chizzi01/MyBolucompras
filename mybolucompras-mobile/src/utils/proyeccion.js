@@ -1,5 +1,5 @@
 import { parsePrecio, formatPrecioEuropeo, getCurrencySymbol } from './formatters';
-import { gastoEntraEsteMes, getSingleCuotaBillingIndex } from './cuotas';
+import { gastoEntraEsteMes, getSingleCuotaBillingIndex, getCuotasRestantes } from './cuotas';
 
 // Costo que un gasto aporta al mes seleccionado.
 // Fijo: precio × cantidad. Crédito multi-cuota: precio / cuotas. Resto: precio.
@@ -25,6 +25,15 @@ export function getGastosMes(gastos, mesSel, mydata) {
 
     if (g.tipo === 'credito') {
       if (cuotas > 1) {
+        if (targetIndex > hoyIndex) {
+          // Meses futuros: proyectar desde restantes de hoy
+          const restToday = getCuotasRestantes(g, mydata);
+          if (typeof restToday !== 'number' || restToday <= 0) return false;
+          const d = targetIndex - hoyIndex;
+          const inCurrentMonth = gastoEntraEsteMes(g, mydata);
+          return d <= (inCurrentMonth ? restToday - 1 : restToday);
+        }
+        // Mes actual y pasados: rango original por fecha de compra
         if (targetIndex < compraIndex || targetIndex >= compraIndex + cuotas) return false;
       } else {
         const billingIndex = getSingleCuotaBillingIndex(g, mydata);

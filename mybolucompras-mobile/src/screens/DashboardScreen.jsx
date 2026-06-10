@@ -384,6 +384,7 @@ export default function DashboardScreen() {
         onClose={() => setShowProyeccionModal(false)}
         gastos={stats.gastosMes}
         mes={mesSel}
+        mydata={mydata}
       />
     </SafeAreaView>
   );

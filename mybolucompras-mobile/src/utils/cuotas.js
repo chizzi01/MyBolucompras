@@ -85,6 +85,38 @@ export function getCuotasRestantes(gasto, mydata) {
   return calcularCuotasRestantes(gasto.fecha, gasto.cuotas);
 }
 
+// Returns the month index (year*12+month) when the first installment fires for a
+// credit expense. Handles current and previous billing windows; falls back to
+// purchase month when billing dates aren't set or purchase is older than 2 cycles.
+export function getCreditoBillingStartIndex(gasto, mydata) {
+  const [, m, y] = (gasto.fecha || '').split('/');
+  const compraIndex = Number(y) * 12 + (Number(m) - 1);
+  const fechaCompra = parseFecha(gasto.fecha);
+  if (!fechaCompra || isNaN(fechaCompra)) return compraIndex;
+
+  const cierreAnt = mydata?.cierreAnterior ? new Date(mydata.cierreAnterior) : null;
+  const cierre = mydata?.cierre ? new Date(mydata.cierre) : null;
+  const vencAnt = mydata?.vencimientoAnterior ? new Date(mydata.vencimientoAnterior) : null;
+  const venc = mydata?.vencimiento ? new Date(mydata.vencimiento) : null;
+
+  const cierreAntOk = cierreAnt && !isNaN(cierreAnt);
+  const cierreOk = cierre && !isNaN(cierre);
+  const vencAntOk = vencAnt && !isNaN(vencAnt);
+  const vencOk = venc && !isNaN(venc);
+
+  // Current billing window: first charge fires at vencimiento
+  if (cierreAntOk && cierreOk && vencOk && fechaCompra > cierreAnt && fechaCompra <= cierre) {
+    return venc.getFullYear() * 12 + venc.getMonth();
+  }
+
+  // Previous billing window: first charge fired at vencimientoAnterior
+  if (cierreAntOk && vencAntOk && fechaCompra <= cierreAnt) {
+    return vencAnt.getFullYear() * 12 + vencAnt.getMonth();
+  }
+
+  return compraIndex;
+}
+
 // Returns the month index (year*12+month) where a single-cuota credit expense
 // belongs in the dashboard — the billing month, not the purchase month.
 // Falls back to purchase month for old/paid expenses or when dates aren't set.
@@ -99,30 +131,7 @@ export function getSingleCuotaBillingIndex(gasto, mydata) {
   );
   if (!remaining || remaining <= 0) return compraIndex;
 
-  const fechaCompra = parseFecha(gasto.fecha);
-  if (!fechaCompra || isNaN(fechaCompra)) return compraIndex;
-
-  const cierreAnt = mydata?.cierreAnterior ? new Date(mydata.cierreAnterior) : null;
-  const cierre = mydata?.cierre ? new Date(mydata.cierre) : null;
-  const vencAnt = mydata?.vencimientoAnterior ? new Date(mydata.vencimientoAnterior) : null;
-  const venc = mydata?.vencimiento ? new Date(mydata.vencimiento) : null;
-
-  const cierreAntOk = cierreAnt && !isNaN(cierreAnt);
-  const cierreOk = cierre && !isNaN(cierre);
-  const vencAntOk = vencAnt && !isNaN(vencAnt);
-  const vencOk = venc && !isNaN(venc);
-
-  // Current billing window: first charge is at vencimiento (next month)
-  if (cierreAntOk && cierreOk && vencOk && fechaCompra > cierreAnt && fechaCompra <= cierre) {
-    return venc.getFullYear() * 12 + venc.getMonth();
-  }
-
-  // Previous billing window: first charge is at vencimientoAnterior (this month)
-  if (cierreAntOk && vencAntOk && fechaCompra <= cierreAnt) {
-    return vencAnt.getFullYear() * 12 + vencAnt.getMonth();
-  }
-
-  return compraIndex;
+  return getCreditoBillingStartIndex(gasto, mydata);
 }
 
 // Returns false when a credit expense was purchased after the last closing date
