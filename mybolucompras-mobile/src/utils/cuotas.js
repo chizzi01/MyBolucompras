@@ -160,10 +160,10 @@ export function gastoEntraEsteMes(gasto, mydata) {
 // mes siguiente) — misma regla que gastoEntraEsteMes usa para gastos.
 export function montoMensualDeuda(deuda, mydata) {
   if (deuda.isFijo) return deuda.monto;
-  const cuotas = parseInt(deuda.cuotas) || 1;
-  if (cuotas <= 1) return deuda.monto;
   const gastoLike = { ...deuda, fecha: deuda.fechaDeuda };
   if (!gastoEntraEsteMes(gastoLike, mydata)) return 0;
+  const cuotas = parseInt(deuda.cuotas) || 1;
+  if (cuotas <= 1) return deuda.monto;
   const restantes = getCuotasRestantes(gastoLike, mydata);
   const restantesNum = Number(restantes);
   if (!isNaN(restantesNum) && restantesNum <= 0) return 0;
