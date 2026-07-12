@@ -13,21 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import DeudaCard from '../components/DeudaCard';
 import { colors, spacing, radius, typography } from '../constants/theme';
-import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
-
-// Monto efectivo mensual de una deuda: cuota actual si es en cuotas, monto total si es pago único o fija.
-// Si la compra en cuotas se hizo después del cierre, la primera cuota todavía no se factura
-// este mes (entrará el mes siguiente), así que no debe contarse en el total de este mes.
-function montoMensualDeuda(d, mydata) {
-  if (d.isFijo) return d.monto;
-  const cuotas = parseInt(d.cuotas) || 1;
-  if (cuotas <= 1) return d.monto;
-  if (!gastoEntraEsteMes({ ...d, fecha: d.fechaDeuda }, mydata)) return 0;
-  const restantes = getCuotasRestantes({ ...d, fecha: d.fechaDeuda }, mydata);
-  const restantesNum = Number(restantes);
-  if (!isNaN(restantesNum) && restantesNum <= 0) return 0;
-  return d.monto / cuotas;
-}
+import { montoMensualDeuda } from '../utils/cuotas';
 
 const fmtMonto = (n) =>
   new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);

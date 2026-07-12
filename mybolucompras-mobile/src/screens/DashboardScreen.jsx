@@ -6,7 +6,7 @@ import { useGastos } from '../hooks/queries/useGastos';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useDeudas } from '../hooks/queries/useDeudas';
 import { useTheme } from '../context/ThemeContext';
-import { getCuotasRestantes } from '../utils/cuotas';
+import { getCuotasRestantes, montoMensualDeuda } from '../utils/cuotas';
 import { getGastosMes, getCostoMes, calcularTotalesPorMoneda, formatAmountShort } from '../utils/proyeccion';
 import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '../utils/formatters';
 import { colors, spacing, radius, typography } from '../constants/theme';
@@ -97,34 +97,32 @@ export default function DashboardScreen() {
     };
   }, [gastos, mydata, mesSel]);
 
-  const deudaStats = useMemo(() => {
-    const pendientes = deudas.filter(d => !d.pagado && d.esAcreedor !== false);
+  // Balance neto por moneda: lo que me deben menos lo que debo, en vez de mostrar
+  // ambos totales por separado (misma simplificación que la pantalla de Deudores).
+  const deudaNeta = useMemo(() => {
+    const pendientes = deudas.filter(d => !d.pagado);
     const porMoneda = {};
     pendientes.forEach(d => {
       const moneda = d.moneda || 'ARS';
-      porMoneda[moneda] = (porMoneda[moneda] || 0) + d.monto;
+      if (!porMoneda[moneda]) porMoneda[moneda] = { neto: 0, count: 0 };
+      const monto = montoMensualDeuda(d, mydata);
+      porMoneda[moneda].neto += d.esAcreedor ? monto : -monto;
+      porMoneda[moneda].count += 1;
     });
-    return { porMoneda, count: pendientes.length };
-  }, [deudas]);
+    return porMoneda;
+  }, [deudas, mydata]);
 
-  const misDeudaStats = useMemo(() => {
-    const pendientes = deudas.filter(d => !d.pagado && d.esAcreedor === false);
-    const porMoneda = {};
-    pendientes.forEach(d => {
-      const moneda = d.moneda || 'ARS';
-      porMoneda[moneda] = (porMoneda[moneda] || 0) + d.monto;
-    });
-    return { porMoneda, count: pendientes.length };
-  }, [deudas]);
+  const deudaNetaEntries = Object.entries(deudaNeta).filter(([, v]) => v.count > 0);
+  const hayDeudaNeta = deudaNetaEntries.length > 0;
 
   const heroTotales = useMemo(() => {
     if (esMesFuturo) return stats.totalesPorMoneda;
     const combined = { ...stats.totalesPorMoneda };
-    Object.entries(deudaStats.porMoneda).forEach(([moneda, monto]) => {
-      combined[moneda] = (combined[moneda] || 0) + monto;
+    Object.entries(deudaNeta).forEach(([moneda, { neto }]) => {
+      if (neto > 0) combined[moneda] = (combined[moneda] || 0) + neto;
     });
     return combined;
-  }, [esMesFuturo, stats.totalesPorMoneda, deudaStats.porMoneda]);
+  }, [esMesFuturo, stats.totalesPorMoneda, deudaNeta]);
 
   const hayTotal = Object.keys(heroTotales).length > 0;
 
@@ -209,7 +207,7 @@ export default function DashboardScreen() {
               <Text style={s.totalHeroLabel}>
                 {esMesFuturo
                   ? 'proyectado · tocá para ver el desglose'
-                  : deudaStats.count > 0
+                  : deudaNetaEntries.some(([, v]) => v.neto > 0)
                     ? `gastado + pendiente de cobro · ${MESES[mesSel.mes].toLowerCase()}`
                     : `gastado en ${MESES[mesSel.mes].toLowerCase()}`}
               </Text>
@@ -221,7 +219,7 @@ export default function DashboardScreen() {
             </>
           )}
 
-          {!esMesFuturo && deudaStats.count > 0 && (
+          {!esMesFuturo && hayDeudaNeta && (
             <>
               <View style={s.totalHeroDivider} />
               <View style={s.totalHeroBreakdownRow}>
@@ -229,26 +227,21 @@ export default function DashboardScreen() {
                   <Text style={s.totalHeroBreakdownLabel}>gastado  </Text>
                   {Object.entries(stats.totalesPorMoneda).map(([moneda, total]) => formatPrecioEuropeo(total, moneda)).join('  ')}
                 </Text>
-                <Text style={s.totalHeroBreakdownSep}>·</Text>
-                <Text style={[s.totalHeroBreakdownItem, { color: colors.warning }]}>
-                  <Text style={[s.totalHeroBreakdownLabel, { color: colors.warning }]}>por cobrar  </Text>
-                  {Object.entries(deudaStats.porMoneda).map(([moneda, total]) => formatPrecioEuropeo(total, moneda)).join('  ')}
-                </Text>
               </View>
-            </>
-          )}
-
-          {!esMesFuturo && misDeudaStats.count > 0 && (
-            <>
-              <View style={s.totalHeroDivider} />
-              {Object.entries(misDeudaStats.porMoneda).map(([moneda, total]) => (
-                <Text key={moneda} style={s.totalHeroMiDeuda}>
-                  {formatPrecioEuropeo(total, moneda)}
-                </Text>
-              ))}
-              <Text style={s.totalHeroMiDeudaLabel}>
-                que debo · {misDeudaStats.count} deuda{misDeudaStats.count !== 1 ? 's' : ''}
-              </Text>
+              {deudaNetaEntries.map(([moneda, { neto, count }]) => {
+                const color = neto > 0 ? colors.warning : neto < 0 ? colors.error : colors.accent;
+                const label = neto > 0 ? 'te deben' : neto < 0 ? 'debés' : 'saldado';
+                return (
+                  <View key={moneda}>
+                    <Text style={[s.totalHeroMiDeuda, { color }]}>
+                      {formatPrecioEuropeo(Math.abs(neto), moneda)}
+                    </Text>
+                    <Text style={[s.totalHeroMiDeudaLabel, { color }]}>
+                      {label} · {count} deuda{count !== 1 ? 's' : ''}
+                    </Text>
+                  </View>
+                );
+              })}
             </>
           )}
         </TouchableOpacity>
@@ -328,43 +321,38 @@ export default function DashboardScreen() {
           </>
         )}
 
-        {/* Deudas pendientes */}
-        {!esMesFuturo && deudaStats.count > 0 && (
+        {/* Balance neto con deudas: un solo total simplificado por moneda en vez de
+            mostrar "por cobrar" y "que debo" como dos cifras separadas. */}
+        {!esMesFuturo && hayDeudaNeta && (
           <>
-            <Text style={s.section}>Deudas pendientes de cobro</Text>
-            <View style={s.deudaCard}>
-              <View style={s.deudaLeft}>
-                <Ionicons name="people-outline" size={22} color={colors.warning} />
-                <Text style={s.deudaCount}>{deudaStats.count} deuda{deudaStats.count !== 1 ? 's' : ''} sin cobrar</Text>
-              </View>
-              <View style={s.deudaAmounts}>
-                {Object.entries(deudaStats.porMoneda).map(([moneda, total]) => (
-                  <Text key={moneda} style={s.deudaAmount}>
-                    {moneda === 'ARS' ? '$' : moneda} {new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)}
-                  </Text>
-                ))}
-              </View>
-            </View>
-          </>
-        )}
-
-        {/* Mis deudas pendientes */}
-        {!esMesFuturo && misDeudaStats.count > 0 && (
-          <>
-            <Text style={s.section}>Lo que debo</Text>
-            <View style={s.miDeudaCard}>
-              <View style={s.deudaLeft}>
-                <Ionicons name="wallet-outline" size={22} color={colors.error} />
-                <Text style={s.miDeudaCount}>{misDeudaStats.count} deuda{misDeudaStats.count !== 1 ? 's' : ''} pendientes</Text>
-              </View>
-              <View style={s.deudaAmounts}>
-                {Object.entries(misDeudaStats.porMoneda).map(([moneda, total]) => (
-                  <Text key={moneda} style={s.miDeudaAmount}>
-                    {moneda === 'ARS' ? '$' : moneda} {new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)}
-                  </Text>
-                ))}
-              </View>
-            </View>
+            <Text style={s.section}>Deudas con amigos</Text>
+            {deudaNetaEntries.map(([moneda, { neto, count }]) => {
+              const positivo = neto > 0;
+              const saldado = neto === 0;
+              const accent = saldado ? colors.accent : positivo ? colors.warning : colors.error;
+              const cardStyle = saldado ? s.deudaCardSaldada : positivo ? s.deudaCard : s.miDeudaCard;
+              return (
+                <View key={moneda} style={cardStyle}>
+                  <View style={s.deudaLeft}>
+                    <Ionicons
+                      name={saldado ? 'checkmark-circle-outline' : positivo ? 'people-outline' : 'wallet-outline'}
+                      size={22}
+                      color={accent}
+                    />
+                    <Text style={[s.deudaCount, { color: accent }]}>
+                      {count} deuda{count !== 1 ? 's' : ''} · {saldado ? 'saldadas' : positivo ? 'te deben' : 'debés'}
+                    </Text>
+                  </View>
+                  {!saldado && (
+                    <View style={s.deudaAmounts}>
+                      <Text style={[s.deudaAmount, { color: accent }]}>
+                        {moneda === 'ARS' ? '$' : moneda} {new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(neto))}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </>
         )}
 
@@ -617,6 +605,7 @@ const styles = (dark) => StyleSheet.create({
     borderColor: colors.warning + '60',
     padding: spacing.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: spacing.sm,
   },
   miDeudaCard: {
     backgroundColor: dark ? '#1c0a0a' : '#FEF2F2',
@@ -624,6 +613,15 @@ const styles = (dark) => StyleSheet.create({
     borderColor: colors.error + '60',
     padding: spacing.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  deudaCardSaldada: {
+    backgroundColor: dark ? '#0d2e1e' : '#ECFDF5',
+    borderRadius: radius.md, borderWidth: 1,
+    borderColor: colors.accent + '60',
+    padding: spacing.md,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: spacing.sm,
   },
   deudaLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
   deudaCount: { ...typography.bodyBold, color: colors.warning },

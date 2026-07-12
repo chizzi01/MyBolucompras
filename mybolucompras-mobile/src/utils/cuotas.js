@@ -153,3 +153,19 @@ export function gastoEntraEsteMes(gasto, mydata) {
   if (new Date() > fechaCierreDate) return true;
   return !(fechaCompra > fechaCierreAnteriorDate && fechaCompra <= fechaCierreDate);
 }
+
+// Monto efectivo mensual de una deuda: cuota actual si está en cuotas de crédito,
+// monto total si es pago único o fija. Devuelve 0 cuando la compra en cuotas se hizo
+// después del cierre y la primera cuota todavía no se factura este mes (entra el
+// mes siguiente) — misma regla que gastoEntraEsteMes usa para gastos.
+export function montoMensualDeuda(deuda, mydata) {
+  if (deuda.isFijo) return deuda.monto;
+  const cuotas = parseInt(deuda.cuotas) || 1;
+  if (cuotas <= 1) return deuda.monto;
+  const gastoLike = { ...deuda, fecha: deuda.fechaDeuda };
+  if (!gastoEntraEsteMes(gastoLike, mydata)) return 0;
+  const restantes = getCuotasRestantes(gastoLike, mydata);
+  const restantesNum = Number(restantes);
+  if (!isNaN(restantesNum) && restantesNum <= 0) return 0;
+  return deuda.monto / cuotas;
+}
