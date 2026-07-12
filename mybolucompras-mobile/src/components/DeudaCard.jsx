@@ -5,7 +5,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { useTheme } from '../context/ThemeContext';
-import { getCuotasRestantes } from '../utils/cuotas';
+import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 
 const MEDIO_ICON_MAP = {
   'Visa':             { lib: 'fa5', name: 'cc-visa' },
@@ -168,6 +168,9 @@ const DeudaCard = memo(function DeudaCard({ deuda, mydata, compensacion, onMarkP
   const cuotasMonto = cuotasInfo && cuotasInfo !== '∞'
     ? deuda.monto / (parseInt(deuda.cuotas) || 1)
     : null;
+  // Compra en cuotas hecha después del cierre: la primera cuota todavía no se
+  // factura este mes, va a entrar recién el mes que viene.
+  const entraEsteMes = deuda.pagado || gastoEntraEsteMes({ ...deuda, fecha: deuda.fechaDeuda }, mydata);
 
   const montoFormatted = new Intl.NumberFormat('es-AR', {
     minimumFractionDigits: 2, maximumFractionDigits: 2,
@@ -210,7 +213,7 @@ const DeudaCard = memo(function DeudaCard({ deuda, mydata, compensacion, onMarkP
           activeOpacity={0.75}
         >
           <View style={s.cardContent}>
-            <View style={s.left}>
+            <View style={[s.left, !entraEsteMes && s.contentDimmed]}>
               <Text style={s.nombre} numberOfLines={1}>
                 {deuda.descripcion || `Deuda con ${deuda.nombre}`}
               </Text>
@@ -252,7 +255,7 @@ const DeudaCard = memo(function DeudaCard({ deuda, mydata, compensacion, onMarkP
               )}
             </View>
 
-            <View style={s.right}>
+            <View style={[s.right, !entraEsteMes && s.contentDimmed]}>
               {!!compensacion && !deuda.pagado && compensacion.esUnoAUno ? (
                 // 1 deuda vs 1 deuda: muestra el monto neto en lugar del original
                 <>
@@ -266,9 +269,14 @@ const DeudaCard = memo(function DeudaCard({ deuda, mydata, compensacion, onMarkP
               )}
               {cuotasInfo && (
                 <View style={s.cuotasRow}>
-                  <Text style={s.cuotasText}>
-                    {cuotasInfo === '∞' ? '∞' : `cuota ${cuotasInfo}`}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    {!entraEsteMes && (
+                      <Ionicons name="time-outline" size={11} color={dark ? '#64748B' : '#94A3B8'} />
+                    )}
+                    <Text style={s.cuotasText}>
+                      {cuotasInfo === '∞' ? '∞' : `cuota ${cuotasInfo}`}
+                    </Text>
+                  </View>
                   {cuotasMonto && (
                     <Text style={s.cuotasMonto}>
                       {simbolo} {new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cuotasMonto)}/mes
@@ -351,6 +359,7 @@ const styles = (dark, isPaid) => StyleSheet.create({
   pagadaBadgeText: { ...typography.caption, fontSize: 10, color: colors.accent, fontWeight: '600' },
   recordatorioText: { ...typography.caption, fontSize: 10, color: colors.warning, marginTop: 3 },
   right: { alignItems: 'flex-end' },
+  contentDimmed: { opacity: 0.4 },
   monto: { ...typography.bodyBold, color: dark ? colors.text.dark : colors.text.light, marginBottom: 2 },
   montoTachado: {
     fontSize: 12, fontWeight: '500',
