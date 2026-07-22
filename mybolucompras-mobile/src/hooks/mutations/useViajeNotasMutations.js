@@ -5,7 +5,7 @@ export function useViajeNotasMutations(viajeId) {
   const queryClient = useQueryClient();
 
   const agregarItem = useMutation({
-    mutationFn: (texto) => viajeNotasService.agregarItem(viajeId, texto),
+    mutationFn: ({ texto, tipo }) => viajeNotasService.agregarItem(viajeId, texto, tipo),
     onSuccess: (nuevo) => {
       queryClient.setQueryData(['viaje-checklist', viajeId], (prev = []) => [...prev, nuevo]);
     },
