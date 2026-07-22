@@ -12,6 +12,8 @@ import { useViajeMutations } from '../../hooks/mutations/useViajeMutations';
 import { userService } from '../../services/userService';
 import { contactService } from '../../services/contactService';
 import { colors, spacing, radius, typography } from '../../constants/theme';
+import DateTimeField from '../common/DateTimeField';
+import { toISODate } from '../../utils/formatters';
 
 const EMOJIS = ['✈️', '🏔️', '🌊', '🌴', '🎿', '🏖️', '🎒', '🗺️'];
 
@@ -30,6 +32,8 @@ export default function CrearViajeModal({ visible, onClose }) {
   const [error, setError] = useState('');
   const [imagenUrl, setImagenUrl] = useState(null);
   const [showGaleria, setShowGaleria] = useState(false);
+  const [fechaDesde, setFechaDesde] = useState(null);
+  const [fechaHasta, setFechaHasta] = useState(null);
 
   useEffect(() => {
     if (visible) contactService.getRecent().then(setRecentContacts);
@@ -56,6 +60,10 @@ export default function CrearViajeModal({ visible, onClose }) {
 
   const handleCrear = async () => {
     if (!titulo.trim()) { setError('El título es requerido.'); return; }
+    if (fechaDesde && fechaHasta && fechaHasta < fechaDesde) {
+      setError('La fecha "hasta" no puede ser anterior a la fecha "desde".');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -64,11 +72,15 @@ export default function CrearViajeModal({ visible, onClose }) {
         emoji,
         participanteIds: participantes.map(p => p.id),
         imagenUrl,
+        fechaDesde: fechaDesde ? toISODate(fechaDesde) : null,
+        fechaHasta: fechaHasta ? toISODate(fechaHasta) : null,
       });
       setTitulo('');
       setEmoji('✈️');
       setParticipantes([]);
       setImagenUrl(null);
+      setFechaDesde(null);
+      setFechaHasta(null);
       onClose();
     } catch (err) {
       setError('Error al crear el viaje: ' + err.message);
@@ -135,6 +147,26 @@ export default function CrearViajeModal({ visible, onClose }) {
               value={titulo}
               onChangeText={setTitulo}
             />
+
+            <Text style={[styles.label, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
+              FECHAS DEL VIAJE <Text style={{ textTransform: 'none', fontWeight: '400' }}>(opcional)</Text>
+            </Text>
+            <View style={styles.fechasRow}>
+              <DateTimeField
+                value={fechaDesde}
+                onChange={setFechaDesde}
+                dark={dark}
+                placeholder="Desde"
+                style={{ flex: 1 }}
+              />
+              <DateTimeField
+                value={fechaHasta}
+                onChange={setFechaHasta}
+                dark={dark}
+                placeholder="Hasta"
+                style={{ flex: 1 }}
+              />
+            </View>
 
             <Text style={[styles.label, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>PARTICIPANTES</Text>
             <View style={styles.searchRow}>
@@ -216,6 +248,7 @@ const styles = StyleSheet.create({
   emojiBtnActive: { borderColor: colors.primary, backgroundColor: colors.primary + '20' },
   input: { borderWidth: 1, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 12, ...typography.body, marginBottom: spacing.md },
   label: { ...typography.captionMed, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
+  fechasRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
   searchRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
   searchBtn: { backgroundColor: colors.primary, borderRadius: radius.md, width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
   recents: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.sm },
