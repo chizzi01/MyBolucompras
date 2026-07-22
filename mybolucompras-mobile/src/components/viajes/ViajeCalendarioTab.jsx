@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../constants/theme';
+import { useAuth } from '../../context/AuthContext';
 import { toISODate, parseISODate } from '../../utils/formatters';
 import { useViajeActividades } from '../../hooks/queries/useViajeActividades';
 import { useViajeActividadMutations } from '../../hooks/mutations/useViajeActividadMutations';
@@ -42,11 +43,13 @@ function sortActividades(list) {
 }
 
 export default function ViajeCalendarioTab({ viaje, dark }) {
+  const { user } = useAuth();
   const bg = dark ? colors.background.dark : colors.background.light;
   const surfaceBg = dark ? '#1E293B' : '#fff';
   const textColor = dark ? colors.text.dark : colors.text.light;
   const subtextColor = dark ? colors.textSecondary.dark : colors.textSecondary.light;
 
+  const esCreador = viaje.createdBy === user?.id;
   const activo = viaje.estado === 'activo';
   const dias = useMemo(() => computeDias(viaje.fechaDesde, viaje.fechaHasta), [viaje.fechaDesde, viaje.fechaHasta]);
   const todayIso = toISODate(new Date());
@@ -86,15 +89,23 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
         <Text style={[styles.emptySubtitle, { color: subtextColor }]}>
           Cargá las fechas del viaje para armar el itinerario día por día.
         </Text>
-        <TouchableOpacity style={styles.emptyBtn} onPress={() => setShowEditarViaje(true)}>
-          <Text style={styles.emptyBtnText}>Cargar fechas</Text>
-        </TouchableOpacity>
-        <EditarViajeModal
-          visible={showEditarViaje}
-          onClose={() => setShowEditarViaje(false)}
-          viaje={viaje}
-          dark={dark}
-        />
+        {esCreador ? (
+          <>
+            <TouchableOpacity style={styles.emptyBtn} onPress={() => setShowEditarViaje(true)}>
+              <Text style={styles.emptyBtnText}>Cargar fechas</Text>
+            </TouchableOpacity>
+            <EditarViajeModal
+              visible={showEditarViaje}
+              onClose={() => setShowEditarViaje(false)}
+              viaje={viaje}
+              dark={dark}
+            />
+          </>
+        ) : (
+          <Text style={[styles.emptySubtitle, { color: subtextColor }]}>
+            El creador del viaje aún no cargó las fechas.
+          </Text>
+        )}
       </View>
     );
   }
