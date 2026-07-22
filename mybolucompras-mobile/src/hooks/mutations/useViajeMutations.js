@@ -8,8 +8,8 @@ export function useViajeMutations() {
   const listKey = ['viajes', user?.id];
 
   const crear = useMutation({
-    mutationFn: ({ titulo, emoji, participanteIds, imagenUrl = null }) =>
-      viajesService.crear(titulo, emoji, participanteIds, imagenUrl),
+    mutationFn: ({ titulo, emoji, participanteIds, imagenUrl = null, fechaDesde = null, fechaHasta = null }) =>
+      viajesService.crear(titulo, emoji, participanteIds, imagenUrl, fechaDesde, fechaHasta),
     onSettled: () => queryClient.invalidateQueries({ queryKey: listKey }),
   });
 

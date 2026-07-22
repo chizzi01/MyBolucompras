@@ -34,14 +34,14 @@ export const viajesService = {
     return mapViaje(data);
   },
 
-  async crear(titulo, emoji, participanteIds, imagenUrl = null) {
+  async crear(titulo, emoji, participanteIds, imagenUrl = null, fechaDesde = null, fechaHasta = null) {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
 
     const { data: viaje, error } = await supabase
       .from('viajes')
-      .insert([{ titulo, emoji, imagen_url: imagenUrl, created_by: user.id }])
+      .insert([{ titulo, emoji, imagen_url: imagenUrl, created_by: user.id, fecha_desde: fechaDesde, fecha_hasta: fechaHasta }])
       .select()
       .single();
     if (error) throw error;
@@ -180,6 +180,8 @@ export const viajesService = {
     if (campos.titulo !== undefined) update.titulo = campos.titulo;
     if (campos.emoji !== undefined) update.emoji = campos.emoji;
     if ('imagenUrl' in campos) update.imagen_url = campos.imagenUrl;
+    if ('fechaDesde' in campos) update.fecha_desde = campos.fechaDesde;
+    if ('fechaHasta' in campos) update.fecha_hasta = campos.fechaHasta;
     const { error } = await supabase
       .from('viajes')
       .update(update)
@@ -195,6 +197,8 @@ function mapViaje(row) {
     emoji: row.emoji,
     estado: row.estado,
     imagenUrl: row.imagen_url ?? null,
+    fechaDesde: row.fecha_desde ?? null,
+    fechaHasta: row.fecha_hasta ?? null,
     createdBy: row.created_by,
     fechaCierre: row.fecha_cierre,
     createdAt: row.created_at,
