@@ -27,6 +27,7 @@ export default function ViajeNotasTab({ viaje, dark }) {
   const [nuevaNota, setNuevaNota] = useState('');
   const [showItemInput, setShowItemInput] = useState(false);
   const [showNotaInput, setShowNotaInput] = useState(false);
+  const [checklistTab, setChecklistTab] = useState('general');
 
   const activo = viaje.estado === 'activo';
   const { checklist, notas, loading } = useViajeNotas(viaje.id);
@@ -46,7 +47,7 @@ export default function ViajeNotasTab({ viaje, dark }) {
 
   const handleAgregarItem = () => {
     if (!nuevoItem.trim()) return;
-    agregarItem.mutate(nuevoItem.trim(), {
+    agregarItem.mutate({ texto: nuevoItem.trim(), tipo: checklistTab }, {
       onSuccess: () => { setNuevoItem(''); setShowItemInput(false); },
       onError: (err) => Alert.alert('Error', err.message),
     });
@@ -90,13 +91,34 @@ export default function ViajeNotasTab({ viaje, dark }) {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: bg }} contentContainerStyle={{ padding: spacing.md, paddingBottom: 40 }}>
-      {sectionHeader('QUÉ LLEVAR', () => setShowItemInput(v => !v))}
+      {sectionHeader(checklistTab === 'general' ? 'QUÉ LLEVAR' : 'MIS COSAS', () => setShowItemInput(v => !v))}
+
+      <View style={styles.checklistTabsRow}>
+        <TouchableOpacity
+          style={[styles.checklistTabBtn, checklistTab === 'general' && styles.checklistTabBtnActive]}
+          onPress={() => { setChecklistTab('general'); setShowItemInput(false); }}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.checklistTabText, { color: subtextColor }, checklistTab === 'general' && styles.checklistTabTextActive]}>
+            General
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.checklistTabBtn, checklistTab === 'personal' && styles.checklistTabBtnActive]}
+          onPress={() => { setChecklistTab('personal'); setShowItemInput(false); }}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.checklistTabText, { color: subtextColor }, checklistTab === 'personal' && styles.checklistTabTextActive]}>
+            Personal
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {showItemInput && activo && (
         <View style={styles.inputRow}>
           <TextInput
             style={[styles.input, { flex: 1, backgroundColor: dark ? '#0F172A' : '#F8FAFC', borderColor: border, color: textColor }]}
-            placeholder="Ej: Protector solar..."
+            placeholder={checklistTab === 'general' ? 'Ej: Protector solar...' : 'Ej: Mi pasaporte...'}
             placeholderTextColor={subtextColor}
             value={nuevoItem}
             onChangeText={setNuevoItem}
@@ -109,11 +131,12 @@ export default function ViajeNotasTab({ viaje, dark }) {
         </View>
       )}
 
-      {checklist.map(item => {
+      {checklist.filter(item => item.tipo === checklistTab).map(item => {
+        const esPersonal = item.tipo === 'personal';
         const completadosPor = item.completadosPor ?? [];
         const completadoPorMi = completadosPor.includes(user?.id);
-        const pendientes = viaje.participantes.filter(p => !completadosPor.includes(p.userId));
-        const todosCompletaron = viaje.participantes.length > 0 && pendientes.length === 0;
+        const pendientes = esPersonal ? [] : viaje.participantes.filter(p => !completadosPor.includes(p.userId));
+        const todosCompletaron = esPersonal ? completadoPorMi : (viaje.participantes.length > 0 && pendientes.length === 0);
         const alguienMarcó = completadosPor.length > 0;
 
         return (
@@ -132,13 +155,13 @@ export default function ViajeNotasTab({ viaje, dark }) {
               <Text style={[styles.checkText, { color: todosCompletaron ? subtextColor : textColor, textDecorationLine: todosCompletaron ? 'line-through' : 'none' }]}>
                 {item.texto}
               </Text>
-              {!todosCompletaron && alguienMarcó && (
+              {!esPersonal && !todosCompletaron && alguienMarcó && (
                 <Text style={styles.esperando}>
                   Esperando a: {pendientes.map(p => p.nombre.split(' ')[0]).join(', ')}
                 </Text>
               )}
             </View>
-            <Text style={[styles.autor, { color: subtextColor }]}>{item.autorNombre.split(' ')[0]}</Text>
+            {!esPersonal && <Text style={[styles.autor, { color: subtextColor }]}>{item.autorNombre.split(' ')[0]}</Text>}
             {item.createdBy === user?.id && activo && (
               <TouchableOpacity onPress={() => handleEliminarItem(item.id)}>
                 <Ionicons name="trash-outline" size={16} color={colors.error} />
@@ -147,6 +170,12 @@ export default function ViajeNotasTab({ viaje, dark }) {
           </TouchableOpacity>
         );
       })}
+
+      {checklist.filter(item => item.tipo === checklistTab).length === 0 && (
+        <Text style={[styles.checklistEmpty, { color: subtextColor }]}>
+          {checklistTab === 'general' ? 'Sin ítems generales todavía' : 'Sin ítems personales todavía'}
+        </Text>
+      )}
 
       <View style={{ height: spacing.lg }} />
 
@@ -199,6 +228,16 @@ const styles = StyleSheet.create({
   checkText: { ...typography.body },
   esperando: { fontSize: 11, color: '#F59E0B', marginTop: 2 },
   autor: { fontSize: 11 },
+  checklistTabsRow: { flexDirection: 'row', gap: 6, marginBottom: spacing.sm },
+  checklistTabBtn: {
+    flex: 1, paddingVertical: 6, borderRadius: radius.md,
+    alignItems: 'center', backgroundColor: 'transparent',
+    borderWidth: 1, borderColor: 'transparent',
+  },
+  checklistTabBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  checklistTabText: { fontSize: 12, fontWeight: '600' },
+  checklistTabTextActive: { color: '#fff' },
+  checklistEmpty: { ...typography.body, textAlign: 'center', paddingVertical: spacing.md },
   notaCard: { borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.sm },
   notaHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 6 },
   notaAutor: { ...typography.captionMed, fontWeight: '700', flex: 1 },
