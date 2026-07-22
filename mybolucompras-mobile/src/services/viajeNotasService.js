@@ -12,6 +12,7 @@ export const viajeNotasService = {
     return data.map(row => ({
       id: row.id,
       texto: row.texto,
+      tipo: row.tipo,
       completadosPor: row.completados_por ?? [],
       createdBy: row.created_by,
       autorNombre: row.autor?.nombre || row.autor?.email || '',
@@ -19,19 +20,20 @@ export const viajeNotasService = {
     }));
   },
 
-  async agregarItem(viajeId, texto) {
+  async agregarItem(viajeId, texto, tipo = 'general') {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
     const { data, error } = await supabase
       .from('viaje_checklist')
-      .insert([{ viaje_id: viajeId, texto, created_by: user.id }])
+      .insert([{ viaje_id: viajeId, texto, created_by: user.id, tipo }])
       .select('*, autor:created_by(id, nombre, email)')
       .single();
     if (error) throw error;
     return {
       id: data.id,
       texto: data.texto,
+      tipo: data.tipo,
       completadosPor: data.completados_por ?? [],
       createdBy: data.created_by,
       autorNombre: data.autor?.nombre || data.autor?.email || '',
