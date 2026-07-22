@@ -12,7 +12,7 @@ export const viajeNotasService = {
     return data.map(row => ({
       id: row.id,
       texto: row.texto,
-      tipo: row.tipo,
+      tipo: row.tipo ?? 'general',
       completadosPor: row.completados_por ?? [],
       createdBy: row.created_by,
       autorNombre: row.autor?.nombre || row.autor?.email || '',

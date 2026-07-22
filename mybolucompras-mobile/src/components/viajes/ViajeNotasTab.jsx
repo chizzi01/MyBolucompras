@@ -96,7 +96,7 @@ export default function ViajeNotasTab({ viaje, dark }) {
       <View style={styles.checklistTabsRow}>
         <TouchableOpacity
           style={[styles.checklistTabBtn, checklistTab === 'general' && styles.checklistTabBtnActive]}
-          onPress={() => { setChecklistTab('general'); setShowItemInput(false); }}
+          onPress={() => { setChecklistTab('general'); setShowItemInput(false); setNuevoItem(''); }}
           activeOpacity={0.7}
         >
           <Text style={[styles.checklistTabText, { color: subtextColor }, checklistTab === 'general' && styles.checklistTabTextActive]}>
@@ -105,7 +105,7 @@ export default function ViajeNotasTab({ viaje, dark }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.checklistTabBtn, checklistTab === 'personal' && styles.checklistTabBtnActive]}
-          onPress={() => { setChecklistTab('personal'); setShowItemInput(false); }}
+          onPress={() => { setChecklistTab('personal'); setShowItemInput(false); setNuevoItem(''); }}
           activeOpacity={0.7}
         >
           <Text style={[styles.checklistTabText, { color: subtextColor }, checklistTab === 'personal' && styles.checklistTabTextActive]}>
