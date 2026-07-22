@@ -14,8 +14,9 @@ import ViajeGastosTab from '../components/viajes/ViajeGastosTab';
 import ViajeBalanceTab from '../components/viajes/ViajeBalanceTab';
 import ViajeNotasTab from '../components/viajes/ViajeNotasTab';
 import ViajeOpcionesSheet from '../components/viajes/ViajeOpcionesSheet';
+import ViajeCalendarioTab from '../components/viajes/ViajeCalendarioTab';
 
-const TABS = ['💸 Gastos', '⚖️ Balance', '✅ Notas'];
+const TABS = ['💸 Gastos', '⚖️ Balance', '✅ Notas', '📅 Calendario'];
 const PARTICIPANT_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 const MAX_AVATARS = 4;
 
@@ -191,6 +192,12 @@ export default function ViajeDetailScreen() {
       )}
       {tabIdx === 2 && (
         <ViajeNotasTab
+          viaje={viaje}
+          dark={dark}
+        />
+      )}
+      {tabIdx === 3 && (
+        <ViajeCalendarioTab
           viaje={viaje}
           dark={dark}
         />
