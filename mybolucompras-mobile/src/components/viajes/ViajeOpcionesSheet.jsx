@@ -11,6 +11,7 @@ import { colors, spacing, radius, typography } from '../../constants/theme';
 import CerrarViajeModal from './CerrarViajeModal';
 import ImagenGaleriaModal from './ImagenGaleriaModal';
 import EliminarViajeModal from './EliminarViajeModal';
+import EditarViajeModal from './EditarViajeModal';
 
 export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, onUpdated, onDeleted, dark }) {
   const { user } = useAuth();
@@ -19,6 +20,7 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
   const [showCerrar, setShowCerrar] = useState(false);
   const [showEliminar, setShowEliminar] = useState(false);
   const [showImagenGaleria, setShowImagenGaleria] = useState(false);
+  const [showEditar, setShowEditar] = useState(false);
 
   const bg = dark ? '#1E293B' : '#fff';
   const textColor = dark ? colors.text.dark : colors.text.light;
@@ -70,6 +72,13 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
             )}
             {esCreador && (
               <Option
+                icon="create-outline"
+                label="Editar viaje"
+                onPress={() => setShowEditar(true)}
+              />
+            )}
+            {esCreador && (
+              <Option
                 icon="image-outline"
                 label="Cambiar imagen de portada"
                 onPress={() => setShowImagenGaleria(true)}
@@ -110,6 +119,12 @@ export default function ViajeOpcionesSheet({ visible, onClose, viaje, gastos, on
         currentUrl={viaje?.imagenUrl ? viaje.imagenUrl.split('?')[0] : null}
         previewEmoji={viaje?.emoji}
         previewTitulo={viaje?.titulo}
+      />
+      <EditarViajeModal
+        visible={showEditar}
+        onClose={() => setShowEditar(false)}
+        viaje={viaje}
+        dark={dark}
       />
     </>
   );
