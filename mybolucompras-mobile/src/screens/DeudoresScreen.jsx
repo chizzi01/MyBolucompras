@@ -13,7 +13,10 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import DeudaCard from '../components/DeudaCard';
 import { colors, spacing, radius, typography } from '../constants/theme';
-import { montoMensualDeuda } from '../utils/cuotas';
+import { montoMensualDeuda, gastoEntraEsteMes } from '../utils/cuotas';
+
+const deudaEntraEsteMes = (deuda, mydata) =>
+  gastoEntraEsteMes({ ...deuda, fecha: deuda.fechaDeuda }, mydata);
 
 const fmtMonto = (n) =>
   new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
@@ -33,7 +36,7 @@ function PersonaGroupCard({ grupo, compensacion, mydata, onMarkPaid, onMarkAllPa
   const sim = moneda === 'ARS' ? '$' : moneda;
   const isAcreedor = deuda0.esAcreedor;
   const isPagadas = deuda0.pagado;
-  const pendientes = grupo.deudas.filter(d => !d.pagado);
+  const pendientes = grupo.deudas.filter(d => !d.pagado && deudaEntraEsteMes(d, mydata));
   const accentColor = isPagadas ? colors.accent : isAcreedor ? colors.warning : colors.error;
   const textColor = dark ? colors.text.dark : colors.text.light;
   const subColor = dark ? colors.textSecondary.dark : colors.textSecondary.light;
@@ -153,7 +156,7 @@ function PersonaGroupCard({ grupo, compensacion, mydata, onMarkPaid, onMarkAllPa
           key={deuda.id}
           deuda={deuda}
           mydata={mydata}
-          onMarkPaid={!deuda.pagado ? () => onMarkPaid(deuda) : undefined}
+          onMarkPaid={!deuda.pagado && deudaEntraEsteMes(deuda, mydata) ? () => onMarkPaid(deuda) : undefined}
           onDelete={() => onDelete(deuda)}
           onRecordar={deuda.esAcreedor && deuda.compartidoConUserId && !deuda.pagado ? () => onRecordar(deuda) : undefined}
           onPress={() => onPress(deuda)}
@@ -337,6 +340,7 @@ export default function DeudoresScreen({ navigation }) {
         id: deuda.id,
         deuda,
         nombre: user?.user_metadata?.nombre || user?.email || 'Alguien',
+        mydata,
       }),
     });
   };
@@ -364,7 +368,7 @@ export default function DeudoresScreen({ navigation }) {
   };
 
   const handleMarkAllPaid = (grupo) => {
-    const pendientes = grupo.deudas.filter(d => !d.pagado);
+    const pendientes = grupo.deudas.filter(d => !d.pagado && deudaEntraEsteMes(d, mydata));
     if (pendientes.length === 0) return;
     const nombre = pendientes[0].nombre;
     const nombreUsuario = user?.user_metadata?.nombre || user?.email || 'Alguien';
@@ -376,7 +380,7 @@ export default function DeudoresScreen({ navigation }) {
         : `¿Confirmas que se pagaron las ${pendientes.length} deudas de "${nombre}"?`,
       confirmText: 'Confirmar',
       onConfirm: () => pendientes.forEach(deuda =>
-        marcarPagadaMutation.mutate({ id: deuda.id, deuda, nombre: nombreUsuario })
+        marcarPagadaMutation.mutate({ id: deuda.id, deuda, nombre: nombreUsuario, mydata })
       ),
     });
   };

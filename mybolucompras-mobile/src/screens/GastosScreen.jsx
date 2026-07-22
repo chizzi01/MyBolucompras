@@ -12,7 +12,7 @@ import { useGastos } from '../hooks/queries/useGastos';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useGastoMutations } from '../hooks/mutations/useGastoMutations';
 import { useViajes } from '../hooks/queries/useViajes';
-import { getCuotasRestantes } from '../utils/cuotas';
+import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 import { useTheme } from '../context/ThemeContext';
 import GastoCard from '../components/GastoCard';
 import FilterBar from '../components/FilterBar';
@@ -108,6 +108,7 @@ export default function GastosScreen({ navigation }) {
         id: gasto.id,
         gasto,
         nombre: user?.user_metadata?.nombre || user?.email || 'Alguien',
+        mydata,
       }),
     });
   };
@@ -123,7 +124,11 @@ export default function GastosScreen({ navigation }) {
       mydata={mydata}
       onPress={() => navigation.navigate('EditarGasto', { gasto: item })}
       onDelete={() => handleDelete(item)}
-      onMarkPaid={esCompartido(item) && !item.pagado ? () => handleMarkPaid(item) : undefined}
+      onMarkPaid={
+        esCompartido(item) && !item.pagado && gastoEntraEsteMes(item, mydata)
+          ? () => handleMarkPaid(item)
+          : undefined
+      }
     />
   );
 
