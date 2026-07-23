@@ -67,7 +67,7 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
   const scrollRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const selectedOtherBg = dark ? '#334155' : '#475569';
-  const sidePadding = (windowWidth - CHIP_WIDTH) / 2;
+  const sidePadding = (windowWidth - ITEM_WIDTH) / 2;
 
   const initialIndex = useMemo(() => {
     const idx = dias.findIndex(d => d.iso === todayIso);
@@ -81,6 +81,7 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
   };
 
   const scrollToIndex = (index) => {
+    setSelectedIso(dias[index].iso);
     scrollRef.current?.scrollTo({ x: index * ITEM_WIDTH, animated: true });
   };
   const [showModal, setShowModal] = useState(false);
