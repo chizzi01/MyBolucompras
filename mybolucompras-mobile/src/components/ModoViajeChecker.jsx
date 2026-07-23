@@ -9,12 +9,13 @@ import ModoViajeModal from './ModoViajeModal';
 export default function ModoViajeChecker() {
   const { mydata } = useConfiguracion();
   const { actualizar } = useConfiguracionMutations();
-  const { viajesActivos } = useViajes();
+  const { viajesActivos, loading } = useViajes();
   const [candidato, setCandidato] = useState(null);
   const redirectedRef = useRef(false);
 
   useEffect(() => {
     if (!mydata) return;
+    if (loading) return;
 
     const today = toISODate(new Date());
     const todayDate = parseISODate(today);
@@ -52,7 +53,7 @@ export default function ModoViajeChecker() {
       );
       setCandidato(elegido);
     }
-  }, [mydata, viajesActivos]);
+  }, [mydata, viajesActivos, loading]);
 
   return (
     <ModoViajeModal
