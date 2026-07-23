@@ -10,9 +10,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useConfiguracionMutations } from '../hooks/mutations/useConfiguracionMutations';
+import { useViajes } from '../hooks/queries/useViajes';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
-import { formatARS } from '../utils/formatters';
+import { formatARS, toISODate } from '../utils/formatters';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
 
 function AccordionSection({ title, children, dark, defaultOpen = false }) {
@@ -52,9 +53,27 @@ export default function ConfiguracionScreen() {
   const { user, signOut, biometricEnabled, biometricAvailable, enableBiometric } = useAuth();
   const { mydata } = useConfiguracion();
   const { actualizar } = useConfiguracionMutations();
+  const { viajesActivos } = useViajes();
   const { dark, mode, setTheme } = useTheme();
   const s = styles(dark);
   const { showModal, modal } = useModal();
+
+  const today = toISODate(new Date());
+  const viajeModoActivo = mydata.modoViajeActivo
+    ? viajesActivos.find(v => v.id === mydata.modoViajeViajeId)
+    : null;
+  const viajeEnCurso = viajesActivos.find(
+    v => v.fechaDesde && v.fechaHasta && v.fechaDesde <= today && today <= v.fechaHasta
+  );
+  const modoViajeSubtitle = viajeModoActivo
+    ? `Activo: ${viajeModoActivo.emoji} ${viajeModoActivo.titulo}`
+    : viajeEnCurso
+      ? 'Se activa desde el aviso al abrir la app'
+      : 'No hay ningún viaje en curso';
+
+  const handleToggleModoViaje = async () => {
+    await actualizar.mutateAsync({ ...mydata, modoViajeActivo: false, modoViajeViajeId: null });
+  };
 
   const nombre = user?.user_metadata?.nombre || user?.email?.split('@')[0] || 'Usuario';
 
@@ -494,6 +513,23 @@ export default function ConfiguracionScreen() {
                 value={biometricEnabled}
                 onValueChange={biometricAvailable ? enableBiometric : undefined}
                 disabled={!biometricAvailable}
+                trackColor={{ false: dark ? '#334155' : '#CBD5E1', true: colors.primary }}
+                thumbColor="#fff"
+              />
+            </View>
+
+            <View style={[s.bioRow, { marginTop: spacing.md }]}>
+              <View style={s.bioInfo}>
+                <Ionicons name="airplane-outline" size={22} color={mydata.modoViajeActivo ? colors.primary : (dark ? '#475569' : '#94A3B8')} />
+                <View style={{ flex: 1 }}>
+                  <Text style={s.bioTitle}>Modo Viaje</Text>
+                  <Text style={s.bioSub}>{modoViajeSubtitle}</Text>
+                </View>
+              </View>
+              <Switch
+                value={mydata.modoViajeActivo}
+                onValueChange={mydata.modoViajeActivo ? handleToggleModoViaje : undefined}
+                disabled={!mydata.modoViajeActivo}
                 trackColor={{ false: dark ? '#334155' : '#CBD5E1', true: colors.primary }}
                 thumbColor="#fff"
               />
