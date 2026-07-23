@@ -149,7 +149,14 @@ export default function ViajeDetailScreen() {
             style={[styles.segTab, tabIdx === i && styles.segTabActive]}
             onPress={() => setTabIdx(i)}
           >
-            <Text style={[styles.segTabText, tabIdx === i && styles.segTabTextActive]} numberOfLines={1}>{tab}</Text>
+            <Text
+              style={[styles.segTabText, tabIdx === i && styles.segTabTextActive]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+            >
+              {tab}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -275,8 +282,8 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 2 },
   statVal: { fontSize: 20, color: '#fff', fontWeight: '800', marginBottom: 2 },
   statSub: { fontSize: 10, color: 'rgba(255,255,255,0.5)' },
-  segmented: { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: 11, padding: 3, gap: 3 },
-  segTab: { flex: 1, paddingVertical: 9, borderRadius: 9, alignItems: 'center' },
+  segmented: { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: 11, padding: 3, gap: 2 },
+  segTab: { flex: 1, paddingVertical: 9, paddingHorizontal: 2, borderRadius: 9, alignItems: 'center' },
   segTabActive: { backgroundColor: '#fff' },
   segTabText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
   segTabTextActive: { color: colors.primary, fontWeight: '800' },
