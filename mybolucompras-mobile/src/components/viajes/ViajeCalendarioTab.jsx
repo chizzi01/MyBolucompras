@@ -163,7 +163,7 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
           style={[styles.edgeFiller, { width: sidePadding }]}
         >
           <Text style={styles.edgeFillerIcon}>🧳</Text>
-          <Text style={[styles.edgeFillerText, { color: subtextColor }]}>Arranca{'\n'}el viaje</Text>
+          <Text style={[styles.edgeFillerText, { color: textColor }]}>Arranca{'\n'}el viaje</Text>
         </LinearGradient>
         {dias.map((dia, index) => {
           const isToday = dia.iso === todayIso;
@@ -199,7 +199,7 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
           style={[styles.edgeFiller, { width: sidePadding }]}
         >
           <Text style={styles.edgeFillerIcon}>🎉</Text>
-          <Text style={[styles.edgeFillerText, { color: subtextColor }]}>Fin del{'\n'}viaje</Text>
+          <Text style={[styles.edgeFillerText, { color: textColor }]}>Fin del{'\n'}viaje</Text>
         </LinearGradient>
       </Animated.ScrollView>
 
@@ -267,8 +267,8 @@ const styles = StyleSheet.create({
   diaChip: { borderRadius: radius.md, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', position: 'relative' },
   todayDot: { position: 'absolute', bottom: 6, width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.primary },
   edgeFiller: { height: 64, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
-  edgeFillerIcon: { fontSize: 22, opacity: 0.5, marginBottom: 4 },
-  edgeFillerText: { fontSize: 11, fontWeight: '600', textAlign: 'center', opacity: 0.6, lineHeight: 14 },
+  edgeFillerIcon: { fontSize: 30, marginBottom: 4 },
+  edgeFillerText: { fontSize: 12, fontWeight: '800', textAlign: 'center', lineHeight: 15 },
   diaChipLabel: { fontSize: 13, fontWeight: '700' },
   diaChipDate: { fontSize: 11, marginTop: 2 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, marginBottom: spacing.sm },
