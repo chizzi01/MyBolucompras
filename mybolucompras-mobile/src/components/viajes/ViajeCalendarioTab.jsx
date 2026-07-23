@@ -144,7 +144,7 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.diasStrip}
-        contentContainerStyle={{ paddingHorizontal: sidePadding }}
+        contentContainerStyle={styles.diasStripContent}
         snapToInterval={ITEM_WIDTH}
         decelerationRate="fast"
         contentOffset={{ x: initialIndex * ITEM_WIDTH, y: 0 }}
@@ -155,6 +155,10 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
         )}
         onMomentumScrollEnd={handleMomentumScrollEnd}
       >
+        <View style={[styles.edgeFiller, { width: sidePadding }]}>
+          <Text style={styles.edgeFillerIcon}>🧳</Text>
+          <Text style={[styles.edgeFillerText, { color: subtextColor }]}>Arranca{'\n'}el viaje</Text>
+        </View>
         {dias.map((dia, index) => {
           const isToday = dia.iso === todayIso;
           const isSelected = dia.iso === selectedIso;
@@ -182,6 +186,10 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
             </View>
           );
         })}
+        <View style={[styles.edgeFiller, { width: sidePadding }]}>
+          <Text style={styles.edgeFillerIcon}>🎉</Text>
+          <Text style={[styles.edgeFillerText, { color: subtextColor }]}>Fin del{'\n'}viaje</Text>
+        </View>
       </Animated.ScrollView>
 
       <View style={styles.sectionHeader}>
@@ -244,8 +252,12 @@ const styles = StyleSheet.create({
   emptyBtn: { backgroundColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.lg, paddingVertical: 12, marginTop: spacing.md },
   emptyBtnText: { color: '#fff', fontWeight: '700' },
   diasStrip: { flexGrow: 0, paddingVertical: spacing.md },
+  diasStripContent: { alignItems: 'center' },
   diaChip: { borderRadius: radius.md, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', position: 'relative' },
   todayDot: { position: 'absolute', bottom: 6, width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.primary },
+  edgeFiller: { alignItems: 'center', justifyContent: 'center' },
+  edgeFillerIcon: { fontSize: 22, opacity: 0.5, marginBottom: 4 },
+  edgeFillerText: { fontSize: 11, fontWeight: '600', textAlign: 'center', opacity: 0.6, lineHeight: 14 },
   diaChipLabel: { fontSize: 13, fontWeight: '700' },
   diaChipDate: { fontSize: 11, marginTop: 2 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, marginBottom: spacing.sm },
