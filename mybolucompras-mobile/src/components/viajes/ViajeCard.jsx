@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { colors, spacing, radius, typography } from '../../constants/theme';
+import { formatRangoFechas } from '../../utils/formatters';
 
 export default function ViajeCard({ viaje, onPress, dark }) {
   const activo = viaje.estado === 'activo';
@@ -9,6 +10,7 @@ export default function ViajeCard({ viaje, onPress, dark }) {
   const gastoCount = viaje._gastoCount ?? 0;
   const checklistTotal = viaje._checklistTotal ?? 0;
   const checklistDone = viaje._checklistDone ?? 0;
+  const rangoFechas = formatRangoFechas(viaje.fechaDesde, viaje.fechaHasta);
 
   return (
     <TouchableOpacity
@@ -23,6 +25,9 @@ export default function ViajeCard({ viaje, onPress, dark }) {
           <Text style={participantes(dark)}>
             {viaje.participantes.map(p => p.nombre.split(' ')[0]).join(', ')}
           </Text>
+          {!!rangoFechas && (
+            <Text style={fechas(dark)}>📅 {rangoFechas}</Text>
+          )}
         </View>
         <View style={estadoBadge(activo)}>
           <Text style={estadoText(activo)}>{activo ? '● Activo' : '🔒 Cerrado'}</Text>
@@ -59,6 +64,7 @@ const row = { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, margi
 const emoji = { fontSize: 28 };
 const titulo = dark => ({ ...typography.h3, color: dark ? colors.text.dark : colors.text.light });
 const participantes = dark => ({ ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginTop: 2 });
+const fechas = dark => ({ ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, marginTop: 2 });
 const estadoBadge = activo => ({
   paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full,
   backgroundColor: activo ? '#10B98120' : '#64748B20',
