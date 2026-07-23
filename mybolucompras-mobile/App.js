@@ -37,6 +37,7 @@ import ViajeDetailScreen from './src/screens/ViajeDetailScreen';
 import DeudoresScreen from './src/screens/DeudoresScreen';
 import AgregarDeudaModal from './src/screens/AgregarDeudaModal';
 import CierreChecker from './src/components/CierreChecker';
+import ModoViajeChecker from './src/components/ModoViajeChecker';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -140,6 +141,7 @@ function RootNavigator() {
           {() => (
             <DataProvider>
               <CierreChecker />
+              <ModoViajeChecker />
               <ViajesProvider>
               <DeudoresProvider>
                 <RealtimeProvider>
