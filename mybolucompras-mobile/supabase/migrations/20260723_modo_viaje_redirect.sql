@@ -14,3 +14,9 @@ ALTER TABLE public.configuracion_usuario
   ADD COLUMN IF NOT EXISTS modo_viaje_activo boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS modo_viaje_viaje_id uuid NULL REFERENCES public.viajes(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS modo_viaje_prompted_ids uuid[] NOT NULL DEFAULT '{}';
+
+-- PostgREST caches the table schema; without this, supabase-js writes to the
+-- new columns fail with "column not found in schema cache" until the cache
+-- next auto-refreshes. Run this NOTIFY every time you apply this migration,
+-- even if you're just re-running it to pick up a later edit to this file.
+NOTIFY pgrst, 'reload schema';

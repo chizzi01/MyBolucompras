@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useConfiguracionMutations } from '../hooks/mutations/useConfiguracionMutations';
 import { useViajes } from '../hooks/queries/useViajes';
-import { navigate } from '../navigation/navigationRef';
+import { navigate, navigationRef } from '../navigation/navigationRef';
 import { toISODate, parseISODate } from '../utils/formatters';
 import ModoViajeModal from './ModoViajeModal';
 
@@ -35,8 +35,17 @@ export default function ModoViajeChecker() {
       }
 
       if (mydata.modoViajeViajeId && !redirectedRef.current) {
-        redirectedRef.current = true;
-        navigate('ViajeDetail', { viajeId: mydata.modoViajeViajeId });
+        const viajeId = mydata.modoViajeViajeId;
+        const tryNavigate = () => {
+          if (redirectedRef.current) return;
+          if (navigationRef.isReady()) {
+            redirectedRef.current = true;
+            navigate('ViajeDetail', { viajeId });
+          } else {
+            setTimeout(tryNavigate, 150);
+          }
+        };
+        tryNavigate();
       }
       return;
     }

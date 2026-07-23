@@ -12,6 +12,7 @@ import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useConfiguracionMutations } from '../hooks/mutations/useConfiguracionMutations';
 import { useViajes } from '../hooks/queries/useViajes';
 import { useTheme } from '../context/ThemeContext';
+import { navigate } from '../navigation/navigationRef';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { formatARS, toISODate } from '../utils/formatters';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
@@ -62,17 +63,36 @@ export default function ConfiguracionScreen() {
   const viajeModoActivo = mydata.modoViajeActivo
     ? viajesActivos.find(v => v.id === mydata.modoViajeViajeId)
     : null;
-  const viajeEnCurso = viajesActivos.find(
+  const viajesEnCurso = viajesActivos.filter(
     v => v.fechaDesde && v.fechaHasta && v.fechaDesde <= today && today <= v.fechaHasta
   );
+  const viajeParaActivar = viajesEnCurso.length > 0
+    ? viajesEnCurso.reduce((max, v) => (v.fechaDesde > max.fechaDesde ? v : max), viajesEnCurso[0])
+    : null;
   const modoViajeSubtitle = viajeModoActivo
     ? `Activo: ${viajeModoActivo.emoji} ${viajeModoActivo.titulo}`
-    : viajeEnCurso
-      ? 'Se activa desde el aviso al abrir la app'
+    : viajeParaActivar
+      ? `Tocá para activarlo: ${viajeParaActivar.emoji} ${viajeParaActivar.titulo}`
       : 'No hay ningún viaje en curso';
 
-  const handleToggleModoViaje = async () => {
-    await actualizar.mutateAsync({ ...mydata, modoViajeActivo: false, modoViajeViajeId: null });
+  const handleToggleModoViaje = async (nextValue) => {
+    try {
+      if (nextValue) {
+        if (!viajeParaActivar) return;
+        const promptedIds = [...new Set([...(mydata.modoViajePromptedIds || []), viajeParaActivar.id])];
+        await actualizar.mutateAsync({
+          ...mydata,
+          modoViajeActivo: true,
+          modoViajeViajeId: viajeParaActivar.id,
+          modoViajePromptedIds: promptedIds,
+        });
+        navigate('ViajeDetail', { viajeId: viajeParaActivar.id });
+      } else {
+        await actualizar.mutateAsync({ ...mydata, modoViajeActivo: false, modoViajeViajeId: null });
+      }
+    } catch (err) {
+      console.warn('[ModoViaje] Error al cambiar estado:', err?.message ?? err);
+    }
   };
 
   const nombre = user?.user_metadata?.nombre || user?.email?.split('@')[0] || 'Usuario';
@@ -517,10 +537,15 @@ export default function ConfiguracionScreen() {
                 thumbColor="#fff"
               />
             </View>
+          </View>
+        </AccordionSection>
 
-            <View style={[s.bioRow, { marginTop: spacing.md }]}>
+        {/* Viajes */}
+        <AccordionSection title="Viajes" dark={dark}>
+          <View style={s.card}>
+            <View style={s.bioRow}>
               <View style={s.bioInfo}>
-                <Ionicons name="airplane-outline" size={22} color={mydata.modoViajeActivo ? colors.primary : (dark ? '#475569' : '#94A3B8')} />
+                <Ionicons name="airplane-outline" size={22} color={(mydata.modoViajeActivo || viajeParaActivar) ? colors.primary : (dark ? '#475569' : '#94A3B8')} />
                 <View style={{ flex: 1 }}>
                   <Text style={s.bioTitle}>Modo Viaje</Text>
                   <Text style={s.bioSub}>{modoViajeSubtitle}</Text>
@@ -528,8 +553,8 @@ export default function ConfiguracionScreen() {
               </View>
               <Switch
                 value={mydata.modoViajeActivo}
-                onValueChange={mydata.modoViajeActivo ? handleToggleModoViaje : undefined}
-                disabled={!mydata.modoViajeActivo}
+                onValueChange={(mydata.modoViajeActivo || viajeParaActivar) ? handleToggleModoViaje : undefined}
+                disabled={!mydata.modoViajeActivo && !viajeParaActivar}
                 trackColor={{ false: dark ? '#334155' : '#CBD5E1', true: colors.primary }}
                 thumbColor="#fff"
               />
