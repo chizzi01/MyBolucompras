@@ -29,6 +29,20 @@ export function parseISODate(iso) {
   return new Date(y, m - 1, d);
 }
 
+export function formatRangoFechas(fechaDesde, fechaHasta) {
+  if (!fechaDesde || !fechaHasta) return null;
+  const start = parseISODate(fechaDesde);
+  const end = parseISODate(fechaHasta);
+  const currentYear = new Date().getFullYear();
+  const crossesYear = start.getFullYear() !== currentYear || end.getFullYear() !== currentYear;
+  const opts = crossesYear
+    ? { day: '2-digit', month: 'short', year: 'numeric' }
+    : { day: '2-digit', month: 'short' };
+  const startLabel = start.toLocaleDateString('es-AR', opts);
+  const endLabel = end.toLocaleDateString('es-AR', opts);
+  return `${startLabel} - ${endLabel}`;
+}
+
 export function parsePrecio(valor) {
   if (typeof valor === 'number') return isNaN(valor) ? 0 : valor;
   if (!valor) return 0;
