@@ -5,6 +5,7 @@ import {
   Animated, useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import { useAuth } from '../../context/AuthContext';
 import { toISODate, parseISODate } from '../../utils/formatters';
@@ -155,10 +156,15 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
         )}
         onMomentumScrollEnd={handleMomentumScrollEnd}
       >
-        <View style={[styles.edgeFiller, { width: sidePadding }]}>
+        <LinearGradient
+          colors={dark ? ['rgba(99,102,241,0.30)', 'rgba(99,102,241,0.04)'] : ['rgba(99,102,241,0.18)', 'rgba(99,102,241,0.02)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.edgeFiller, { width: sidePadding }]}
+        >
           <Text style={styles.edgeFillerIcon}>🧳</Text>
           <Text style={[styles.edgeFillerText, { color: subtextColor }]}>Arranca{'\n'}el viaje</Text>
-        </View>
+        </LinearGradient>
         {dias.map((dia, index) => {
           const isToday = dia.iso === todayIso;
           const isSelected = dia.iso === selectedIso;
@@ -186,10 +192,15 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
             </View>
           );
         })}
-        <View style={[styles.edgeFiller, { width: sidePadding }]}>
+        <LinearGradient
+          colors={dark ? ['rgba(16,185,129,0.30)', 'rgba(16,185,129,0.04)'] : ['rgba(16,185,129,0.18)', 'rgba(16,185,129,0.02)']}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={[styles.edgeFiller, { width: sidePadding }]}
+        >
           <Text style={styles.edgeFillerIcon}>🎉</Text>
           <Text style={[styles.edgeFillerText, { color: subtextColor }]}>Fin del{'\n'}viaje</Text>
-        </View>
+        </LinearGradient>
       </Animated.ScrollView>
 
       <View style={styles.sectionHeader}>
@@ -255,7 +266,7 @@ const styles = StyleSheet.create({
   diasStripContent: { alignItems: 'center' },
   diaChip: { borderRadius: radius.md, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', position: 'relative' },
   todayDot: { position: 'absolute', bottom: 6, width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.primary },
-  edgeFiller: { alignItems: 'center', justifyContent: 'center' },
+  edgeFiller: { height: 64, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   edgeFillerIcon: { fontSize: 22, opacity: 0.5, marginBottom: 4 },
   edgeFillerText: { fontSize: 11, fontWeight: '600', textAlign: 'center', opacity: 0.6, lineHeight: 14 },
   diaChipLabel: { fontSize: 13, fontWeight: '700' },
