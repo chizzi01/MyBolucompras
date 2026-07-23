@@ -1,7 +1,8 @@
 // src/components/viajes/ViajeCalendarioTab.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
+  Animated, useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../constants/theme';
@@ -33,6 +34,10 @@ function computeDias(fechaDesde, fechaHasta) {
   return dias;
 }
 
+const CHIP_WIDTH = 68;
+const CHIP_GAP = spacing.sm;
+const ITEM_WIDTH = CHIP_WIDTH + CHIP_GAP;
+
 function sortActividades(list) {
   return list.slice().sort((a, b) => {
     if (!a.hora && !b.hora) return 0;
@@ -57,6 +62,27 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
     if (dias.some(d => d.iso === todayIso)) return todayIso;
     return dias[0]?.iso ?? null;
   });
+
+  const { width: windowWidth } = useWindowDimensions();
+  const scrollRef = useRef(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const selectedOtherBg = dark ? '#334155' : '#475569';
+  const sidePadding = (windowWidth - CHIP_WIDTH) / 2;
+
+  const initialIndex = useMemo(() => {
+    const idx = dias.findIndex(d => d.iso === todayIso);
+    return idx >= 0 ? idx : 0;
+  }, [dias, todayIso]);
+
+  const handleMomentumScrollEnd = (e) => {
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const idx = Math.min(Math.max(Math.round(offsetX / ITEM_WIDTH), 0), dias.length - 1);
+    setSelectedIso(dias[idx].iso);
+  };
+
+  const scrollToIndex = (index) => {
+    scrollRef.current?.scrollTo({ x: index * ITEM_WIDTH, animated: true });
+  };
   const [showModal, setShowModal] = useState(false);
   const [showEditarViaje, setShowEditarViaje] = useState(false);
   const [editingActividad, setEditingActividad] = useState(null);
@@ -112,22 +138,50 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.diasStrip} contentContainerStyle={{ paddingHorizontal: spacing.md, gap: spacing.sm }}>
-        {dias.map(dia => {
-          const active = dia.iso === selectedIso;
+      <Animated.ScrollView
+        ref={scrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.diasStrip}
+        contentContainerStyle={{ paddingHorizontal: sidePadding }}
+        snapToInterval={ITEM_WIDTH}
+        decelerationRate="fast"
+        contentOffset={{ x: initialIndex * ITEM_WIDTH, y: 0 }}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: true },
+        )}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+      >
+        {dias.map((dia, index) => {
+          const isToday = dia.iso === todayIso;
+          const isSelected = dia.iso === selectedIso;
+          const chipBg = isSelected ? (isToday ? colors.primary : selectedOtherBg) : surfaceBg;
+          const chipTextColor = isSelected ? '#fff' : textColor;
+          const chipSubTextColor = isSelected ? 'rgba(255,255,255,0.8)' : subtextColor;
+
+          const inputRange = [(index - 1) * ITEM_WIDTH, index * ITEM_WIDTH, (index + 1) * ITEM_WIDTH];
+          const scale = scrollX.interpolate({ inputRange, outputRange: [0.82, 1, 0.82], extrapolate: 'clamp' });
+          const opacity = scrollX.interpolate({ inputRange, outputRange: [0.45, 1, 0.45], extrapolate: 'clamp' });
+
           return (
-            <TouchableOpacity
-              key={dia.iso}
-              style={[styles.diaChip, { backgroundColor: active ? colors.primary : surfaceBg }]}
-              onPress={() => setSelectedIso(dia.iso)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.diaChipLabel, { color: active ? '#fff' : textColor }]}>{dia.label}</Text>
-              <Text style={[styles.diaChipDate, { color: active ? 'rgba(255,255,255,0.8)' : subtextColor }]}>{dia.dateLabel}</Text>
-            </TouchableOpacity>
+            <View key={dia.iso} style={{ width: ITEM_WIDTH, alignItems: 'center' }}>
+              <Animated.View style={{ transform: [{ scale }], opacity }}>
+                <TouchableOpacity
+                  style={[styles.diaChip, { width: CHIP_WIDTH, backgroundColor: chipBg }]}
+                  onPress={() => scrollToIndex(index)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.diaChipLabel, { color: chipTextColor }]}>{dia.label}</Text>
+                  <Text style={[styles.diaChipDate, { color: chipSubTextColor }]}>{dia.dateLabel}</Text>
+                  {isToday && !isSelected && <View style={styles.todayDot} />}
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
           );
         })}
-      </ScrollView>
+      </Animated.ScrollView>
 
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionLabel, { color: subtextColor }]}>ITINERARIO</Text>
@@ -189,7 +243,8 @@ const styles = StyleSheet.create({
   emptyBtn: { backgroundColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.lg, paddingVertical: 12, marginTop: spacing.md },
   emptyBtnText: { color: '#fff', fontWeight: '700' },
   diasStrip: { flexGrow: 0, paddingVertical: spacing.md },
-  diaChip: { borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 8, alignItems: 'center' },
+  diaChip: { borderRadius: radius.md, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  todayDot: { position: 'absolute', bottom: 6, width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.primary },
   diaChipLabel: { fontSize: 13, fontWeight: '700' },
   diaChipDate: { fontSize: 11, marginTop: 2 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, marginBottom: spacing.sm },
