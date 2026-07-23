@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import {
   Animated, Easing, View, Platform, useColorScheme,
 } from 'react-native';
-import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +14,7 @@ import SpInAppUpdates, { IAUUpdateKind } from 'sp-react-native-in-app-updates';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './src/lib/queryClient';
 import { useRealtimeInvalidation } from './src/hooks/useRealtimeInvalidation';
+import { navigationRef } from './src/navigation/navigationRef';
 
 const inAppUpdates = new SpInAppUpdates(false);
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -229,7 +230,6 @@ export default function App() {
 
 function AppWithTheme() {
   const { dark } = useTheme();
-  const navigationRef = useNavigationContainerRef();
   const responseListener = useRef();
 
   useEffect(() => {
