@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
 import { useViajeDetalle } from '../hooks/queries/useViajeDetalle';
 import { colors } from '../constants/theme';
-import { formatMontoEuropeo } from '../utils/formatters';
+import { formatMontoEuropeo, formatRangoFechas } from '../utils/formatters';
 import ViajeGastosTab from '../components/viajes/ViajeGastosTab';
 import ViajeBalanceTab from '../components/viajes/ViajeBalanceTab';
 import ViajeNotasTab from '../components/viajes/ViajeNotasTab';
@@ -55,6 +55,7 @@ export default function ViajeDetailScreen() {
 
   if (!viaje) return null;
 
+  const rangoFechas = formatRangoFechas(viaje.fechaDesde, viaje.fechaHasta);
   const visibleParticipants = viaje.participantes.slice(0, MAX_AVATARS);
   const overflowCount = viaje.participantes.length - MAX_AVATARS;
 
@@ -104,6 +105,13 @@ export default function ViajeDetailScreen() {
           </View>
         </View>
       </View>
+
+      {!!rangoFechas && (
+        <View style={styles.fechaRow}>
+          <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.75)" />
+          <Text style={styles.fechaText}>{rangoFechas}</Text>
+        </View>
+      )}
 
       <View style={styles.avatarsRow}>
         {visibleParticipants.map((p, i) => (
@@ -247,6 +255,8 @@ const styles = StyleSheet.create({
   },
   badgeDot: { width: 5, height: 5, borderRadius: 2.5 },
   badgeText: { fontSize: 9, fontWeight: '700' },
+  fechaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10 },
+  fechaText: { fontSize: 12, color: 'rgba(255,255,255,0.75)', fontWeight: '600' },
   avatarsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
   av: {
     width: 26, height: 26, borderRadius: 13,
