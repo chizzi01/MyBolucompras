@@ -8,6 +8,7 @@ const defaultMydata = {
   fondos: 0, etiquetas: [], presupuestos: {},
   presupuestoMensualMax: 0, bancosHabilitados: [],
   mediosHabilitados: [], monedaPreferida: 'ARS',
+  modoViajeActivo: false, modoViajeViajeId: null, modoViajePromptedIds: [],
 };
 
 export function useConfiguracion() {
