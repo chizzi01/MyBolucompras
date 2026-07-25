@@ -195,29 +195,35 @@ export const gastosService = {
     if (!otroUserId || !user) return;
 
     const precio = gastoActual.precioNum;
+    let fechaISO = gastoActual.fecha;
+    if (fechaISO?.includes('/')) fechaISO = fechaISO.split('/').reverse().join('-');
 
     await Promise.all([
-      // Gasto del otro usuario — sin filtro pagado=false para que el re-marcado mensual funcione
+      // Gasto del otro usuario — sin filtro pagado=false para que el re-marcado mensual funcione.
+      // fecha acota al gasto correspondiente cuando hay varios con el mismo precio.
       supabase
         .from('gastos')
         .update({ pagado: true, fecha_pago: today })
         .eq('user_id', otroUserId)
         .eq('compartido_con_user_id', user.id)
-        .eq('precio', precio),
+        .eq('precio', precio)
+        .eq('fecha', fechaISO),
       // Mi deuda relacionada (si existe)
       supabase
         .from('deudores')
         .update({ pagado: true, fecha_pago: today })
         .eq('user_id', user.id)
         .eq('compartido_con_user_id', otroUserId)
-        .eq('monto', precio),
+        .eq('monto', precio)
+        .eq('fecha_deuda', fechaISO),
       // Deuda del otro usuario relacionada
       supabase
         .from('deudores')
         .update({ pagado: true, fecha_pago: today })
         .eq('user_id', otroUserId)
         .eq('compartido_con_user_id', user.id)
-        .eq('monto', precio),
+        .eq('monto', precio)
+        .eq('fecha_deuda', fechaISO),
     ]);
 
     sendPushToUser(otroUserId, {
