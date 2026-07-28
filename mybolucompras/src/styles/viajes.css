@@ -1195,3 +1195,90 @@
   flex: 1;
   max-width: 220px;
 }
+
+.viaje-calendario-strip-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.viaje-calendario-strip {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 4px 2px;
+  flex: 1;
+}
+
+.viaje-calendario-strip-arrow {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.viaje-calendario-chip {
+  flex-shrink: 0;
+  width: 52px;
+  padding: 8px 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: center;
+}
+
+.viaje-calendario-chip.selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.viaje-calendario-chip-dow {
+  font-size: 11px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.viaje-calendario-chip-day {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.viaje-actividad-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.viaje-actividad-hora {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-primary);
+  min-width: 44px;
+}
+
+.viaje-actividad-body {
+  flex: 1;
+}
+
+.viaje-actividad-titulo {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.viaje-actividad-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}

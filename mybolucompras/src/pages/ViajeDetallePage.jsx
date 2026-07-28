@@ -10,6 +10,7 @@ import { viajesService } from '../services/viajesService';
 import { viajeGastosService } from '../services/viajeGastosService';
 import { viajePagosService } from '../services/viajePagosService';
 import { viajeNotasService } from '../services/viajeNotasService';
+import { viajeActividadesService } from '../services/viajeActividadesService';
 import ViajeGastoModal from '../components/viajes/ViajeGastoModal';
 import RegistrarPagoModal from '../components/viajes/RegistrarPagoModal';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
@@ -22,7 +23,7 @@ import '../styles/viajes.css';
 
 const PARTICIPANT_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 const MAX_AVATARS = 4;
-const TABS = ['💸 Gastos', '⚖️ Balance', '✅ Notas'];
+const TABS = ['💸 Gastos', '⚖️ Balance', '📅 Calendario', '✅ Notas'];
 
 function getColor(participantes, userId) {
   const idx = participantes.findIndex(p => p.userId === userId);
@@ -258,6 +259,123 @@ function TabBalance({ viaje, gastos, pagos, onRefresh }) {
         viaje={viaje}
         transaccion={pagoModal}
       />
+    </div>
+  );
+}
+
+// ── Tab Calendario ──────────────────────────
+function computeDias(fechaDesde, fechaHasta) {
+  if (!fechaDesde || !fechaHasta) return [];
+  const dias = [];
+  let cur = new Date(`${fechaDesde}T00:00:00`);
+  const end = new Date(`${fechaHasta}T00:00:00`);
+  while (cur <= end) {
+    dias.push(cur.toISOString().split('T')[0]);
+    cur = new Date(cur.getTime() + 24 * 60 * 60 * 1000);
+  }
+  return dias;
+}
+
+function TabCalendario({ viaje, currentUserId, activo }) {
+  const addToast = useToast();
+  const dias = computeDias(viaje.fechaDesde, viaje.fechaHasta);
+  const [selectedDia, setSelectedDia] = useState(dias[0] || null);
+  const [actividades, setActividades] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const stripRef = useRef(null);
+
+  const cargar = useCallback(async () => {
+    try {
+      const data = await viajeActividadesService.getByViaje(viaje.id);
+      setActividades(data);
+    } catch {
+      addToast('Error al cargar el calendario', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [viaje.id]);
+
+  useEffect(() => { cargar(); }, [cargar]);
+
+  const handleEliminar = async (act) => {
+    if (!window.confirm(`¿Eliminar "${act.titulo}"?`)) return;
+    try {
+      await viajeActividadesService.eliminar(act.id);
+      addToast('Actividad eliminada', 'success');
+      cargar();
+    } catch {
+      addToast('Error al eliminar', 'error');
+    }
+  };
+
+  const scrollStrip = (dir) => {
+    stripRef.current?.scrollBy({ left: dir * 160, behavior: 'smooth' });
+  };
+
+  if (loading) return <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--color-text-muted)' }}>Cargando…</div>;
+
+  if (dias.length === 0) {
+    return (
+      <div className="viajes-empty" style={{ paddingTop: 'var(--space-8)' }}>
+        <div className="viajes-empty-icon">📅</div>
+        <div className="viajes-empty-title">Sin fechas configuradas</div>
+        <p className="viajes-empty-sub">Editá el viaje y agregá fecha de inicio y fin para armar el itinerario</p>
+      </div>
+    );
+  }
+
+  const actividadesDelDia = actividades
+    .filter(a => a.fecha === selectedDia)
+    .sort((a, b) => (a.hora || '99:99').localeCompare(b.hora || '99:99'));
+
+  return (
+    <div>
+      <div className="viaje-calendario-strip-wrap">
+        <button className="viaje-calendario-strip-arrow" onClick={() => scrollStrip(-1)}>‹</button>
+        <div className="viaje-calendario-strip" ref={stripRef}>
+          {dias.map(dia => {
+            const d = new Date(`${dia}T00:00:00`);
+            const activo = dia === selectedDia;
+            return (
+              <button
+                key={dia}
+                className={`viaje-calendario-chip${activo ? ' selected' : ''}`}
+                onClick={() => setSelectedDia(dia)}
+              >
+                <div className="viaje-calendario-chip-dow">{d.toLocaleDateString('es-AR', { weekday: 'short' })}</div>
+                <div className="viaje-calendario-chip-day">{d.getDate()}</div>
+              </button>
+            );
+          })}
+        </div>
+        <button className="viaje-calendario-strip-arrow" onClick={() => scrollStrip(1)}>›</button>
+      </div>
+
+      <div className="viaje-section-label">
+        {new Date(`${selectedDia}T00:00:00`).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+      </div>
+
+      {actividadesDelDia.length === 0 ? (
+        <div className="viajes-empty" style={{ paddingTop: 'var(--space-6)' }}>
+          <div className="viajes-empty-title">Sin actividades este día</div>
+        </div>
+      ) : (
+        actividadesDelDia.map(act => (
+          <div key={act.id} className="viaje-actividad-row">
+            {act.hora && <div className="viaje-actividad-hora">{act.hora.slice(0, 5)}</div>}
+            <div className="viaje-actividad-body">
+              <div className="viaje-actividad-titulo">{act.titulo}</div>
+              {act.ubicacion && <div className="viaje-actividad-meta">📍 {act.ubicacion}</div>}
+              {act.nota && <div className="viaje-actividad-meta">{act.nota}</div>}
+            </div>
+            {activo && act.createdBy === currentUserId && (
+              <button className="viaje-gasto-del-btn" onClick={() => handleEliminar(act)} title="Eliminar">
+                <IoTrashOutline size={16} />
+              </button>
+            )}
+          </div>
+        ))
+      )}
     </div>
   );
 }
@@ -694,6 +812,9 @@ export default function ViajeDetallePage() {
             <TabBalance viaje={viaje} gastos={gastos} pagos={pagos} onRefresh={cargar} />
           )}
           {tabIdx === 2 && (
+            <TabCalendario viaje={viaje} currentUserId={user?.id} activo={activo} />
+          )}
+          {tabIdx === 3 && (
             <TabNotas viaje={viaje} currentUserId={user?.id} />
           )}
 
