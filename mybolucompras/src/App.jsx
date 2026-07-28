@@ -7,6 +7,7 @@ import { ViajesProvider } from './context/ViajesContext';
 import { useTheme } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import UpdateNotification from './components/UpdateNotification';
+import ModoViajeChecker from './components/ModoViajeChecker';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
 import BackgroundIcons from './components/BackgroundIcons';
@@ -60,6 +61,7 @@ function App() {
       <BackgroundIcons />
       <Router>
         <UpdateNotification />
+        <ModoViajeChecker />
         <ErrorBoundary>
         <Suspense fallback={<AppFallback />}>
           <Routes>
