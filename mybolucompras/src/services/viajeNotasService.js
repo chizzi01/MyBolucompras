@@ -12,6 +12,7 @@ export const viajeNotasService = {
     return data.map(row => ({
       id: row.id,
       texto: row.texto,
+      tipo: row.tipo || 'general',
       completadosPor: row.completados_por || [],
       createdBy: row.created_by,
       autorNombre: row.autor?.nombre || row.autor?.email || row.created_by,
@@ -34,10 +35,10 @@ export const viajeNotasService = {
     }));
   },
 
-  async agregarItem(viajeId, texto, userId) {
+  async agregarItem(viajeId, texto, userId, tipo = 'general') {
     const { error } = await supabase
       .from('viaje_checklist')
-      .insert([{ viaje_id: viajeId, texto, completados_por: [], created_by: userId }]);
+      .insert([{ viaje_id: viajeId, texto, tipo, completados_por: [], created_by: userId }]);
     if (error) throw error;
   },
 
