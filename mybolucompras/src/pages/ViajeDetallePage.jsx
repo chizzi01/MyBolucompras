@@ -13,6 +13,7 @@ import { viajeNotasService } from '../services/viajeNotasService';
 import ViajeGastoModal from '../components/viajes/ViajeGastoModal';
 import RegistrarPagoModal from '../components/viajes/RegistrarPagoModal';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
+import { formatRangoFechas } from '../utils/formatters';
 import { IoArrowBack, IoEllipsisVertical, IoAddOutline, IoTrashOutline, IoLockClosedOutline, IoAddCircleOutline, IoCheckmark, IoEllipseOutline, IoCheckmarkCircle, IoCheckmarkCircleOutline, IoImageOutline } from 'react-icons/io5';
 import { FiArrowRight } from 'react-icons/fi';
 import ImagenGaleriaModal from '../components/viajes/ImagenGaleriaModal';
@@ -545,6 +546,7 @@ export default function ViajeDetallePage() {
   if (!viaje) return null;
 
   const activo = viaje.estado === 'activo';
+  const rango = formatRangoFechas(viaje.fechaDesde, viaje.fechaHasta);
   const totalGastado = gastos.reduce((s, g) => s + g.precio, 0);
   const porPersona = viaje.participantes.length > 0 ? totalGastado / viaje.participantes.length : 0;
   const visibleParticipants = viaje.participantes.slice(0, MAX_AVATARS);
@@ -607,6 +609,8 @@ export default function ViajeDetallePage() {
             <div className={`viaje-hero-badge${activo ? ' activo' : ' cerrado'}`}>
               {activo ? '● Activo' : '🔒 Archivado'}
             </div>
+
+            {rango && <div className="viaje-hero-fechas">📅 {rango}</div>}
 
             {/* avatars */}
             <div className="viaje-hero-avatars">

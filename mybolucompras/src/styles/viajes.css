@@ -1178,3 +1178,15 @@
   justify-content: center;
   color: white;
 }
+
+.viaje-card-fechas {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.viaje-hero-fechas {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 4px;
+}

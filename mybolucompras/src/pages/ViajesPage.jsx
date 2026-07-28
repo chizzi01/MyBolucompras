@@ -8,6 +8,7 @@ import { useToast } from '../components/Toast';
 import { useViajes } from '../context/ViajesContext';
 import { useAuth } from '../context/AuthContext';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
+import { formatRangoFechas } from '../utils/formatters';
 import { IoAddOutline } from 'react-icons/io5';
 import '../styles/modal.css';
 import '../styles/viajes.css';
@@ -15,6 +16,7 @@ import '../styles/viajes.css';
 function ViajeCard({ v, onClick }) {
   const activo = v.estado === 'activo';
   const nombres = v.participantes.map(p => p.nombre.split(' ')[0]).join(', ');
+  const rango = formatRangoFechas(v.fechaDesde, v.fechaHasta);
 
   return (
     <div
@@ -46,6 +48,7 @@ function ViajeCard({ v, onClick }) {
 
         {/* Participants */}
         <div className="viaje-card-participantes">{nombres}</div>
+        {rango && <div className="viaje-card-fechas">📅 {rango}</div>}
 
         {/* Chips */}
         {(v._gastoCount > 0 || v._checklistTotal > 0) && (
