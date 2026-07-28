@@ -73,9 +73,9 @@ export default function ViajesPage() {
   const activos = viajes.filter(v => v.estado === 'activo');
   const archivados = viajes.filter(v => v.estado === 'cerrado');
 
-  const handleCrear = async (titulo, emoji, participanteIds) => {
+  const handleCrear = async (titulo, emoji, participanteIds, fechaDesde, fechaHasta) => {
     try {
-      const nuevo = await crear(titulo, emoji, participanteIds);
+      const nuevo = await crear(titulo, emoji, participanteIds, fechaDesde, fechaHasta);
       setModalOpen(false);
       addToast('Viaje creado', 'success');
       navigate(`/viajes/${nuevo.id}`);

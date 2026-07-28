@@ -523,9 +523,9 @@ export default function ViajeDetallePage() {
     }
   };
 
-  const handleEditSave = async (titulo, emoji) => {
+  const handleEditSave = async (titulo, emoji, _participanteIds, fechaDesde, fechaHasta) => {
     try {
-      await viajesService.editarViaje(id, { titulo, emoji });
+      await viajesService.editarViaje(id, { titulo, emoji, fechaDesde, fechaHasta });
       setEditModal(false);
       addToast('Viaje actualizado', 'success');
       cargar();

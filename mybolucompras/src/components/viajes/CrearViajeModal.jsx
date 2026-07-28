@@ -9,6 +9,8 @@ const EMOJIS = ['✈️','🏖️','🏔️','🗺️','🌍','🏕️','🚗','
 export default function CrearViajeModal({ onClose, onSave, currentUserId, currentUserNombre, viaje = null }) {
   const [titulo, setTitulo] = useState(viaje?.titulo || '');
   const [emoji, setEmoji] = useState(viaje?.emoji || '✈️');
+  const [fechaDesde, setFechaDesde] = useState(viaje?.fechaDesde || '');
+  const [fechaHasta, setFechaHasta] = useState(viaje?.fechaHasta || '');
   const [participantes, setParticipantes] = useState([]);
   const [searchEmail, setSearchEmail] = useState('');
   const [searchResult, setSearchResult] = useState(null);
@@ -50,10 +52,14 @@ export default function CrearViajeModal({ onClose, onSave, currentUserId, curren
 
   const handleGuardar = async () => {
     if (!titulo.trim()) { setError('El título es obligatorio'); return; }
+    if (fechaDesde && fechaHasta && fechaHasta < fechaDesde) {
+      setError('La fecha de fin no puede ser anterior a la de inicio');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
-      await onSave(titulo.trim(), emoji, participantes.map(p => p.userId));
+      await onSave(titulo.trim(), emoji, participantes.map(p => p.userId), fechaDesde || null, fechaHasta || null);
     } catch {
       setError('Error al guardar');
       setSaving(false);
@@ -100,6 +106,29 @@ export default function CrearViajeModal({ onClose, onSave, currentUserId, curren
                   type="button"
                 >{e}</button>
               ))}
+            </div>
+          </div>
+
+          {/* Fechas */}
+          <div className="form-grid">
+            <div className="form-field">
+              <label className="form-label">Desde</label>
+              <input
+                className="form-input"
+                type="date"
+                value={fechaDesde}
+                onChange={e => setFechaDesde(e.target.value)}
+              />
+            </div>
+            <div className="form-field">
+              <label className="form-label">Hasta</label>
+              <input
+                className="form-input"
+                type="date"
+                value={fechaHasta}
+                onChange={e => setFechaHasta(e.target.value)}
+                min={fechaDesde || undefined}
+              />
             </div>
           </div>
 
