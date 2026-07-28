@@ -14,6 +14,7 @@ import { viajeActividadesService } from '../services/viajeActividadesService';
 import ViajeGastoModal from '../components/viajes/ViajeGastoModal';
 import RegistrarPagoModal from '../components/viajes/RegistrarPagoModal';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
+import AgregarActividadModal from '../components/viajes/AgregarActividadModal';
 import { formatRangoFechas } from '../utils/formatters';
 import { IoArrowBack, IoEllipsisVertical, IoAddOutline, IoTrashOutline, IoLockClosedOutline, IoAddCircleOutline, IoCheckmark, IoEllipseOutline, IoCheckmarkCircle, IoCheckmarkCircleOutline, IoImageOutline } from 'react-icons/io5';
 import { FiArrowRight } from 'react-icons/fi';
@@ -282,6 +283,7 @@ function TabCalendario({ viaje, currentUserId, activo }) {
   const [selectedDia, setSelectedDia] = useState(dias[0] || null);
   const [actividades, setActividades] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actividadModal, setActividadModal] = useState(false);
   const stripRef = useRef(null);
 
   const cargar = useCallback(async () => {
@@ -305,6 +307,18 @@ function TabCalendario({ viaje, currentUserId, activo }) {
       cargar();
     } catch {
       addToast('Error al eliminar', 'error');
+    }
+  };
+
+  const handleSaveActividad = async (data) => {
+    try {
+      await viajeActividadesService.crear(viaje.id, data, currentUserId);
+      setActividadModal(false);
+      addToast('Actividad agregada', 'success');
+      cargar();
+    } catch {
+      addToast('Error al agregar la actividad', 'error');
+      throw new Error('save failed');
     }
   };
 
@@ -375,6 +389,20 @@ function TabCalendario({ viaje, currentUserId, activo }) {
             )}
           </div>
         ))
+      )}
+
+      {activo && (
+        <button className="viaje-fab" onClick={() => setActividadModal(true)}>
+          <IoAddOutline size={20} /> Agregar actividad
+        </button>
+      )}
+
+      {actividadModal && (
+        <AgregarActividadModal
+          fecha={selectedDia}
+          onClose={() => setActividadModal(false)}
+          onSave={handleSaveActividad}
+        />
       )}
     </div>
   );
