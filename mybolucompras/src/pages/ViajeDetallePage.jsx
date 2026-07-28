@@ -273,6 +273,7 @@ function TabNotas({ viaje, currentUserId }) {
   const [showItemInput, setShowItemInput] = useState(false);
   const [showNotaInput, setShowNotaInput] = useState(false);
   const [loadingNotas, setLoadingNotas] = useState(true);
+  const [checklistTab, setChecklistTab] = useState('general'); // 'general' | 'personal'
 
   const cargar = useCallback(async () => {
     try {
@@ -311,7 +312,7 @@ function TabNotas({ viaje, currentUserId }) {
   const handleAgregarItem = async () => {
     if (!nuevoItem.trim()) return;
     try {
-      await viajeNotasService.agregarItem(viaje.id, nuevoItem.trim(), currentUserId);
+      await viajeNotasService.agregarItem(viaje.id, nuevoItem.trim(), currentUserId, checklistTab);
       setNuevoItem(''); setShowItemInput(false);
       cargar();
     } catch { addToast('Error al agregar', 'error'); }
@@ -338,11 +339,22 @@ function TabNotas({ viaje, currentUserId }) {
 
   if (loadingNotas) return <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--color-text-muted)' }}>Cargando…</div>;
 
+  const checklistFiltrado = checklist.filter(item => item.tipo === checklistTab);
+
   return (
     <div>
       {/* Checklist */}
       <div className="viaje-notas-section-header">
-        <div className="viaje-section-label" style={{ margin: 0 }}>Qué llevar</div>
+        <div className="viaje-seg-tabs" style={{ margin: 0 }}>
+          <button
+            className={`viaje-seg-btn${checklistTab === 'general' ? ' active' : ''}`}
+            onClick={() => setChecklistTab('general')}
+          >General</button>
+          <button
+            className={`viaje-seg-btn${checklistTab === 'personal' ? ' active' : ''}`}
+            onClick={() => setChecklistTab('personal')}
+          >Personal</button>
+        </div>
         {activo && (
           <button className="viaje-notas-add-btn" onClick={() => setShowItemInput(v => !v)}>
             <IoAddCircleOutline size={22} />
@@ -366,11 +378,11 @@ function TabNotas({ viaje, currentUserId }) {
         </div>
       )}
 
-      {checklist.map(item => {
+      {checklistFiltrado.map(item => {
         const completadosPor = item.completadosPor ?? [];
         const completadoPorMi = completadosPor.includes(currentUserId);
         const pendientes = viaje.participantes.filter(p => !completadosPor.includes(p.userId));
-        const todosCompletaron = viaje.participantes.length > 0 && pendientes.length === 0;
+        const todosCompletaron = item.tipo === 'general' && viaje.participantes.length > 0 && pendientes.length === 0;
         const alguienMarcó = completadosPor.length > 0;
         const CheckIcon = todosCompletaron ? IoCheckmarkCircle : completadoPorMi ? IoCheckmarkCircleOutline : IoEllipseOutline;
 
@@ -379,13 +391,13 @@ function TabNotas({ viaje, currentUserId }) {
             <CheckIcon size={22} className={`viaje-checklist-check${todosCompletaron || completadoPorMi ? ' done' : ''}`} />
             <div style={{ flex: 1 }}>
               <div className={`viaje-checklist-texto${todosCompletaron ? ' done' : ''}`}>{item.texto}</div>
-              {!todosCompletaron && alguienMarcó && (
+              {item.tipo === 'general' && !todosCompletaron && alguienMarcó && (
                 <div className="viaje-checklist-esperando">
                   Esperando a: {pendientes.map(p => p.nombre.split(' ')[0]).join(', ')}
                 </div>
               )}
             </div>
-            <span className="viaje-checklist-autor">{item.autorNombre.split(' ')[0]}</span>
+            {item.tipo === 'general' && <span className="viaje-checklist-autor">{item.autorNombre.split(' ')[0]}</span>}
             {item.createdBy === currentUserId && activo && (
               <button className="viaje-checklist-del" onClick={e => { e.stopPropagation(); handleEliminarItem(item.id); }}>
                 <IoTrashOutline size={14} />
@@ -394,6 +406,12 @@ function TabNotas({ viaje, currentUserId }) {
           </div>
         );
       })}
+
+      {checklistFiltrado.length === 0 && (
+        <div style={{ color: 'var(--color-text-muted)', fontSize: 13, padding: 'var(--space-3) 0' }}>
+          {checklistTab === 'general' ? 'Sin ítems generales todavía' : 'Sin ítems personales todavía'}
+        </div>
+      )}
 
       <div style={{ height: 'var(--space-5)' }} />
 
