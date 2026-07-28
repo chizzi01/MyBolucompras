@@ -27,10 +27,10 @@ export function ViajesProvider({ children }) {
 
   useEffect(() => { cargarViajes(); }, [cargarViajes]);
 
-  const crear = async (titulo, emoji, participanteIds) => {
+  const crear = async (titulo, emoji, participanteIds, fechaDesde, fechaHasta) => {
     const snapshot = [...viajes];
     try {
-      const nuevo = await viajesService.crear(titulo, emoji, participanteIds);
+      const nuevo = await viajesService.crear(titulo, emoji, participanteIds, fechaDesde, fechaHasta);
       setViajes(prev => [nuevo, ...prev]);
       return nuevo;
     } catch (e) {
