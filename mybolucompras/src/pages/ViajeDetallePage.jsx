@@ -271,8 +271,11 @@ function computeDias(fechaDesde, fechaHasta) {
   let cur = new Date(`${fechaDesde}T00:00:00`);
   const end = new Date(`${fechaHasta}T00:00:00`);
   while (cur <= end) {
-    dias.push(cur.toISOString().split('T')[0]);
-    cur = new Date(cur.getTime() + 24 * 60 * 60 * 1000);
+    const y = cur.getFullYear();
+    const m = String(cur.getMonth() + 1).padStart(2, '0');
+    const d = String(cur.getDate()).padStart(2, '0');
+    dias.push(`${y}-${m}-${d}`);
+    cur.setDate(cur.getDate() + 1);
   }
   return dias;
 }
@@ -285,6 +288,13 @@ function TabCalendario({ viaje, currentUserId, activo }) {
   const [loading, setLoading] = useState(true);
   const [actividadModal, setActividadModal] = useState(false);
   const stripRef = useRef(null);
+
+  useEffect(() => {
+    if (!selectedDia || !dias.includes(selectedDia)) {
+      setSelectedDia(dias[0] || null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viaje.fechaDesde, viaje.fechaHasta]);
 
   const cargar = useCallback(async () => {
     try {
@@ -491,15 +501,18 @@ function TabNotas({ viaje, currentUserId }) {
     <div>
       {/* Checklist */}
       <div className="viaje-notas-section-header">
-        <div className="viaje-seg-tabs" style={{ margin: 0 }}>
-          <button
-            className={`viaje-seg-btn${checklistTab === 'general' ? ' active' : ''}`}
-            onClick={() => setChecklistTab('general')}
-          >General</button>
-          <button
-            className={`viaje-seg-btn${checklistTab === 'personal' ? ' active' : ''}`}
-            onClick={() => setChecklistTab('personal')}
-          >Personal</button>
+        <div>
+          <div className="viaje-section-label" style={{ margin: 0, marginBottom: 'var(--space-2)' }}>Qué llevar</div>
+          <div className="viaje-seg-tabs" style={{ margin: 0 }}>
+            <button
+              className={`viaje-seg-btn${checklistTab === 'general' ? ' active' : ''}`}
+              onClick={() => setChecklistTab('general')}
+            >General</button>
+            <button
+              className={`viaje-seg-btn${checklistTab === 'personal' ? ' active' : ''}`}
+              onClick={() => setChecklistTab('personal')}
+            >Personal</button>
+          </div>
         </div>
         {activo && (
           <button className="viaje-notas-add-btn" onClick={() => setShowItemInput(v => !v)}>
@@ -529,14 +542,15 @@ function TabNotas({ viaje, currentUserId }) {
         const completadoPorMi = completadosPor.includes(currentUserId);
         const pendientes = viaje.participantes.filter(p => !completadosPor.includes(p.userId));
         const todosCompletaron = item.tipo === 'general' && viaje.participantes.length > 0 && pendientes.length === 0;
+        const completo = item.tipo === 'personal' ? completadoPorMi : todosCompletaron;
         const alguienMarcó = completadosPor.length > 0;
-        const CheckIcon = todosCompletaron ? IoCheckmarkCircle : completadoPorMi ? IoCheckmarkCircleOutline : IoEllipseOutline;
+        const CheckIcon = completo ? IoCheckmarkCircle : completadoPorMi ? IoCheckmarkCircleOutline : IoEllipseOutline;
 
         return (
           <div key={item.id} className="viaje-checklist-item" onClick={() => handleToggle(item)}>
-            <CheckIcon size={22} className={`viaje-checklist-check${todosCompletaron || completadoPorMi ? ' done' : ''}`} />
+            <CheckIcon size={22} className={`viaje-checklist-check${completo || completadoPorMi ? ' done' : ''}`} />
             <div style={{ flex: 1 }}>
-              <div className={`viaje-checklist-texto${todosCompletaron ? ' done' : ''}`}>{item.texto}</div>
+              <div className={`viaje-checklist-texto${completo ? ' done' : ''}`}>{item.texto}</div>
               {item.tipo === 'general' && !todosCompletaron && alguienMarcó && (
                 <div className="viaje-checklist-esperando">
                   Esperando a: {pendientes.map(p => p.nombre.split(' ')[0]).join(', ')}
