@@ -44,3 +44,18 @@ export const CURRENCY_SYMBOLS = {
 export function getCurrencySymbol(code) {
   return CURRENCY_SYMBOLS[code] || '$';
 }
+
+export function formatRangoFechas(fechaDesde, fechaHasta) {
+  if (!fechaDesde || !fechaHasta) return null;
+  const start = new Date(`${fechaDesde}T00:00:00`);
+  const end = new Date(`${fechaHasta}T00:00:00`);
+  if (isNaN(start) || isNaN(end)) return null;
+  const currentYear = new Date().getFullYear();
+  const crossesYear = start.getFullYear() !== currentYear || end.getFullYear() !== currentYear;
+  const opts = crossesYear
+    ? { day: '2-digit', month: 'short', year: 'numeric' }
+    : { day: '2-digit', month: 'short' };
+  const startLabel = start.toLocaleDateString('es-AR', opts);
+  const endLabel = end.toLocaleDateString('es-AR', opts);
+  return `${startLabel} - ${endLabel}`;
+}
