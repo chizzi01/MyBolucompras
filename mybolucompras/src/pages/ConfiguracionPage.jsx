@@ -8,7 +8,7 @@ import '../styles/configuracion.css';
 import '../styles/table.css';
 
 export default function ConfiguracionPage() {
-  const { mydata, setMydata, actualizarConfig } = useData();
+  const { mydata, setMydata } = useData();
   const addToast = useToast();
 
   const [bancosSeleccionados, setBancosSeleccionados] = useState([]);
@@ -37,10 +37,12 @@ export default function ConfiguracionPage() {
   const handleToggleModoViaje = async () => {
     if (!mydata.modoViajeActivo) return;
     try {
-      await actualizarConfig({
+      await configuracionService.actualizarModoViaje({
         modoViajeActivo: false,
         modoViajeViajeId: null,
+        modoViajePromptedIds: mydata.modoViajePromptedIds,
       });
+      setMydata(prev => ({ ...prev, modoViajeActivo: false, modoViajeViajeId: null }));
       addToast('Modo Viaje desactivado', 'success');
     } catch {
       addToast('Error al actualizar Modo Viaje', 'error');

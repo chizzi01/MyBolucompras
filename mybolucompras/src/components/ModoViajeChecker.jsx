@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { configuracionService } from '../services/configuracionService';
 import { viajesService } from '../services/viajesService';
 import ModoViajeModal from './ModoViajeModal';
+import { useToast } from './Toast';
 
 function toISODate(date) {
   return date.toISOString().split('T')[0];
@@ -13,6 +14,7 @@ function toISODate(date) {
 export default function ModoViajeChecker() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const addToast = useToast();
   const [candidato, setCandidato] = useState(null);
   const redirectedRef = useRef(false);
 
@@ -42,7 +44,11 @@ export default function ModoViajeChecker() {
           }
 
           if (!viaje || vencido) {
-            await configuracionService.actualizar({ ...mydata, modoViajeActivo: false, modoViajeViajeId: null });
+            await configuracionService.actualizarModoViaje({
+              modoViajeActivo: false,
+              modoViajeViajeId: null,
+              modoViajePromptedIds: mydata.modoViajePromptedIds,
+            });
             return;
           }
 
@@ -80,10 +86,10 @@ export default function ModoViajeChecker() {
       const mydata = await configuracionService.get();
       if (!mydata) return;
       const promptedIds = [...new Set([...(mydata.modoViajePromptedIds || []), viaje.id])];
-      await configuracionService.actualizar({
-        ...mydata,
+      await configuracionService.actualizarModoViaje({
+        modoViajeActivo: activar ? true : mydata.modoViajeActivo,
+        modoViajeViajeId: activar ? viaje.id : mydata.modoViajeViajeId,
         modoViajePromptedIds: promptedIds,
-        ...(activar ? { modoViajeActivo: true, modoViajeViajeId: viaje.id } : {}),
       });
       if (activar) {
         redirectedRef.current = true;
@@ -91,6 +97,7 @@ export default function ModoViajeChecker() {
       }
     } catch (err) {
       console.error('[ModoViajeChecker]', err);
+      addToast?.('Error al guardar Modo Viaje', 'error');
     }
   };
 

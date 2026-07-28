@@ -23,6 +23,26 @@ export const configuracionService = {
       .upsert({ user_id: user.id, ...mapToDB(config), updated_at: new Date().toISOString() });
     if (error) throw error;
   },
+
+  // Writes ONLY the modo-viaje columns. This exists so that generic config saves (Settings,
+  // cierre/fondos updates) — which build their payload from a possibly-stale in-memory snapshot
+  // of `mydata` — can never clobber modo-viaje state written concurrently by ModoViajeChecker.
+  // See docs/superpowers/plans/2026-07-27-mobile-parity.md final-review Finding 5.
+  async actualizarModoViaje({ modoViajeActivo, modoViajeViajeId, modoViajePromptedIds }) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No autenticado');
+
+    const { error } = await supabase
+      .from('configuracion_usuario')
+      .upsert({
+        user_id: user.id,
+        modo_viaje_activo: modoViajeActivo ?? false,
+        modo_viaje_viaje_id: modoViajeViajeId || null,
+        modo_viaje_prompted_ids: modoViajePromptedIds || [],
+        updated_at: new Date().toISOString(),
+      });
+    if (error) throw error;
+  },
 };
 
 function getDefaults() {
@@ -76,8 +96,6 @@ function mapToDB(config) {
     bancos_habilitados: config.bancosHabilitados || [],
     medios_habilitados: config.mediosHabilitados || [],
     moneda_preferida: config.monedaPreferida || 'ARS',
-    modo_viaje_activo: config.modoViajeActivo ?? false,
-    modo_viaje_viaje_id: config.modoViajeViajeId || null,
-    modo_viaje_prompted_ids: config.modoViajePromptedIds || [],
+    // modo_viaje_* columns are intentionally NOT written here — see actualizarModoViaje() above.
   };
 }
