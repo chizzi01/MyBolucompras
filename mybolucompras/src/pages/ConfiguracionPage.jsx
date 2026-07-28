@@ -5,9 +5,10 @@ import { useToast } from '../components/Toast';
 import { configuracionService } from '../services/configuracionService';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
 import '../styles/configuracion.css';
+import '../styles/table.css';
 
 export default function ConfiguracionPage() {
-  const { mydata, setMydata } = useData();
+  const { mydata, setMydata, actualizarConfig } = useData();
   const addToast = useToast();
 
   const [bancosSeleccionados, setBancosSeleccionados] = useState([]);
@@ -31,6 +32,19 @@ export default function ConfiguracionPage() {
     setMediosSeleccionados(prev =>
       prev.includes(medio) ? prev.filter(m => m !== medio) : [...prev, medio]
     );
+  };
+
+  const handleToggleModoViaje = async () => {
+    if (!mydata.modoViajeActivo) return;
+    try {
+      await actualizarConfig({
+        modoViajeActivo: false,
+        modoViajeViajeId: null,
+      });
+      addToast('Modo Viaje desactivado', 'success');
+    } catch {
+      addToast('Error al actualizar Modo Viaje', 'error');
+    }
   };
 
   const handleSave = async () => {
@@ -118,6 +132,33 @@ export default function ConfiguracionPage() {
                   {m.symbol} {m.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="config-card">
+            <div className="config-card-title">✈️ Modo Viaje</div>
+            <p className="config-card-desc">
+              Cuando está activo, la app te lleva directo al viaje seleccionado al abrirla. Solo puede activarse desde el aviso automático al detectar un viaje en curso; acá podés desactivarlo.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>
+                {mydata.modoViajeActivo ? 'Activado' : 'Desactivado'}
+              </span>
+              <div
+                className={`switch-track${mydata.modoViajeActivo ? ' on' : ''}`}
+                style={{
+                  width: 48,
+                  height: 26,
+                  cursor: mydata.modoViajeActivo ? 'pointer' : 'not-allowed',
+                  opacity: mydata.modoViajeActivo ? 1 : 0.5,
+                }}
+                onClick={handleToggleModoViaje}
+                role="switch"
+                aria-checked={!!mydata.modoViajeActivo}
+                aria-disabled={!mydata.modoViajeActivo}
+              >
+                <div className="switch-thumb" style={{ width: 18, height: 18, top: 4, left: mydata.modoViajeActivo ? 26 : 4 }} />
+              </div>
             </div>
           </div>
 
