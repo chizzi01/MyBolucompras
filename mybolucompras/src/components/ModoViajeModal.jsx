@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { IoAirplane } from 'react-icons/io5';
+import '../styles/modal.css';
+import '../styles/viajes.css';
+import '../styles/table.css';
 
 export default function ModoViajeModal({ viaje, onConfirm }) {
   const [activar, setActivar] = useState(false);
