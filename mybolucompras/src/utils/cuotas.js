@@ -148,3 +148,9 @@ export function gastoEntraEsteMes(gasto, mydata) {
   if (new Date() > fechaCierreDate) return true;
   return !(fechaCompra > fechaCierreAnteriorDate && fechaCompra <= fechaCierreDate);
 }
+
+// Adapts a `deuda` (deudores table shape, date field named `fechaDeuda`) to the
+// `gasto` shape gastoEntraEsteMes expects (date field named `fecha`).
+export function deudaEntraEsteMes(deuda, mydata) {
+  return gastoEntraEsteMes({ ...deuda, fecha: deuda.fechaDeuda }, mydata);
+}

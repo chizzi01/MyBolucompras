@@ -8,12 +8,9 @@ import { useDeudores } from '../context/DeudoresContext';
 import { useData } from '../context/DataContext';
 import DeudaModal from '../components/DeudaModal';
 import { getCurrencySymbol } from '../utils/formatters';
-import { calcularCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
+import { calcularCuotasRestantes, deudaEntraEsteMes } from '../utils/cuotas';
 import { IoAddOutline, IoSearchOutline, IoCheckmarkCircleOutline, IoPencilOutline, IoTrashOutline } from 'react-icons/io5';
 import '../styles/deudores.css';
-
-const deudaEntraEsteMes = (deuda, mydata) =>
-  gastoEntraEsteMes({ ...deuda, fecha: deuda.fechaDeuda }, mydata);
 
 export default function DeudoresPage() {
   const addToast = useToast();

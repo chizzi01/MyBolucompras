@@ -1,10 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { deudoresService } from '../services/deudoresService';
 import { useAuth } from './AuthContext';
-import { gastoEntraEsteMes } from '../utils/cuotas';
-
-const deudaEntraEsteMes = (deuda, mydata) =>
-  gastoEntraEsteMes({ ...deuda, fecha: deuda.fechaDeuda }, mydata);
+import { deudaEntraEsteMes } from '../utils/cuotas';
 
 const DeudoresContext = createContext(null);
 
