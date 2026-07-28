@@ -17,6 +17,7 @@ export function DataProvider({ children }) {
     cierre: '', vencimiento: '', cierreAnterior: '', vencimientoAnterior: '',
     fondos: 0, etiquetas: [], presupuestos: {},
     bancosHabilitados: [], mediosHabilitados: [], monedaPreferida: 'ARS',
+    modoViajeActivo: false, modoViajeViajeId: null, modoViajePromptedIds: [],
   });
   const [loading, setLoading] = useState(!demo);
   const [error, setError] = useState(null);

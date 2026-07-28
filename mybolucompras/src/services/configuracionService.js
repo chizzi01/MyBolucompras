@@ -38,6 +38,9 @@ function getDefaults() {
     bancosHabilitados: [],
     mediosHabilitados: [],
     monedaPreferida: 'ARS',
+    modoViajeActivo: false,
+    modoViajeViajeId: null,
+    modoViajePromptedIds: [],
   };
 }
 
@@ -54,6 +57,9 @@ function mapFromDB(row) {
     bancosHabilitados: row.bancos_habilitados || [],
     mediosHabilitados: row.medios_habilitados || [],
     monedaPreferida: row.moneda_preferida || 'ARS',
+    modoViajeActivo: row.modo_viaje_activo ?? false,
+    modoViajeViajeId: row.modo_viaje_viaje_id || null,
+    modoViajePromptedIds: row.modo_viaje_prompted_ids || [],
   };
 }
 
@@ -70,5 +76,8 @@ function mapToDB(config) {
     bancos_habilitados: config.bancosHabilitados || [],
     medios_habilitados: config.mediosHabilitados || [],
     moneda_preferida: config.monedaPreferida || 'ARS',
+    modo_viaje_activo: config.modoViajeActivo ?? false,
+    modo_viaje_viaje_id: config.modoViajeViajeId || null,
+    modo_viaje_prompted_ids: config.modoViajePromptedIds || [],
   };
 }
