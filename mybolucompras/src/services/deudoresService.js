@@ -36,12 +36,15 @@ export const deudoresService = {
     const nombreCreador = user.user_metadata?.nombre || user.email;
     let fechaISO = finalDeuda.fechaDeuda;
     if (fechaISO?.includes('/')) fechaISO = fechaISO.split('/').reverse().join('-');
-    fechaISO = fechaISO || new Date().toISOString().split('T')[0];
+    // gastos.fecha is NOT NULL, so the "gastos" counterpart row still needs a fallback date.
+    // deudores.fecha_deuda is nullable — leave fechaISO itself as-is (possibly falsy) so the
+    // counterpart's deuda row matches the owner's row (mapToDB also stores null when dateless).
+    const fechaGastoISO = fechaISO || new Date().toISOString().split('T')[0];
 
     const gastoParaOtro = {
       es_fijo: finalDeuda.isFijo ?? false,
       objeto: finalDeuda.descripcion || `Deuda con ${nombreCreador}`,
-      fecha: fechaISO,
+      fecha: fechaGastoISO,
       medio: finalDeuda.medio || null,
       cuotas: parseInt(finalDeuda.cuotas) || 1,
       tipo: ['debito', 'credito'].includes(finalDeuda.tipo) ? finalDeuda.tipo : null,
@@ -67,7 +70,7 @@ export const deudoresService = {
       cuotas: parseInt(finalDeuda.cuotas) || 1,
       cantidad: parseInt(finalDeuda.cantidad) || 1,
       pagado: false,
-      fecha_deuda: fechaISO,
+      fecha_deuda: fechaISO || null,
       fecha_pago: null,
       compartido_con_nombre: nombreCreador,
       compartido_con_user_id: user.id,
@@ -122,32 +125,40 @@ export const deudoresService = {
       let fechaDeudaISO = deudaActual.fechaDeuda;
       if (fechaDeudaISO?.includes('/')) fechaDeudaISO = fechaDeudaISO.split('/').reverse().join('-');
 
+      // fecha_deuda/fecha acotan a la deuda correspondiente cuando hay varias con el mismo monto,
+      // pero si no tenemos una fecha normalizada (deuda dateless o legacy) no podemos filtrar por
+      // ella: un string vacío produce `eq.` en PostgREST, que Postgres rechaza como fecha inválida.
+      let deudaOtroQuery = supabase
+        .from('deudores')
+        .update({ pagado: true, fecha_pago: today })
+        .eq('user_id', otroUserId)
+        .eq('compartido_con_user_id', user.id)
+        .eq('monto', monto);
+      if (fechaDeudaISO) deudaOtroQuery = deudaOtroQuery.eq('fecha_deuda', fechaDeudaISO);
+
+      let gastoOtroQuery = supabase
+        .from('gastos')
+        .update({ pagado: true, fecha_pago: today })
+        .eq('user_id', otroUserId)
+        .eq('compartido_con_user_id', user.id)
+        .eq('precio', monto);
+      if (fechaDeudaISO) gastoOtroQuery = gastoOtroQuery.eq('fecha', fechaDeudaISO);
+
+      let gastoMioQuery = supabase
+        .from('gastos')
+        .update({ pagado: true, fecha_pago: today })
+        .eq('user_id', user.id)
+        .eq('compartido_con_user_id', otroUserId)
+        .eq('precio', monto);
+      if (fechaDeudaISO) gastoMioQuery = gastoMioQuery.eq('fecha', fechaDeudaISO);
+
       const results = await Promise.all([
         // Deuda del otro usuario — sin filtro pagado=false para que el re-marcado mensual funcione.
-        // fecha_deuda acota a la deuda correspondiente cuando hay varias con el mismo monto.
-        supabase
-          .from('deudores')
-          .update({ pagado: true, fecha_pago: today })
-          .eq('user_id', otroUserId)
-          .eq('compartido_con_user_id', user.id)
-          .eq('monto', monto)
-          .eq('fecha_deuda', fechaDeudaISO),
+        deudaOtroQuery,
         // Gasto del otro usuario
-        supabase
-          .from('gastos')
-          .update({ pagado: true, fecha_pago: today })
-          .eq('user_id', otroUserId)
-          .eq('compartido_con_user_id', user.id)
-          .eq('precio', monto)
-          .eq('fecha', fechaDeudaISO),
+        gastoOtroQuery,
         // Mi gasto si existe
-        supabase
-          .from('gastos')
-          .update({ pagado: true, fecha_pago: today })
-          .eq('user_id', user.id)
-          .eq('compartido_con_user_id', otroUserId)
-          .eq('precio', monto)
-          .eq('fecha', fechaDeudaISO),
+        gastoMioQuery,
       ]);
       results.forEach(({ error: e }) => { if (e) throw e; });
     }
