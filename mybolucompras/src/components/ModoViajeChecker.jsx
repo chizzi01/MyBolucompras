@@ -22,47 +22,51 @@ export default function ModoViajeChecker() {
     let cancelled = false;
 
     (async () => {
-      const [mydata, viajes] = await Promise.all([
-        configuracionService.get(),
-        viajesService.getAll(),
-      ]);
-      if (cancelled || !mydata) return;
+      try {
+        const [mydata, viajes] = await Promise.all([
+          configuracionService.get(),
+          viajesService.getAll(),
+        ]);
+        if (cancelled || !mydata) return;
 
-      const viajesActivos = viajes.filter(v => v.estado === 'activo');
-      const today = toISODate(new Date());
+        const viajesActivos = viajes.filter(v => v.estado === 'activo');
+        const today = toISODate(new Date());
 
-      if (mydata.modoViajeActivo) {
-        const viaje = viajesActivos.find(v => v.id === mydata.modoViajeViajeId);
-        let vencido = false;
-        if (viaje?.fechaHasta) {
-          const limite = new Date(`${viaje.fechaHasta}T00:00:00`);
-          limite.setDate(limite.getDate() + 1);
-          vencido = new Date(`${today}T00:00:00`) > limite;
-        }
+        if (mydata.modoViajeActivo) {
+          const viaje = viajesActivos.find(v => v.id === mydata.modoViajeViajeId);
+          let vencido = false;
+          if (viaje?.fechaHasta) {
+            const limite = new Date(`${viaje.fechaHasta}T00:00:00`);
+            limite.setDate(limite.getDate() + 1);
+            vencido = new Date(`${today}T00:00:00`) > limite;
+          }
 
-        if (!viaje || vencido) {
-          await configuracionService.actualizar({ ...mydata, modoViajeActivo: false, modoViajeViajeId: null });
+          if (!viaje || vencido) {
+            await configuracionService.actualizar({ ...mydata, modoViajeActivo: false, modoViajeViajeId: null });
+            return;
+          }
+
+          if (!redirectedRef.current) {
+            redirectedRef.current = true;
+            navigate(`/viajes/${viaje.id}`);
+          }
           return;
         }
 
-        if (!redirectedRef.current) {
-          redirectedRef.current = true;
-          navigate(`/viajes/${viaje.id}`);
+        const candidatos = viajesActivos
+          .filter(v => v.fechaDesde && v.fechaHasta)
+          .filter(v => v.fechaDesde <= today && today <= v.fechaHasta)
+          .filter(v => !(mydata.modoViajePromptedIds || []).includes(v.id));
+
+        if (candidatos.length > 0) {
+          const elegido = candidatos.reduce(
+            (max, v) => (v.fechaDesde > max.fechaDesde ? v : max),
+            candidatos[0]
+          );
+          if (!cancelled) setCandidato(elegido);
         }
-        return;
-      }
-
-      const candidatos = viajesActivos
-        .filter(v => v.fechaDesde && v.fechaHasta)
-        .filter(v => v.fechaDesde <= today && today <= v.fechaHasta)
-        .filter(v => !(mydata.modoViajePromptedIds || []).includes(v.id));
-
-      if (candidatos.length > 0) {
-        const elegido = candidatos.reduce(
-          (max, v) => (v.fechaDesde > max.fechaDesde ? v : max),
-          candidatos[0]
-        );
-        if (!cancelled) setCandidato(elegido);
+      } catch (err) {
+        console.error('[ModoViajeChecker]', err);
       }
     })();
 
@@ -72,17 +76,21 @@ export default function ModoViajeChecker() {
   const handleConfirmar = async (activar) => {
     const viaje = candidato;
     setCandidato(null);
-    const mydata = await configuracionService.get();
-    if (!mydata) return;
-    const promptedIds = [...new Set([...(mydata.modoViajePromptedIds || []), viaje.id])];
-    await configuracionService.actualizar({
-      ...mydata,
-      modoViajePromptedIds: promptedIds,
-      ...(activar ? { modoViajeActivo: true, modoViajeViajeId: viaje.id } : {}),
-    });
-    if (activar) {
-      redirectedRef.current = true;
-      navigate(`/viajes/${viaje.id}`);
+    try {
+      const mydata = await configuracionService.get();
+      if (!mydata) return;
+      const promptedIds = [...new Set([...(mydata.modoViajePromptedIds || []), viaje.id])];
+      await configuracionService.actualizar({
+        ...mydata,
+        modoViajePromptedIds: promptedIds,
+        ...(activar ? { modoViajeActivo: true, modoViajeViajeId: viaje.id } : {}),
+      });
+      if (activar) {
+        redirectedRef.current = true;
+        navigate(`/viajes/${viaje.id}`);
+      }
+    } catch (err) {
+      console.error('[ModoViajeChecker]', err);
     }
   };
 
