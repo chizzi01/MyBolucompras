@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { deudoresService } from '../services/deudoresService';
 import { useAuth } from './AuthContext';
+import { gastoEntraEsteMes } from '../utils/cuotas';
+
+const deudaEntraEsteMes = (deuda, mydata) =>
+  gastoEntraEsteMes({ ...deuda, fecha: deuda.fechaDeuda }, mydata);
 
 const DeudoresContext = createContext(null);
 
@@ -52,7 +56,10 @@ export function DeudoresProvider({ children }) {
     }
   };
 
-  const marcarPagada = async (id, deudaActual) => {
+  const marcarPagada = async (id, deudaActual, mydata) => {
+    if (!deudaEntraEsteMes(deudaActual, mydata)) {
+      throw new Error('No se puede marcar como pagada una deuda que todavía no entra este mes');
+    }
     const snapshot = deudas;
     const fechaPago = new Date().toISOString().split('T')[0].split('-').reverse().join('/');
     setDeudas(prev => prev.map(d =>

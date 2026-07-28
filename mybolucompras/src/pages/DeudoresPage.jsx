@@ -5,14 +5,19 @@ import Footer from '../components/Footer';
 import DeudoresSkeleton from '../components/DeudoresSkeleton';
 import { useToast } from '../components/Toast';
 import { useDeudores } from '../context/DeudoresContext';
+import { useData } from '../context/DataContext';
 import DeudaModal from '../components/DeudaModal';
 import { getCurrencySymbol } from '../utils/formatters';
-import { calcularCuotasRestantes } from '../utils/cuotas';
+import { calcularCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 import { IoAddOutline, IoSearchOutline, IoCheckmarkCircleOutline, IoPencilOutline, IoTrashOutline } from 'react-icons/io5';
 import '../styles/deudores.css';
 
+const deudaEntraEsteMes = (deuda, mydata) =>
+  gastoEntraEsteMes({ ...deuda, fecha: deuda.fechaDeuda }, mydata);
+
 export default function DeudoresPage() {
   const addToast = useToast();
+  const { mydata } = useData();
   const { deudas, loading, agregarDeuda, editarDeuda, marcarPagada, eliminarDeuda } = useDeudores();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -81,10 +86,10 @@ export default function DeudoresPage() {
 
   const handleMarcarPagada = async (deuda) => {
     try {
-      await marcarPagada(deuda.id, deuda);
+      await marcarPagada(deuda.id, deuda, mydata);
       addToast('Deuda marcada como pagada', 'success');
-    } catch {
-      addToast('Error al marcar como pagada', 'error');
+    } catch (e) {
+      addToast(e.message || 'Error al marcar como pagada', 'error');
     }
   };
 
@@ -235,11 +240,21 @@ export default function DeudoresPage() {
                           </span>
                           {deuda.pagado ? (
                             <span className="deuda-badge-pagado">✓ Pagado</span>
-                          ) : (
+                          ) : deudaEntraEsteMes(deuda, mydata) ? (
                             <div className="deuda-fila-acciones">
                               <button className="deuda-btn-icon success" title="Marcar como pagada" onClick={() => handleMarcarPagada(deuda)}>
                                 <IoCheckmarkCircleOutline size={17} />
                               </button>
+                              <button className="deuda-btn-icon" title="Editar" onClick={() => handleEdit(deuda)}>
+                                <IoPencilOutline size={16} />
+                              </button>
+                              <button className="deuda-btn-icon danger" title="Eliminar" onClick={() => handleEliminar(deuda.id)}>
+                                <IoTrashOutline size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="deuda-fila-acciones">
+                              <span className="deuda-badge-pendiente" title="Todavía no entra en la facturación de este mes">⏳ Próximo mes</span>
                               <button className="deuda-btn-icon" title="Editar" onClick={() => handleEdit(deuda)}>
                                 <IoPencilOutline size={16} />
                               </button>

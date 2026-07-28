@@ -302,3 +302,9 @@
   font-size: 14px;
   margin-bottom: var(--space-5);
 }
+
+.deuda-badge-pendiente {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
