@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import { FiX } from 'react-icons/fi';
 
-export default function AgregarActividadModal({ fecha, onClose, onSave }) {
-  const [titulo, setTitulo] = useState('');
-  const [hora, setHora] = useState('');
-  const [ubicacion, setUbicacion] = useState('');
-  const [nota, setNota] = useState('');
+export default function AgregarActividadModal({ fecha, actividad = null, onClose, onSave }) {
+  const isEdit = !!actividad;
+  const [titulo, setTitulo] = useState(actividad?.titulo || '');
+  const [hora, setHora] = useState(actividad?.hora?.slice(0, 5) || '');
+  const [ubicacion, setUbicacion] = useState(actividad?.ubicacion || '');
+  const [nota, setNota] = useState(actividad?.nota || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -16,7 +17,7 @@ export default function AgregarActividadModal({ fecha, onClose, onSave }) {
     setError('');
     try {
       await onSave({
-        fecha,
+        ...(isEdit ? {} : { fecha }),
         hora: hora || null,
         titulo: titulo.trim(),
         ubicacion: ubicacion.trim() || null,
@@ -34,7 +35,7 @@ export default function AgregarActividadModal({ fecha, onClose, onSave }) {
         <div className="modal-header">
           <div className="modal-header-left">
             <div className="modal-icon modal-icon-primary">📅</div>
-            <div className="modal-title">Agregar actividad</div>
+            <div className="modal-title">{isEdit ? 'Editar actividad' : 'Agregar actividad'}</div>
           </div>
           <button className="modal-close-btn" onClick={onClose}><FiX size={18} /></button>
         </div>
@@ -65,7 +66,7 @@ export default function AgregarActividadModal({ fecha, onClose, onSave }) {
         <div className="modal-footer">
           <button className="btn-ghost" onClick={onClose} disabled={saving}>Cancelar</button>
           <button className="viajes-btn-primary" onClick={handleGuardar} disabled={saving}>
-            {saving ? 'Guardando…' : 'Agregar'}
+            {saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Agregar'}
           </button>
         </div>
       </div>

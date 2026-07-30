@@ -31,6 +31,22 @@ export const viajeActividadesService = {
     return mapFromDB(data);
   },
 
+  async editar(id, campos) {
+    const update = {};
+    if (campos.hora !== undefined) update.hora = campos.hora || null;
+    if (campos.titulo !== undefined) update.titulo = campos.titulo;
+    if (campos.ubicacion !== undefined) update.ubicacion = campos.ubicacion || null;
+    if (campos.nota !== undefined) update.nota = campos.nota || null;
+    const { data, error } = await supabase
+      .from('viaje_actividades')
+      .update(update)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return mapFromDB(data);
+  },
+
   async eliminar(id) {
     const { error } = await supabase.from('viaje_actividades').delete().eq('id', id);
     if (error) throw error;

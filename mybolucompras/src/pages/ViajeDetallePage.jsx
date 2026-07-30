@@ -321,13 +321,19 @@ function TabCalendario({ viaje, currentUserId, activo }) {
   };
 
   const handleSaveActividad = async (data) => {
+    const editando = actividadModal && typeof actividadModal === 'object';
     try {
-      await viajeActividadesService.crear(viaje.id, data, currentUserId);
+      if (editando) {
+        await viajeActividadesService.editar(actividadModal.id, data);
+        addToast('Actividad actualizada', 'success');
+      } else {
+        await viajeActividadesService.crear(viaje.id, data, currentUserId);
+        addToast('Actividad agregada', 'success');
+      }
       setActividadModal(false);
-      addToast('Actividad agregada', 'success');
       cargar();
     } catch {
-      addToast('Error al agregar la actividad', 'error');
+      addToast(editando ? 'Error al actualizar la actividad' : 'Error al agregar la actividad', 'error');
       throw new Error('save failed');
     }
   };
@@ -385,15 +391,20 @@ function TabCalendario({ viaje, currentUserId, activo }) {
         </div>
       ) : (
         actividadesDelDia.map(act => (
-          <div key={act.id} className="viaje-actividad-row">
+          <div
+            key={act.id}
+            className="viaje-actividad-row"
+            style={activo ? { cursor: 'pointer' } : undefined}
+            onClick={() => activo && setActividadModal(act)}
+          >
             {act.hora && <div className="viaje-actividad-hora">{act.hora.slice(0, 5)}</div>}
             <div className="viaje-actividad-body">
               <div className="viaje-actividad-titulo">{act.titulo}</div>
               {act.ubicacion && <div className="viaje-actividad-meta">📍 {act.ubicacion}</div>}
               {act.nota && <div className="viaje-actividad-meta">{act.nota}</div>}
             </div>
-            {activo && act.createdBy === currentUserId && (
-              <button className="viaje-gasto-del-btn" onClick={() => handleEliminar(act)} title="Eliminar">
+            {activo && (
+              <button className="viaje-gasto-del-btn" onClick={e => { e.stopPropagation(); handleEliminar(act); }} title="Eliminar">
                 <IoTrashOutline size={16} />
               </button>
             )}
@@ -410,6 +421,7 @@ function TabCalendario({ viaje, currentUserId, activo }) {
       {actividadModal && (
         <AgregarActividadModal
           fecha={selectedDia}
+          actividad={typeof actividadModal === 'object' ? actividadModal : null}
           onClose={() => setActividadModal(false)}
           onSave={handleSaveActividad}
         />
