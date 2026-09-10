@@ -1005,7 +1005,13 @@ function FijoSelector({ value, onChange, dark, s }) {
               size={18}
               color={activo ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
             />
-            <Text style={[s.tipoBtnText, activo && s.tipoBtnTextActive]}>{op.label}</Text>
+            <Text
+              style={[s.tipoBtnText, activo && s.tipoBtnTextActive]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {op.label}
+            </Text>
           </TouchableOpacity>
         );
       })}
@@ -1216,6 +1222,7 @@ const styles = (dark) => StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 12,
+    paddingHorizontal: 4,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: dark ? colors.border.dark : colors.border.light,
@@ -1227,6 +1234,7 @@ const styles = (dark) => StyleSheet.create({
   },
   tipoBtnText: {
     ...typography.bodyMed,
+    flexShrink: 1,
     color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
   },
   tipoBtnTextActive: {
