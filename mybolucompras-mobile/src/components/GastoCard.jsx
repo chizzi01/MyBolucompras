@@ -28,6 +28,31 @@ function MedioIcon({ medio, dark }) {
   return <Ionicons name={def.name} size={18} color={color} />;
 }
 
+// Badge circular de color por categoría — mismo lenguaje que "Modo Previa":
+// ícono blanco chico sobre un fondo del color de la etiqueta.
+function CategoryBadge({ medio, color }) {
+  const def = MEDIO_ICON_MAP[medio];
+  return (
+    <View style={[cbStyles.badge, { backgroundColor: color }]}>
+      {def?.lib === 'fa5' ? (
+        <FontAwesome5 name={def.name} size={14} color="#fff" brand />
+      ) : def?.lib === 'mci' ? (
+        <MaterialCommunityIcons name={def.name} size={16} color="#fff" />
+      ) : (
+        <Ionicons name={def?.name || 'pricetag'} size={16} color="#fff" />
+      )}
+    </View>
+  );
+}
+
+const cbStyles = StyleSheet.create({
+  badge: {
+    width: 38, height: 38, borderRadius: 13,
+    alignItems: 'center', justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+});
+
 const resolveEtiqueta = (nombre, etiquetas = []) => {
   const found = etiquetas.find(e => (typeof e === 'string' ? e : e.nombre) === nombre);
   if (!found) return { nombre, color: colors.primary };
@@ -186,7 +211,7 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete, onMarkPaid
       </View>
 
       <Animated.View
-        style={{ transform: [{ translateX }], flex: 1 }}
+        style={{ transform: [{ translateX }], flex: 1, zIndex: 1, elevation: 1 }}
         {...panResponder.panHandlers}
       >
         <TouchableOpacity
@@ -201,26 +226,26 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete, onMarkPaid
               dark={dark}
             />
           ) : (
-            <View style={[s.left, !entraEsteMes && s.contentDimmed]}>
-              <Text style={s.objeto} numberOfLines={1}>{gasto.objeto}</Text>
-              <View style={s.meta}>
-                <MedioIcon medio={gasto.medio} dark={dark} />
-                {etiquetaObj ? (
-                  <View style={[s.tag, { backgroundColor: etiquetaObj.color + '25', borderColor: etiquetaObj.color }]}>
-                    <Text style={[s.tagText, { color: etiquetaObj.color }]}>{etiquetaObj.nombre}</Text>
-                  </View>
-                ) : null}
-                {isPaidShared ? (
-                  <View style={s.paidBadge}>
-                    <Ionicons name="checkmark-circle" size={10} color={colors.accent} />
-                    <Text style={s.paidBadgeText}>Pagado</Text>
-                  </View>
-                ) : gasto.compartidoConNombre ? (
-                  <View style={s.sharedBadge}>
-                    <Ionicons name="people-outline" size={10} color={dark ? '#94A3B8' : '#64748B'} />
-                    <Text style={s.sharedBadgeText} numberOfLines={1}>{gasto.compartidoConNombre}</Text>
-                  </View>
-                ) : null}
+            <View style={[s.rowContent, !entraEsteMes && s.contentDimmed]}>
+              <CategoryBadge medio={gasto.medio} color={etiquetaObj?.color || (dark ? '#3A3652' : '#D8CBAE')} />
+              <View style={s.left}>
+                <Text style={s.objeto} numberOfLines={1}>{gasto.objeto}</Text>
+                <View style={s.meta}>
+                  {etiquetaObj ? (
+                    <Text style={s.metaText} numberOfLines={1}>{etiquetaObj.nombre}</Text>
+                  ) : null}
+                  {isPaidShared ? (
+                    <View style={s.paidBadge}>
+                      <Ionicons name="checkmark-circle" size={10} color={colors.accent} />
+                      <Text style={s.paidBadgeText}>Pagado</Text>
+                    </View>
+                  ) : gasto.compartidoConNombre ? (
+                    <View style={s.sharedBadge}>
+                      <Ionicons name="people-outline" size={10} color={dark ? '#94A3B8' : '#64748B'} />
+                      <Text style={s.sharedBadgeText} numberOfLines={1}>{gasto.compartidoConNombre}</Text>
+                    </View>
+                  ) : null}
+                </View>
               </View>
             </View>
           )}
@@ -266,26 +291,21 @@ const styles = (dark, isPaidShared) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: dark ? colors.surface.dark : colors.surface.light,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: dark ? 0.3 : 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: isPaidShared ? 2 : 1,
-    borderColor: isPaidShared
-      ? colors.accent
-      : dark ? colors.border.dark : colors.border.light,
+    paddingVertical: spacing.sm + 6,
+    borderWidth: isPaidShared ? 1.5 : 0,
+    borderColor: isPaidShared ? colors.accent : 'transparent',
+    elevation: 1,
+    zIndex: 1,
   },
   contentDimmed: { opacity: 0.4 },
-  left: { flex: 1, marginRight: spacing.sm },
-  objeto: { ...typography.bodyBold, color: dark ? colors.text.dark : colors.text.light, marginBottom: 4 },
+  rowContent: { flex: 1, flexDirection: 'row', alignItems: 'center', marginRight: spacing.sm },
+  left: { flex: 1 },
+  objeto: { ...typography.bodyBold, color: dark ? colors.text.dark : colors.text.light, marginBottom: 2 },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  tag: { borderRadius: radius.full, borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2 },
-  tagText: { ...typography.captionMed },
-  right: { alignItems: 'flex-end', marginRight: spacing.sm },
+  metaText: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
+  right: { alignItems: 'flex-end' },
   precio: { ...typography.bodyBold, color: dark ? colors.text.dark : colors.text.light, marginBottom: 2 },
   precioTotal: { ...typography.caption, color: dark ? '#475569' : '#94A3B8', marginBottom: 4 },
   badgesRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
@@ -301,8 +321,10 @@ const styles = (dark, isPaidShared) => StyleSheet.create({
     position: 'absolute',
     right: 0, top: 0, bottom: 0,
     flexDirection: 'row',
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     overflow: 'hidden',
+    zIndex: 0,
+    elevation: 0,
   },
   paidBtn: {
     flex: 1,

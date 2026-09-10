@@ -17,6 +17,31 @@ const MEDIO_ICON_MAP = {
   'Mercado Pago':     { lib: 'mci', name: 'credit-card-fast-outline' },
 };
 
+const AVATAR_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#818CF8', '#34D399'];
+function avatarColorFor(nombre = '') {
+  let hash = 0;
+  for (let i = 0; i < nombre.length; i++) hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function PersonaAvatar({ nombre }) {
+  const inicial = (nombre || '?').trim()[0]?.toUpperCase() || '?';
+  return (
+    <View style={[avStyles.avatar, { backgroundColor: avatarColorFor(nombre) }]}>
+      <Text style={avStyles.text}>{inicial}</Text>
+    </View>
+  );
+}
+
+const avStyles = StyleSheet.create({
+  avatar: {
+    width: 38, height: 38, borderRadius: 19,
+    alignItems: 'center', justifyContent: 'center',
+    marginRight: 12,
+  },
+  text: { color: '#fff', fontWeight: '800', fontSize: 15 },
+});
+
 function MedioIcon({ medio, dark }) {
   const def = MEDIO_ICON_MAP[medio];
   const color = dark ? colors.textSecondary.dark : colors.textSecondary.light;
@@ -204,7 +229,7 @@ const DeudaCard = memo(function DeudaCard({ deuda, mydata, compensacion, onMarkP
       </View>
 
       <Animated.View
-        style={{ transform: [{ translateX }], flex: 1 }}
+        style={{ transform: [{ translateX }], flex: 1, zIndex: 1, elevation: 1 }}
         {...panResponder.panHandlers}
       >
         <TouchableOpacity
@@ -213,15 +238,13 @@ const DeudaCard = memo(function DeudaCard({ deuda, mydata, compensacion, onMarkP
           activeOpacity={0.75}
         >
           <View style={s.cardContent}>
+            <PersonaAvatar nombre={deuda.nombre} />
             <View style={[s.left, !entraEsteMes && s.contentDimmed]}>
               <Text style={s.nombre} numberOfLines={1}>
                 {deuda.descripcion || `Deuda con ${deuda.nombre}`}
               </Text>
               <View style={s.meta}>
-                <View style={s.nombreBadge}>
-                  <Ionicons name="person-outline" size={10} color={dark ? colors.textSecondary.dark : colors.textSecondary.light} />
-                  <Text style={s.nombreBadgeText}>{deuda.nombre}</Text>
-                </View>
+                <Text style={s.nombreLabel} numberOfLines={1}>{deuda.nombre}</Text>
                 {!!deuda.tipo && (
                   <View style={[s.tipoBadge, { backgroundColor: tipoColor + '20', borderColor: tipoColor }]}>
                     <Text style={[s.tipoBadgeText, { color: tipoColor }]}>
@@ -311,18 +334,13 @@ const styles = (dark, isPaid) => StyleSheet.create({
   card: {
     flexDirection: 'column',
     backgroundColor: dark ? colors.surface.dark : colors.surface.light,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: dark ? 0.3 : 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: isPaid ? 2 : 1,
-    borderColor: isPaid
-      ? colors.accent
-      : dark ? colors.border.dark : colors.border.light,
+    paddingVertical: spacing.sm + 6,
+    borderWidth: isPaid ? 1.5 : 0,
+    borderColor: isPaid ? colors.accent : 'transparent',
+    elevation: 1,
+    zIndex: 1,
   },
   cardContent: {
     flexDirection: 'row',
@@ -335,14 +353,7 @@ const styles = (dark, isPaid) => StyleSheet.create({
   tipoBadge: { borderRadius: radius.full, borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2 },
   tipoBadgeText: { ...typography.captionMed, fontSize: 10 },
   medio: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
-  nombreBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 3,
-    backgroundColor: dark ? '#1e293b' : '#F1F5F9',
-    paddingHorizontal: 7, paddingVertical: 2,
-    borderRadius: radius.full, borderWidth: 1,
-    borderColor: dark ? colors.border.dark : colors.border.light,
-  },
-  nombreBadgeText: { ...typography.caption, fontSize: 10, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, fontWeight: '600' },
+  nombreLabel: { ...typography.captionMed, color: dark ? colors.textSecondary.dark : colors.textSecondary.light },
   compartidoBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
     backgroundColor: dark ? '#1e293b' : '#EEF2FF',
@@ -374,7 +385,8 @@ const styles = (dark, isPaid) => StyleSheet.create({
   fechaPago: { ...typography.caption, fontSize: 10, color: colors.accent, marginTop: 2 },
   actionsContainer: {
     position: 'absolute', right: 0, top: 0, bottom: 0,
-    flexDirection: 'row', borderRadius: radius.md, overflow: 'hidden',
+    flexDirection: 'row', borderRadius: radius.lg, overflow: 'hidden',
+    zIndex: 0, elevation: 0,
   },
   actionBtn: { width: ACTION_W, justifyContent: 'center', alignItems: 'center', gap: 4 },
   actionText: { color: '#fff', fontSize: 11, fontWeight: '600' },

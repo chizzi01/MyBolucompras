@@ -11,13 +11,13 @@ import { useAuth } from '../context/AuthContext';
 import { useGastos } from '../hooks/queries/useGastos';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useGastoMutations } from '../hooks/mutations/useGastoMutations';
-import { useViajes } from '../hooks/queries/useViajes';
 import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 import { useTheme } from '../context/ThemeContext';
 import GastoCard from '../components/GastoCard';
 import FilterBar from '../components/FilterBar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { colors, spacing, radius, typography } from '../constants/theme';
+import ProfileAvatarButton from '../components/nav/ProfileAvatarButton';
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -29,8 +29,6 @@ export default function GastosScreen({ navigation }) {
   const { mydata } = useConfiguracion();
   const { eliminar: eliminarMutation, marcarPagado: marcarPagadoMutation } = useGastoMutations();
   const { user } = useAuth();
-  const { viajesActivos } = useViajes();
-  const viajeActivo = viajesActivos[0] ?? null;
   const { dark } = useTheme();
   const s = styles(dark);
 
@@ -143,20 +141,6 @@ export default function GastosScreen({ navigation }) {
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           <TouchableOpacity
-            style={[s.mesChip, viajeActivo && s.mesChipViaje]}
-            onPress={() => navigation.navigate('Viajes')}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={viajeActivo ? 'airplane' : 'airplane-outline'}
-              size={13}
-              color={viajeActivo ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
-            />
-            <Text style={[s.mesChipText, viajeActivo && s.mesChipTextActive]}>
-              {viajeActivo ? viajeActivo.titulo : 'Viajes'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
             style={[s.mesChip, soloEsteMes && s.mesChipActive]}
             onPress={toggleSoloEsteMes}
             activeOpacity={0.7}
@@ -170,6 +154,7 @@ export default function GastosScreen({ navigation }) {
               {soloEsteMes ? mesNombre : 'Todos'}
             </Text>
           </TouchableOpacity>
+          <ProfileAvatarButton size={30} />
         </View>
       </View>
 
@@ -261,7 +246,6 @@ const styles = (dark) => StyleSheet.create({
     backgroundColor: dark ? colors.surface.dark : colors.surface.light,
   },
   mesChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  mesChipViaje: { backgroundColor: colors.accent, borderColor: colors.accent },
   mesChipText: {
     ...typography.captionMed,
     color: dark ? colors.textSecondary.dark : colors.textSecondary.light,

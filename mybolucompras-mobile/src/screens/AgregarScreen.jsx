@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { colors, spacing, radius, typography, fonts } from '../constants/theme';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
 import { formatFecha, parseFecha, formatPrecioInputDisplay, formatPrecioLive, getCurrencySymbol } from '../utils/formatters';
 import { useModal } from '../hooks/useModal';
@@ -70,6 +70,11 @@ export default function AgregarScreen() {
     banco: bancosDisponibles.length === 1 ? bancosDisponibles[0] : '',
   });
   const loading = agregarMutation.isPending || agregarViajeGastoMutation.isPending;
+  // Colapsado por defecto: fecha, medio, banco, tipo de gasto y cuotas ya
+  // vienen con un valor por defecto razonable — la mayoría de los gastos no
+  // necesita tocarlos. Se auto-expande si el usuario ya venía de un estado
+  // no default (ej. gasto fijo) para no esconderle algo que ya eligió.
+  const [showMore, setShowMore] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [ocrItems, setOcrItems] = useState([]); // For bulk items
   const [showOcrModal, setShowOcrModal] = useState(false);
@@ -193,6 +198,7 @@ export default function AgregarScreen() {
         ...INITIAL,
         medio: mediosDisponibles[0] || '',
         moneda: mydata.monedaPreferida || 'ARS',
+        banco: bancosDisponibles.length === 1 ? bancosDisponibles[0] : '',
       });
       setPrecioDisplay('');
       setSharedUser(null);
@@ -204,7 +210,7 @@ export default function AgregarScreen() {
         type: 'success',
         title: '¡Guardado!',
         message: 'El gasto fue agregado correctamente.',
-        onClose: () => shouldGoBack ? navigation.goBack() : navigation.navigate('Gastos'),
+        onClose: () => shouldGoBack ? navigation.goBack() : navigation.navigate('Tabs', { screen: 'Gastos' }),
       });
     } catch (err) {
       showModal({ type: 'error', title: 'Error al guardar', message: err.message });
@@ -284,7 +290,7 @@ export default function AgregarScreen() {
         type: 'success',
         title: '¡Guardados!',
         message: `Se guardaron ${ocrItems.length} gastos correctamente.`,
-        onClose: () => navigation.navigate('Gastos')
+        onClose: () => navigation.navigate('Tabs', { screen: 'Gastos' })
       });
     } catch (err) {
       showModal({ type: 'error', title: 'Error', message: 'Hubo un problema al guardar los gastos.' });
@@ -385,7 +391,17 @@ export default function AgregarScreen() {
           keyboardDismissMode="interactive"
         >
         <View style={s.titleRow}>
-          <Text style={s.title}>Nuevo gasto</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar"
+            >
+              <Ionicons name="close" size={22} color={dark ? colors.text.dark : colors.text.light} />
+            </TouchableOpacity>
+            <Text style={s.title}>Nuevo gasto</Text>
+          </View>
           <TouchableOpacity style={s.scanBtn} onPress={handleScanReceipt} disabled={isScanning} activeOpacity={0.7}>
             <Ionicons name="scan-outline" size={19} color={colors.primary} />
             <Text style={s.scanBtnText}>Escanear</Text>
@@ -486,79 +502,35 @@ export default function AgregarScreen() {
           />
         )}
 
-        <Field label="Tipo de gasto" dark={dark}>
-          <FijoSelector value={form.isFijo} onChange={v => set('isFijo', v)} dark={dark} s={s} />
+        {/* Monto — lo primero que se llena, grande y con la moneda al lado */}
+        <View style={s.amountRow}>
+          <View style={s.currencyPicker}>
+            <SelectRow options={MONEDAS.map(m => m.codigo)} value={form.moneda} onChange={v => set('moneda', v)} dark={dark} style={s.currencyPickerBtn} />
+          </View>
+          <TextInput
+            style={s.amountInput}
+            value={precioDisplay}
+            onChangeText={handlePriceChange}
+            placeholder={`${getCurrencySymbol(form.moneda)} 0,00`}
+            placeholderTextColor={dark ? '#3A3652' : '#D8CBAE'}
+            keyboardType="decimal-pad"
+            returnKeyType="done"
+            autoFocus
+          />
+        </View>
+
+        <Field label="Objeto" dark={dark}>
+          <TextInput
+            style={[s.input, s.inputLarge]}
+            value={form.objeto}
+            onChangeText={v => set('objeto', v)}
+            placeholder="¿En qué se fue? Ej: Zapatillas"
+            placeholderTextColor={dark ? '#475569' : '#94A3B8'}
+            returnKeyType="next"
+          />
         </Field>
 
-        <Row>
-          <Field label="Objeto" dark={dark} flex>
-            <TextInput style={s.input} value={form.objeto} onChangeText={v => set('objeto', v)} placeholder="Ej: Zapatillas" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
-          </Field>
-          <Field label="Fecha" dark={dark} flex>
-            <DatePickerField
-              value={form.fecha}
-              onChange={v => set('fecha', v)}
-              dark={dark}
-              s={s}
-            />
-          </Field>
-        </Row>
-
-        <Row>
-          <Field label="Medio de pago" dark={dark} flex>
-            <SelectRow options={mediosDisponibles} value={form.medio} onChange={v => set('medio', v)} dark={dark} style={s.input} />
-          </Field>
-          <Field label="Banco" dark={dark} flex>
-            <SelectRow options={['', ...bancosDisponibles]} value={form.banco} onChange={v => set('banco', v)} dark={dark} style={s.input} placeholder="Sin banco" />
-          </Field>
-        </Row>
-
-        <Row>
-          <Field label="Moneda" dark={dark} flex>
-            <SelectRow options={MONEDAS.map(m => m.codigo)} value={form.moneda} onChange={v => set('moneda', v)} dark={dark} style={s.input} />
-          </Field>
-          <Field label="Precio" dark={dark} flex>
-            <TextInput
-              style={s.input}
-              value={precioDisplay}
-              onChangeText={handlePriceChange}
-              placeholder={`${getCurrencySymbol(form.moneda)} 0,00`}
-              placeholderTextColor={dark ? '#475569' : '#94A3B8'}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-            />
-          </Field>
-        </Row>
-
-        {form.isFijo && (
-          <Row>
-            <Field label="Rep en el mes" dark={dark} flex>
-              <TextInput style={s.input} value={form.cantidad} onChangeText={v => set('cantidad', v)} keyboardType="number-pad" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
-            </Field>
-            <Field label="Periodo en meses" dark={dark} flex>
-              <TextInput style={s.input} value={form.cuotas} onChangeText={v => set('cuotas', v)} keyboardType="number-pad" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
-            </Field>
-          </Row>
-        )}
-
-        {!form.isFijo && !MEDIOS_SOLO_DEBITO.includes(form.medio) && (
-          <Field label="Tipo de pago" dark={dark}>
-            <TipoSelector value={form.tipo} onChange={v => set('tipo', v)} dark={dark} s={s} />
-          </Field>
-        )}
-
-        {esCuotasHabilitado && (
-          <Field label="Cuotas" dark={dark}>
-            <CuotasSelector
-              value={form.cuotas}
-              onChange={v => set('cuotas', v)}
-              dark={dark}
-              s={s}
-            />
-          </Field>
-        )}
-
-        <Field label="Etiqueta" dark={dark}>
+        <Field label="Categoría" dark={dark}>
           <EtiquetaSelector
             value={form.etiqueta}
             onChange={v => set('etiqueta', v)}
@@ -569,7 +541,8 @@ export default function AgregarScreen() {
           />
         </Field>
 
-        {/* Compartir Gasto — hidden when a viaje is active (split handled by SplitPanel) */}
+        {/* Compartir Gasto — visible siempre; se oculta solo cuando un viaje
+            activo ya maneja la división vía SplitPanel */}
         {!(selectedViaje && viajeToggleOn) && (
           <View style={s.shareCard}>
             <Text style={s.shareTitle}>Compartir gasto</Text>
@@ -624,6 +597,71 @@ export default function AgregarScreen() {
               </View>
             )}
           </View>
+        )}
+
+        {/* Todo lo demás ya tiene un valor por defecto razonable (hoy, tu
+            medio de pago habitual, variable/débito) — se muestra solo si
+            hace falta tocarlo, para no frenar la carga de un gasto simple. */}
+        <TouchableOpacity style={s.moreToggle} onPress={() => setShowMore(v => !v)} activeOpacity={0.7}>
+          <Text style={s.moreToggleText}>
+            {showMore ? 'Ocultar detalles' : 'Más detalles (fecha, medio de pago, cuotas...)'}
+          </Text>
+          <Ionicons name={showMore ? 'chevron-up' : 'chevron-down'} size={16} color={colors.primary} />
+        </TouchableOpacity>
+
+        {showMore && (
+          <>
+            <Row>
+              <Field label="Fecha" dark={dark} flex>
+                <DatePickerField
+                  value={form.fecha}
+                  onChange={v => set('fecha', v)}
+                  dark={dark}
+                  s={s}
+                />
+              </Field>
+              <Field label="Tipo de gasto" dark={dark} flex>
+                <FijoSelector value={form.isFijo} onChange={v => set('isFijo', v)} dark={dark} s={s} />
+              </Field>
+            </Row>
+
+            <Row>
+              <Field label="Medio de pago" dark={dark} flex>
+                <SelectRow options={mediosDisponibles} value={form.medio} onChange={v => set('medio', v)} dark={dark} style={s.input} />
+              </Field>
+              <Field label="Banco" dark={dark} flex>
+                <SelectRow options={['', ...bancosDisponibles]} value={form.banco} onChange={v => set('banco', v)} dark={dark} style={s.input} placeholder="Sin banco" />
+              </Field>
+            </Row>
+
+            {form.isFijo && (
+              <Row>
+                <Field label="Rep en el mes" dark={dark} flex>
+                  <TextInput style={s.input} value={form.cantidad} onChangeText={v => set('cantidad', v)} keyboardType="number-pad" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+                </Field>
+                <Field label="Periodo en meses" dark={dark} flex>
+                  <TextInput style={s.input} value={form.cuotas} onChangeText={v => set('cuotas', v)} keyboardType="number-pad" placeholderTextColor={dark ? '#475569' : '#94A3B8'} />
+                </Field>
+              </Row>
+            )}
+
+            {!form.isFijo && !MEDIOS_SOLO_DEBITO.includes(form.medio) && (
+              <Field label="Tipo de pago" dark={dark}>
+                <TipoSelector value={form.tipo} onChange={v => set('tipo', v)} dark={dark} s={s} />
+              </Field>
+            )}
+
+            {esCuotasHabilitado && (
+              <Field label="Cuotas" dark={dark}>
+                <CuotasSelector
+                  value={form.cuotas}
+                  onChange={v => set('cuotas', v)}
+                  dark={dark}
+                  s={s}
+                />
+              </Field>
+            )}
+          </>
         )}
 
         <TouchableOpacity style={s.btn} onPress={handleGuardar} disabled={loading} activeOpacity={0.85}>
@@ -1134,15 +1172,43 @@ const styles = (dark) => StyleSheet.create({
   },
   scanOverlayText: { ...typography.bodyMed, color: dark ? colors.text.dark : colors.text.light },
   input: {
-    backgroundColor: dark ? '#0F172A' : '#F8FAFC',
-    borderWidth: 1,
-    borderColor: dark ? colors.border.dark : colors.border.light,
+    backgroundColor: dark ? colors.surfaceSecondary.dark : colors.surfaceSecondary.light,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: 12,
     ...typography.body,
     color: dark ? colors.text.dark : colors.text.light,
   },
+  inputLarge: { fontSize: 17, ...typography.bodyBold },
+  amountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  currencyPicker: { width: 76 },
+  currencyPickerBtn: {
+    backgroundColor: dark ? colors.surfaceSecondary.dark : colors.surfaceSecondary.light,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 10,
+  },
+  amountInput: {
+    flex: 1,
+    fontFamily: fonts.display,
+    fontSize: 34,
+    color: dark ? colors.text.dark : colors.text.light,
+    padding: 0,
+  },
+  moreToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  moreToggleText: { ...typography.captionMed, color: colors.primary },
   tipoBtn: {
     flex: 1,
     flexDirection: 'row',

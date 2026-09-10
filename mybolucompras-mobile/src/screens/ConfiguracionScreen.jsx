@@ -50,7 +50,7 @@ function AccordionSection({ title, children, dark, defaultOpen = false }) {
   );
 }
 
-export default function ConfiguracionScreen() {
+export default function ConfiguracionScreen({ navigation }) {
   const { user, signOut, biometricEnabled, biometricAvailable, enableBiometric } = useAuth();
   const { mydata } = useConfiguracion();
   const { actualizar } = useConfiguracionMutations();
@@ -244,7 +244,18 @@ export default function ConfiguracionScreen() {
     <SafeAreaView style={s.root} edges={['top']}>
       {modal}
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={s.pageTitle}>Configuración</Text>
+        <View style={s.pageHeader}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={s.backBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+          >
+            <Ionicons name="chevron-back" size={22} color={dark ? colors.text.dark : colors.text.light} />
+          </TouchableOpacity>
+          <Text style={s.pageTitle}>Configuración</Text>
+        </View>
 
         {/* Perfil */}
         <View style={s.profileCard}>
@@ -592,7 +603,9 @@ function FieldLabel({ text, dark }) {
 const styles = (dark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light },
   scroll: { padding: spacing.md },
-  pageTitle: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light, marginBottom: spacing.md },
+  pageHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: spacing.md },
+  backBtn: { padding: 4, marginLeft: -4 },
+  pageTitle: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',

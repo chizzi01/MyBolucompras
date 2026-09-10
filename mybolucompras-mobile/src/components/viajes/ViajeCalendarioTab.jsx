@@ -162,7 +162,7 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
           end={{ x: 1, y: 1 }}
           style={[styles.edgeFiller, { width: sidePadding }]}
         >
-          <Text style={styles.edgeFillerIcon}>🧳</Text>
+          <Ionicons name="briefcase-outline" size={20} color={textColor} style={styles.edgeFillerIcon} />
           <Text style={[styles.edgeFillerText, { color: textColor }]}>Arranca{'\n'}el viaje</Text>
         </LinearGradient>
         {dias.map((dia, index) => {
@@ -198,7 +198,7 @@ export default function ViajeCalendarioTab({ viaje, dark }) {
           end={{ x: 0, y: 1 }}
           style={[styles.edgeFiller, { width: sidePadding }]}
         >
-          <Text style={styles.edgeFillerIcon}>🎉</Text>
+          <Ionicons name="flag-outline" size={20} color={textColor} style={styles.edgeFillerIcon} />
           <Text style={[styles.edgeFillerText, { color: textColor }]}>Fin del{'\n'}viaje</Text>
         </LinearGradient>
       </Animated.ScrollView>
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   diaChip: { borderRadius: radius.md, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', position: 'relative' },
   todayDot: { position: 'absolute', bottom: 6, width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.primary },
   edgeFiller: { height: 64, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-  edgeFillerIcon: { fontSize: 20, marginBottom: 3 },
+  edgeFillerIcon: { marginBottom: 3 },
   edgeFillerText: { fontSize: 10, fontWeight: '800', textAlign: 'center', lineHeight: 12 },
   diaChipLabel: { fontSize: 13, fontWeight: '700' },
   diaChipDate: { fontSize: 11, marginTop: 2 },

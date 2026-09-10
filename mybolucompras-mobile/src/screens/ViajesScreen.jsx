@@ -12,6 +12,7 @@ import { colors, spacing, radius, typography } from '../constants/theme';
 import ViajeCard from '../components/viajes/ViajeCard';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
 import ViajeResumenModal from '../components/viajes/ViajeResumenModal';
+import ProfileAvatarButton from '../components/nav/ProfileAvatarButton';
 
 export default function ViajesScreen() {
   const { dark } = useTheme();
@@ -54,21 +55,7 @@ export default function ViajesScreen() {
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: dark ? colors.background.dark : colors.background.light }]} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => navigation.navigate('Tabs')}
-          activeOpacity={0.7}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          accessibilityLabel="Ir al inicio"
-          accessibilityRole="button"
-        >
-          <Ionicons name="arrow-back" size={18} color={colors.primary} />
-          <Text style={[styles.backBtnText, { color: dark ? colors.textSecondary.dark : colors.textSecondary.light }]}>
-            Inicio
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.headerCenter}>
+        <View style={styles.headerLeft}>
           <Text style={[styles.title, { color: dark ? colors.text.dark : colors.text.light }]}>
             Mis Viajes ✈️
           </Text>
@@ -77,7 +64,7 @@ export default function ViajesScreen() {
           </Text>
         </View>
 
-        <View style={styles.rightSlot}>
+        <View style={styles.headerRight}>
           <TouchableOpacity
             style={styles.newBtn}
             onPress={() => setShowCrear(true)}
@@ -86,6 +73,7 @@ export default function ViajesScreen() {
             <Ionicons name="add" size={18} color="#fff" />
             <Text style={styles.newBtnText}>Nuevo</Text>
           </TouchableOpacity>
+          <ProfileAvatarButton size={30} />
         </View>
       </View>
 
@@ -130,24 +118,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
   },
-  backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    minWidth: 72,
-  },
-  backBtnText: {
-    fontSize: 14,
-  },
-  rightSlot: {
-    minWidth: 72,
-    alignItems: 'flex-end',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  title: { ...typography.h2 },
+  headerLeft: { flexShrink: 1 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  title: { ...typography.h3 },
   subtitle: { ...typography.caption, marginTop: 2 },
   newBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.primary, paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: radius.full },
   newBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },

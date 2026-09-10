@@ -173,7 +173,7 @@ export default function ViajeResumenModal({ viaje, visible, onClose }) {
 
               {gastos.length === 0 && (
                 <View style={s.empty}>
-                  <Text style={{ fontSize: 36 }}>📭</Text>
+                  <Ionicons name="receipt-outline" size={36} color={textSecondary} />
                   <Text style={[s.emptyText, { color: textSecondary }]}>
                     No hay gastos registrados
                   </Text>

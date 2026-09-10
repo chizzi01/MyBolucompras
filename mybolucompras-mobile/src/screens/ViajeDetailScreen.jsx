@@ -16,7 +16,12 @@ import ViajeNotasTab from '../components/viajes/ViajeNotasTab';
 import ViajeOpcionesSheet from '../components/viajes/ViajeOpcionesSheet';
 import ViajeCalendarioTab from '../components/viajes/ViajeCalendarioTab';
 
-const TABS = ['💸 Gastos', '⚖️ Balance', '✅ Notas', '📅 Calendario'];
+const TABS = [
+  { label: 'Gastos', icon: 'cash-outline' },
+  { label: 'Balance', icon: 'swap-horizontal-outline' },
+  { label: 'Notas', icon: 'checkmark-circle-outline' },
+  { label: 'Calendario', icon: 'calendar-outline' },
+];
 const PARTICIPANT_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 const MAX_AVATARS = 4;
 
@@ -145,17 +150,23 @@ export default function ViajeDetailScreen() {
       <View style={styles.segmented}>
         {TABS.map((tab, i) => (
           <TouchableOpacity
-            key={tab}
+            key={tab.label}
             style={[styles.segTab, tabIdx === i && styles.segTabActive]}
             onPress={() => setTabIdx(i)}
           >
+            <Ionicons
+              name={tab.icon}
+              size={14}
+              color={tabIdx === i ? colors.primary : 'rgba(255,255,255,0.6)'}
+              style={styles.segTabIcon}
+            />
             <Text
               style={[styles.segTabText, tabIdx === i && styles.segTabTextActive]}
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.7}
             >
-              {tab}
+              {tab.label}
             </Text>
           </TouchableOpacity>
         ))}
@@ -283,8 +294,9 @@ const styles = StyleSheet.create({
   statVal: { fontSize: 20, color: '#fff', fontWeight: '800', marginBottom: 2 },
   statSub: { fontSize: 10, color: 'rgba(255,255,255,0.5)' },
   segmented: { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: 11, padding: 3, gap: 2 },
-  segTab: { flex: 1, paddingVertical: 9, paddingHorizontal: 2, borderRadius: 9, alignItems: 'center' },
+  segTab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, paddingHorizontal: 2, borderRadius: 9 },
   segTabActive: { backgroundColor: '#fff' },
+  segTabIcon: { marginTop: -1 },
   segTabText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
   segTabTextActive: { color: colors.primary, fontWeight: '800' },
 });

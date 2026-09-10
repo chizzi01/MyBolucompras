@@ -9,7 +9,8 @@ import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes, montoMensualDeuda } from '../utils/cuotas';
 import { getGastosMes, getCostoMes, calcularTotalesPorMoneda, formatAmountShort } from '../utils/proyeccion';
 import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '../utils/formatters';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { colors, spacing, radius, typography, fonts } from '../constants/theme';
+import ProfileAvatarButton from '../components/nav/ProfileAvatarButton';
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -130,19 +131,19 @@ export default function DashboardScreen() {
     <SafeAreaView style={s.root} edges={['top']}>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* Header con navegación de mes */}
+        {/* Header */}
         <View style={s.headerRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Text style={s.pageTitle}>Dashboard</Text>
-            <TouchableOpacity 
-              style={s.notifBtn} 
+          <Text style={s.pageTitle}>Dashboard</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <TouchableOpacity
+              style={s.notifBtn}
               onPress={() => setShowNotifications(true)}
               activeOpacity={0.7}
             >
-              <Ionicons 
-                name={unreadCount > 0 ? "notifications" : "notifications-outline"} 
-                size={22} 
-                color={unreadCount > 0 ? colors.primary : (dark ? colors.textSecondary.dark : colors.textSecondary.light)} 
+              <Ionicons
+                name={unreadCount > 0 ? "notifications" : "notifications-outline"}
+                size={20}
+                color={unreadCount > 0 ? colors.primary : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
               />
               {unreadCount > 0 && (
                 <View style={s.badge}>
@@ -150,35 +151,38 @@ export default function DashboardScreen() {
                 </View>
               )}
             </TouchableOpacity>
+            <ProfileAvatarButton size={30} />
           </View>
-          <View style={s.monthNav}>
-            <TouchableOpacity
-              onPress={prevMes}
-              style={s.monthNavBtn}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={18}
-                color={dark ? colors.textSecondary.dark : colors.textSecondary.light}
-              />
-            </TouchableOpacity>
-            <Text style={[s.monthLabel, esMesFuturo && { color: '#F97316' }]}>
-              {MESES[mesSel.mes]} {mesSel.anio}
-            </Text>
-            <TouchableOpacity
-              onPress={nextMes}
-              style={s.monthNavBtn}
-              disabled={esMesLimite}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={esMesLimite ? 'transparent' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
-              />
-            </TouchableOpacity>
-          </View>
+        </View>
+
+        {/* Navegación de mes — línea propia, sin competir con el título */}
+        <View style={s.monthNav}>
+          <TouchableOpacity
+            onPress={prevMes}
+            style={s.monthNavBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={18}
+              color={dark ? colors.textSecondary.dark : colors.textSecondary.light}
+            />
+          </TouchableOpacity>
+          <Text style={[s.monthLabel, esMesFuturo && { color: '#F97316' }]}>
+            {MESES[mesSel.mes]} {mesSel.anio}
+          </Text>
+          <TouchableOpacity
+            onPress={nextMes}
+            style={s.monthNavBtn}
+            disabled={esMesLimite}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color={esMesLimite ? 'transparent' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Total del mes — H1 hero */}
@@ -294,7 +298,12 @@ export default function DashboardScreen() {
           <>
             <Text style={s.section}>Gasto más caro</Text>
             <View style={s.destacado}>
-              <Text style={s.destacadoObj} numberOfLines={1}>{stats.masCaro.objeto}</Text>
+              <View style={s.destacadoLeft}>
+                <View style={s.destacadoBadge}>
+                  <Ionicons name="trophy" size={16} color="#fff" />
+                </View>
+                <Text style={s.destacadoObj} numberOfLines={1}>{stats.masCaro.objeto}</Text>
+              </View>
               <Text style={s.destacadoVal}>
                 {formatPrecioEuropeo(stats.masCaro.precio, stats.masCaro.moneda)}
               </Text>
@@ -334,11 +343,13 @@ export default function DashboardScreen() {
               return (
                 <View key={moneda} style={cardStyle}>
                   <View style={s.deudaLeft}>
-                    <Ionicons
-                      name={saldado ? 'checkmark-circle-outline' : positivo ? 'people-outline' : 'wallet-outline'}
-                      size={22}
-                      color={accent}
-                    />
+                    <View style={[s.deudaBadge, { backgroundColor: accent }]}>
+                      <Ionicons
+                        name={saldado ? 'checkmark-circle' : positivo ? 'people' : 'wallet'}
+                        size={16}
+                        color="#fff"
+                      />
+                    </View>
                     <Text style={[s.deudaCount, { color: accent }]}>
                       {count} deuda{count !== 1 ? 's' : ''} · {saldado ? 'saldadas' : positivo ? 'te deben' : 'debés'}
                     </Text>
@@ -382,14 +393,12 @@ function KPICard({ label, value, dark, accent }) {
   const s = StyleSheet.create({
     card: {
       flex: 1,
-      backgroundColor: dark ? colors.surface.dark : colors.surface.light,
-      borderRadius: radius.md,
+      backgroundColor: dark ? colors.surfaceSecondary.dark : colors.surfaceSecondary.light,
+      borderRadius: radius.lg,
       padding: spacing.md,
-      borderWidth: 1,
-      borderColor: dark ? colors.border.dark : colors.border.light,
       alignItems: 'center',
     },
-    val: { fontSize: 32, fontWeight: '800', color: accent, marginBottom: 4 },
+    val: { fontSize: 26, fontFamily: fonts.display, color: accent, marginBottom: 4 },
     lbl: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textAlign: 'center' },
   });
   return (
@@ -412,11 +421,9 @@ function ProxMesKPI({ totales, mesNombre, onPress, dark }) {
   const s = StyleSheet.create({
     card: {
       flex: 1,
-      backgroundColor: dark ? colors.surface.dark : colors.surface.light,
-      borderRadius: radius.md,
+      backgroundColor: dark ? 'rgba(249,115,22,0.14)' : '#FFF1E6',
+      borderRadius: radius.lg,
       padding: spacing.md,
-      borderWidth: 1,
-      borderColor: '#F9731640',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -465,7 +472,10 @@ const styles = (dark) => StyleSheet.create({
     marginBottom: spacing.md,
   },
   pageTitle: { ...typography.h2, color: dark ? colors.text.dark : colors.text.light },
-  monthNav: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  monthNav: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 4, marginBottom: spacing.sm,
+  },
   monthNavBtn: { padding: 4 },
   monthLabel: {
     ...typography.bodyMed,
@@ -474,25 +484,16 @@ const styles = (dark) => StyleSheet.create({
     textAlign: 'center',
   },
   totalHero: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg + 4,
-    marginBottom: spacing.md,
-    backgroundColor: dark ? colors.surface.dark : colors.surface.light,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: dark ? colors.border.dark : colors.border.light,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
+    alignItems: 'flex-start',
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   totalHeroRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs },
   totalHeroAmount: {
-    fontSize: 42,
-    fontWeight: '800',
+    fontSize: 36,
+    fontFamily: fonts.display,
     color: colors.primary,
-    letterSpacing: -1,
   },
   totalHeroMoneda: {
     ...typography.captionMed,
@@ -504,10 +505,9 @@ const styles = (dark) => StyleSheet.create({
     marginTop: 6,
   },
   totalHeroEmpty: {
-    fontSize: 42,
-    fontWeight: '800',
-    color: dark ? '#334155' : '#CBD5E1',
-    letterSpacing: -1,
+    fontSize: 36,
+    fontFamily: fonts.display,
+    color: dark ? '#332F47' : '#DCD3BF',
   },
   totalHeroDivider: {
     height: 1,
@@ -520,7 +520,6 @@ const styles = (dark) => StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     flexWrap: 'wrap',
-    justifyContent: 'center',
   },
   totalHeroBreakdownItem: {
     ...typography.caption,
@@ -568,17 +567,21 @@ const styles = (dark) => StyleSheet.create({
   },
   kpiRow: { flexDirection: 'row', gap: spacing.sm },
   destacado: {
-    backgroundColor: dark ? colors.surface.dark : colors.surface.light,
-    borderRadius: radius.md,
+    backgroundColor: dark ? colors.surfaceSecondary.dark : colors.surfaceSecondary.light,
+    borderRadius: radius.lg,
     padding: spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: dark ? colors.border.dark : colors.border.light,
+  },
+  destacadoLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
+  destacadoBadge: {
+    width: 34, height: 34, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.warning,
   },
   destacadoObj: { ...typography.bodyMed, color: dark ? colors.text.dark : colors.text.light, flex: 1, marginRight: spacing.sm },
-  destacadoVal: { ...typography.bodyBold, color: colors.primary },
+  destacadoVal: { ...typography.bodyBold, color: dark ? colors.text.dark : colors.text.light },
   barRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: spacing.sm },
   barLabel: {
     ...typography.caption,
@@ -600,28 +603,29 @@ const styles = (dark) => StyleSheet.create({
     textAlign: 'right',
   },
   deudaCard: {
-    backgroundColor: dark ? '#1c1408' : '#FFFBEB',
-    borderRadius: radius.md, borderWidth: 1,
-    borderColor: colors.warning + '60',
+    backgroundColor: dark ? colors.surfaceSecondary.dark : colors.surfaceSecondary.light,
+    borderRadius: radius.lg,
     padding: spacing.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     marginBottom: spacing.sm,
   },
   miDeudaCard: {
-    backgroundColor: dark ? '#1c0a0a' : '#FEF2F2',
-    borderRadius: radius.md, borderWidth: 1,
-    borderColor: colors.error + '60',
+    backgroundColor: dark ? colors.surfaceSecondary.dark : colors.surfaceSecondary.light,
+    borderRadius: radius.lg,
     padding: spacing.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     marginBottom: spacing.sm,
   },
   deudaCardSaldada: {
-    backgroundColor: dark ? '#0d2e1e' : '#ECFDF5',
-    borderRadius: radius.md, borderWidth: 1,
-    borderColor: colors.accent + '60',
+    backgroundColor: dark ? colors.surfaceSecondary.dark : colors.surfaceSecondary.light,
+    borderRadius: radius.lg,
     padding: spacing.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     marginBottom: spacing.sm,
+  },
+  deudaBadge: {
+    width: 34, height: 34, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
   },
   deudaLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
   deudaCount: { ...typography.bodyBold, color: colors.warning },

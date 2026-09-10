@@ -121,7 +121,7 @@ export default function ViajeBalanceTab({ viaje, gastos, pagos, participantColor
       {/* ── TODO SALDADO ── */}
       {liquidacion.length === 0 && porPersona.length > 0 && (
         <View style={[styles.card, { backgroundColor: surfaceBg, borderColor, alignItems: 'center', padding: spacing.lg }]}>
-          <Text style={{ fontSize: 32 }}>✅</Text>
+          <Ionicons name="checkmark-circle-outline" size={32} color={colors.success} />
           <Text style={[styles.sub, { color: subtextColor, marginTop: 8 }]}>Todo está saldado</Text>
         </View>
       )}

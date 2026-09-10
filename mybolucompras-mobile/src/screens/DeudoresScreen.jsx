@@ -12,7 +12,8 @@ import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import DeudaCard from '../components/DeudaCard';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { colors, spacing, radius, typography, fonts } from '../constants/theme';
+import ProfileAvatarButton from '../components/nav/ProfileAvatarButton';
 import { montoMensualDeuda, gastoEntraEsteMes } from '../utils/cuotas';
 
 const deudaEntraEsteMes = (deuda, mydata) =>
@@ -428,13 +429,16 @@ export default function DeudoresScreen({ navigation }) {
             </View>
           )}
         </View>
-        <TouchableOpacity
-          style={s.addBtn}
-          onPress={() => navigation.navigate('AgregarDeuda', {})}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="add" size={22} color="#fff" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity
+            style={s.addBtn}
+            onPress={() => navigation.navigate('AgregarDeuda', {})}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="add" size={22} color="#fff" />
+          </TouchableOpacity>
+          <ProfileAvatarButton size={30} />
+        </View>
       </View>
 
       {tabActivo === 'deudores' && Object.keys(totalDeudores).length > 0 && (
@@ -562,7 +566,7 @@ const styles = (dark) => StyleSheet.create({
     borderColor: colors.error + '50',
   },
   totalLabel: { ...typography.caption, color: colors.warning, textTransform: 'uppercase', fontSize: 10, marginBottom: 2 },
-  totalAmount: { fontSize: 22, fontWeight: '800', color: colors.warning, letterSpacing: -0.5 },
+  totalAmount: { fontSize: 20, fontFamily: fonts.display, color: colors.warning },
   tabsRow: {
     flexDirection: 'row', marginHorizontal: spacing.md, marginBottom: spacing.xs,
     backgroundColor: dark ? '#1e293b' : '#F1F5F9',

@@ -5,11 +5,19 @@ import {
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
+import { useFonts } from 'expo-font';
+import { ArchivoBlack_400Regular } from '@expo-google-fonts/archivo-black';
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope';
 import SpInAppUpdates, { IAUUpdateKind } from 'sp-react-native-in-app-updates';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './src/lib/queryClient';
@@ -38,6 +46,7 @@ import DeudoresScreen from './src/screens/DeudoresScreen';
 import AgregarDeudaModal from './src/screens/AgregarDeudaModal';
 import CierreChecker from './src/components/CierreChecker';
 import ModoViajeChecker from './src/components/ModoViajeChecker';
+import ModoPreviaTabBar from './src/components/nav/ModoPreviaTabBar';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -81,41 +90,22 @@ function AnimatedSplash({ dark }) {
 }
 
 // ── Navigation ───────────────────────────────────────────────────────────────
+// "Modo Previa": la barra pasa de 5 tabs a los 4 destinos reales (Gastos,
+// Dashboard, Deudores, Viajes) con un "+" flotante que abre Agregar. Config
+// deja de ser un tab: se abre desde el avatar de perfil en cada header.
 function TabNavigator() {
-  const { dark } = useTheme();
-  const insets = useSafeAreaInsets();
-
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: dark ? colors.tabBar.dark : colors.tabBar.light,
-          borderTopColor: dark ? colors.border.dark : colors.border.light,
-          borderTopWidth: 1,
-          paddingBottom: insets.bottom + 4,
-          height: 56 + insets.bottom,
-        },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: dark ? '#475569' : '#94A3B8',
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '500', marginBottom: 2 },
-        tabBarIcon: ({ focused, color, size }) => {
-          const icons = {
-            Gastos: focused ? 'list' : 'list-outline',
-            Agregar: focused ? 'add-circle' : 'add-circle-outline',
-            Dashboard: focused ? 'bar-chart' : 'bar-chart-outline',
-            Deudores: focused ? 'people' : 'people-outline',
-            Configuracion: focused ? 'settings' : 'settings-outline',
-          };
-          return <Ionicons name={icons[route.name]} size={route.name === 'Agregar' ? 28 : size} color={color} />;
-        },
-      })}
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <ModoPreviaTabBar {...props} />}
     >
-      <Tab.Screen name="Gastos" component={GastosScreen} />
-      <Tab.Screen name="Agregar" component={AgregarScreen} options={{ tabBarLabel: 'Agregar', tabBarIconStyle: { marginTop: -2 }, tabBarHideOnKeyboard: true }} />
+      {/* Orden pensado para el FAB central: Gastos y Viajes quedan pegados al
+          "+" (tiene sentido, se usan justo antes/después de cargar un gasto);
+          Inicio y Deudas van en las puntas, lejos del botón. */}
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Deudores" component={DeudoresScreen} options={{ tabBarLabel: 'Deudas' }} />
-      <Tab.Screen name="Configuracion" component={ConfiguracionScreen} options={{ tabBarLabel: 'Config' }} />
+      <Tab.Screen name="Gastos" component={GastosScreen} />
+      <Tab.Screen name="Viajes" component={ViajesScreen} />
+      <Tab.Screen name="Deudores" component={DeudoresScreen} />
     </Tab.Navigator>
   );
 }
@@ -148,6 +138,20 @@ function RootNavigator() {
                   <AuthStack.Navigator screenOptions={{ headerShown: false }}>
                     <AuthStack.Screen name="Tabs" component={TabNavigator} />
                     <AuthStack.Screen
+                      name="Agregar"
+                      component={AgregarScreen}
+                      options={{
+                        animation: 'slide_from_bottom',
+                        gestureEnabled: true,
+                        gestureDirection: 'vertical',
+                      }}
+                    />
+                    <AuthStack.Screen
+                      name="Configuracion"
+                      component={ConfiguracionScreen}
+                      options={{ animation: 'slide_from_right' }}
+                    />
+                    <AuthStack.Screen
                       name="EditarGasto"
                       component={EditarGastoScreen}
                       options={{
@@ -160,11 +164,6 @@ function RootNavigator() {
                       name="ViajeDetail"
                       component={ViajeDetailScreen}
                       options={{ animation: 'slide_from_right' }}
-                    />
-                    <AuthStack.Screen
-                      name="Viajes"
-                      component={ViajesScreen}
-                      options={{ animation: 'slide_from_bottom' }}
                     />
                     <AuthStack.Screen
                       name="AgregarDeuda"
@@ -201,6 +200,15 @@ export default function App() {
   const colorScheme = useColorScheme();
   const rootBg = colorScheme === 'dark' ? colors.background.dark : colors.background.light;
 
+  const [fontsLoaded] = useFonts({
+    ArchivoBlack_400Regular,
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+
   useEffect(() => {
     if (Platform.OS !== 'android') return;
     inAppUpdates
@@ -214,6 +222,14 @@ export default function App() {
         console.warn('[Update] error:', err?.message ?? err);
       });
   }, []);
+
+  if (!fontsLoaded) {
+    return (
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: rootBg }}>
+        <AnimatedSplash dark={colorScheme === 'dark'} />
+      </GestureHandlerRootView>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

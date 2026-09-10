@@ -145,9 +145,8 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
   const borderColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
 
   const handleAgregarGasto = () => {
-    navigation.navigate('Tabs', {
-      screen: 'Agregar',
-      params: { viajeId: viaje.id, viajeNombre: `${viaje.emoji} ${viaje.titulo}` },
+    navigation.navigate('Agregar', {
+      viajeId: viaje.id, viajeNombre: `${viaje.emoji} ${viaje.titulo}`,
     });
   };
 
@@ -199,7 +198,7 @@ export default function ViajeGastosTab({ viaje, gastos, onGastoAdded, participan
         refreshControl={<RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={{ fontSize: 40 }}>💸</Text>
+            <Ionicons name="cash-outline" size={40} color={subtextColor} />
             <Text style={[styles.emptyText, { color: subtextColor }]}>Sin gastos todavía</Text>
           </View>
         }

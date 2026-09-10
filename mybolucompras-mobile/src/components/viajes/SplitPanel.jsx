@@ -1,13 +1,14 @@
 // src/components/viajes/SplitPanel.jsx
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import ParticipantesPicker from './ParticipantesPicker';
 
 const MODES = [
-  { key: 'solo', label: '🙋 Solo yo' },
-  { key: 'todos', label: '👥 Todos' },
-  { key: 'algunos', label: '👤+ Algunos' },
+  { key: 'solo', icon: 'person-outline', label: 'Solo yo' },
+  { key: 'todos', icon: 'people-outline', label: 'Todos' },
+  { key: 'algunos', icon: 'person-add-outline', label: 'Algunos' },
 ];
 
 // participantes: [{userId, nombre}], currentUserId: string
@@ -54,6 +55,12 @@ export default function SplitPanel({ participantes, currentUserId, value, onChan
             onPress={() => handleModeChange(m.key)}
             activeOpacity={0.7}
           >
+            <Ionicons
+              name={m.icon}
+              size={14}
+              color={modoSplit === m.key ? '#fff' : textColor}
+              style={styles.modeBtnIcon}
+            />
             <Text style={[styles.modeBtnText, { color: modoSplit === m.key ? '#fff' : textColor }]}>
               {m.label}
             </Text>
@@ -95,8 +102,9 @@ const styles = StyleSheet.create({
   panel: { borderWidth: 1, borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.md },
   label: { ...typography.captionMed, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing.sm },
   modeRow: { flexDirection: 'row', gap: spacing.sm },
-  modeBtn: { flex: 1, paddingVertical: 10, borderRadius: radius.md, borderWidth: 1, alignItems: 'center' },
+  modeBtn: { flex: 1, flexDirection: 'row', paddingVertical: 10, borderRadius: radius.md, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 5 },
   modeBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  modeBtnIcon: { marginTop: -1 },
   modeBtnText: { fontSize: 12, fontWeight: '600' },
   pickerBtn: { marginTop: spacing.sm, borderWidth: 1, borderStyle: 'dashed', borderRadius: radius.md, padding: 10, alignItems: 'center' },
   summary: { ...typography.captionMed, textAlign: 'center', marginTop: spacing.sm },
