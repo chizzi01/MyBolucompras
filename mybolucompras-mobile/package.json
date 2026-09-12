@@ -8,7 +8,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "build:aab": "node scripts/bump-version.js && cd android && .\\gradlew bundleRelease",
-    "build:apk": "node scripts/bump-version.js && cd android && .\\gradlew assembleRelease"
+    "build:apk": "node scripts/bump-version.js && cd android && .\\gradlew assembleRelease",
+    "test": "jest"
   },
   "dependencies": {
     "@expo-google-fonts/archivo-black": "^0.4.1",
@@ -44,6 +45,10 @@
   "private": true,
   "devDependencies": {
     "@types/react": "~19.1.10",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "jest": "^29.7.0",
+    "babel-jest": "^29.7.0",
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0"
   }
 }
