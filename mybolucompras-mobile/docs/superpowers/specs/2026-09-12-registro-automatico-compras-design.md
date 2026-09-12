@@ -60,6 +60,23 @@ gastosService.crear()  (mismo flujo ya existente)
 3. Antes de intentar cualquier parseo, un filtro por keywords descarta notificaciones que no son de compra (resúmenes de cuenta, vencimientos, rechazos, promociones) — evita gastar la llamada a IA y evita falsos positivos.
 4. La promoción de un caso resuelto por IA a plantilla de reglas es manual (a mano por el desarrollador revisando fixtures), no automática — para no incorporar reglas de baja calidad sin revisión.
 
+### Plantilla Galicia (referencia concreta)
+
+Formato real de notificación de compra de la app de Banco Galicia (`com.bancogalicia...`, se confirma el package exacto en el plan de implementación revisando el dispositivo de prueba):
+
+- **Título**: `Pagaste: $12.000`
+- **Cuerpo**: `A MANTECA LB-MANTECA LB HE con tu Visa Débito 2665 a las 14:35`
+
+Reglas de extracción:
+- **Keyword de match/filtro**: título empieza con `Pagaste:` (esto además sirve como filtro positivo — otras notificaciones de Galicia, como "¡Recibiste plata!", quedan afuera sin necesidad de excluirlas una por una).
+- **monto**: del título, `Pagaste:\s*\$([\d.,]+)`.
+- **comercio_raw**: del cuerpo, `^A (.+?) con tu` → `MANTECA LB-MANTECA LB HE`.
+- **medio + tipo**: del cuerpo, `con tu (Visa|Mastercard|American Express) (Débito|Crédito) (\d{4})` → medio `Visa`, tipo `debito`, ultimos4 `2665`.
+- **fecha_detectada**: se usa el timestamp de la notificación capturado por el listener nativo, no la hora en texto (`a las 14:35`) — el texto no trae fecha (día/mes), solo hora, y el timestamp del sistema ya es preciso.
+- **moneda**: Galicia no la incluye en este tipo de notificación; se asume `ARS` por defecto para este banco (ajustable a futuro si aparece un caso en otra moneda).
+
+Esta es la primera plantilla real cargada en `src/services/__fixtures__/notificaciones/galicia.json` (o `.js`, se define en el plan) y sirve de modelo para las plantillas de los demás bancos a medida que se consigan sus ejemplos.
+
 **Salida normalizada** de cualquiera de las dos capas:
 ```json
 {
@@ -138,4 +155,4 @@ RLS en ambas tablas: cada usuario solo lee/escribe sus propias filas (mismo patr
 
 ## Pendiente antes de implementar
 
-La plantilla de reglas de Galicia necesita un ejemplo real del texto de notificación de compra de esa app (título + cuerpo exacto) para escribir los regex de extracción. Sin eso, Galicia arranca también por el fallback de IA hasta conseguir el ejemplo.
+Ya se cuenta con el formato real de Galicia (ver "Plantilla Galicia" arriba). Queda pendiente, para el resto de los bancos del catálogo, ir consiguiendo ejemplos reales a medida que se prioricen — hasta entonces cada uno arranca por el fallback de IA.
