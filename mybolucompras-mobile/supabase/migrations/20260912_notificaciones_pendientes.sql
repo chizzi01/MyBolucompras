@@ -32,7 +32,8 @@ CREATE POLICY "np_select" ON public.notificaciones_pendientes FOR SELECT
 CREATE POLICY "np_insert" ON public.notificaciones_pendientes FOR INSERT
   WITH CHECK (user_id = auth.uid());
 CREATE POLICY "np_update" ON public.notificaciones_pendientes FOR UPDATE
-  USING (user_id = auth.uid());
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
 CREATE POLICY "np_delete" ON public.notificaciones_pendientes FOR DELETE
   USING (user_id = auth.uid());
 
@@ -52,4 +53,5 @@ CREATE POLICY "ca_select" ON public.comercios_aprendidos FOR SELECT
 CREATE POLICY "ca_upsert" ON public.comercios_aprendidos FOR INSERT
   WITH CHECK (user_id = auth.uid());
 CREATE POLICY "ca_update" ON public.comercios_aprendidos FOR UPDATE
-  USING (user_id = auth.uid());
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
