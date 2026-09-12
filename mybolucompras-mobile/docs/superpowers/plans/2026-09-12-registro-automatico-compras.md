@@ -819,6 +819,11 @@ Usados por Task 8 (hooks) y Task 10 (queue processor).
 
 `src/services/__tests__/notificacionesPendientesService.test.js`:
 ```js
+// El service real importa ../lib/supabase, que a su vez importa 'react-native'
+// y 'expo-constants' — no cargan bajo Jest plano (sin jest-expo). Se mockea
+// el módulo antes de requerir el service para poder testear solo el mapeo.
+jest.mock('../lib/supabase', () => ({ supabase: {} }));
+
 const { mapFromDB, mapToDB } = require('../notificacionesPendientesService');
 
 describe('notificacionesPendientesService mapping', () => {
@@ -1725,7 +1730,7 @@ const styles = (dark) => StyleSheet.create({
 ```jsx
 // src/screens/PendientesComprasScreen.jsx
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -1753,7 +1758,9 @@ export default function PendientesComprasScreen() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <View style={s.header}>
-        <TouchableOpacityBack navigation={navigation} dark={dark} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: spacing.sm }}>
+          <Ionicons name="arrow-back" size={24} color={dark ? colors.text.dark : colors.text.light} />
+        </TouchableOpacity>
         <Text style={s.title}>Compras detectadas</Text>
       </View>
 
@@ -1782,15 +1789,6 @@ export default function PendientesComprasScreen() {
   );
 }
 
-function TouchableOpacityBack({ navigation, dark }) {
-  const { TouchableOpacity } = require('react-native');
-  return (
-    <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: spacing.sm }}>
-      <Ionicons name="arrow-back" size={24} color={dark ? colors.text.dark : colors.text.light} />
-    </TouchableOpacity>
-  );
-}
-
 const styles = (dark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light },
   header: {
@@ -1802,8 +1800,6 @@ const styles = (dark) => StyleSheet.create({
   emptyText: { ...typography.body, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textAlign: 'center' },
 });
 ```
-
-(El helper `TouchableOpacityBack` con `require` inline evita un segundo import de `TouchableOpacity` en el mismo archivo donde ya se usa `View`/`Text`/`FlatList`; si se prefiere prolijidad, mover `TouchableOpacity` al import de arriba junto a `View, Text, FlatList, StyleSheet` y borrar el `require`.)
 
 - [ ] **Step 3: Registrar la pantalla en `App.js`**
 
