@@ -17,47 +17,51 @@ Devolvé SOLO este JSON, sin texto adicional ni markdown:
 Si el texto NO es una notificación de compra, respondé exactamente: {"esCompra": false}`;
 
 async function parseConIA(titulo, texto, apiKey) {
-  const response = await fetch(OPENROUTER_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://mybolucompras.app',
-      'X-Title': 'Budget Buddy',
-    },
-    body: JSON.stringify({
-      model: 'openai/gpt-4o-mini',
-      messages: [
-        { role: 'user', content: `${PROMPT}\n\nTítulo: ${titulo}\nTexto: ${texto}` },
-      ],
-      temperature: 0.1,
-    }),
-  });
-
-  if (!response.ok) return null;
-
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content?.trim() || '';
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return null;
-
-  let parsed;
   try {
-    parsed = JSON.parse(jsonMatch[0]);
+    const response = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://mybolucompras.app',
+        'X-Title': 'Budget Buddy',
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: [
+          { role: 'user', content: `${PROMPT}\n\nTítulo: ${titulo}\nTexto: ${texto}` },
+        ],
+        temperature: 0.1,
+      }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content?.trim() || '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch {
+      return null;
+    }
+
+    if (parsed.esCompra === false || parsed.monto == null) return null;
+
+    return {
+      monto: Number(parsed.monto) || 0,
+      moneda: parsed.moneda || 'ARS',
+      comercio_raw: parsed.comercio_raw || null,
+      medio: parsed.medio || null,
+      tipo: parsed.tipo || null,
+      ultimos4: parsed.ultimos4 || null,
+    };
   } catch {
     return null;
   }
-
-  if (parsed.esCompra === false || parsed.monto == null) return null;
-
-  return {
-    monto: Number(parsed.monto) || 0,
-    moneda: parsed.moneda || 'ARS',
-    comercio_raw: parsed.comercio_raw || null,
-    medio: parsed.medio || null,
-    tipo: parsed.tipo || null,
-    ultimos4: parsed.ultimos4 || null,
-  };
 }
 
 module.exports = { parseConIA };

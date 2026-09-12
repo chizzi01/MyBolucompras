@@ -53,4 +53,19 @@ describe('parseConIA', () => {
     const resultado = await parseConIA('x', 'y', 'fake-key');
     expect(resultado).toBeNull();
   });
+
+  test('devuelve null si fetch rechaza (error de red)', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('network down'));
+    const resultado = await parseConIA('x', 'y', 'fake-key');
+    expect(resultado).toBeNull();
+  });
+
+  test('devuelve null si response.json() rechaza (respuesta no JSON)', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockRejectedValue(new Error('invalid json')),
+    });
+    const resultado = await parseConIA('x', 'y', 'fake-key');
+    expect(resultado).toBeNull();
+  });
 });
