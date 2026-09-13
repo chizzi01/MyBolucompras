@@ -36,6 +36,11 @@ export default function PendienteCompraCard({ pendiente, onConfirmar, onDescarta
     })
   ).current;
 
+  const close = () => {
+    Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+    setOpen(false);
+  };
+
   const precioDisplay = pendiente.monto != null
     ? formatPrecioEuropeo(pendiente.monto, pendiente.moneda || 'ARS')
     : '—';
@@ -59,7 +64,7 @@ export default function PendienteCompraCard({ pendiente, onConfirmar, onDescarta
       >
         <TouchableOpacity
           style={s.card}
-          onPress={onConfirmar}
+          onPress={() => { if (open) { close(); } else { onConfirmar(); } }}
           activeOpacity={0.75}
         >
           <View style={s.left}>
