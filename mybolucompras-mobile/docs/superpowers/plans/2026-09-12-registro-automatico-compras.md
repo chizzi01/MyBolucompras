@@ -1115,17 +1115,20 @@ git commit -m "feat: hooks de datos para notificaciones pendientes"
 
 Este task depende de una librería externa. **Antes de escribir el wrapper, confirmá su API real** — los nombres de método de abajo son los conocidos públicamente para `react-native-android-notification-listener`, pero pueden haber cambiado de versión.
 
+> **Addendum post-ejecución (Task 9 ya implementado):** se confirmó contra la librería real (`v5.0.1`) que `getPermissionStatus()`/`requestPermission()` matchean, pero **no existe ningún `NativeEventEmitter`/evento en vivo** — la única vía de entrega es la headless task, disparada igual en foreground o background, con payload `{ notification }` donde `notification` es un **string JSON** (no un objeto). Por lo tanto:
+> - `registrarListener` (Step 4 más abajo) **no se implementó como suscripción nativa** — esa API no existe — y **no tiene ningún consumidor real en este plan** (ver corrección en Task 12 más abajo). Tratalo como parte histórica del diseño original, no como la interfaz final.
+> - El config plugin del Step 2 **no se creó**: la librería trae su propio `AndroidManifest.xml` que Expo/RN autolinking + el manifest merger de Gradle integran solos (proyecto es CNG, `android/` gitignored). `app.json` no se modificó.
+> - Cualquier código que lea el payload de la headless task (Task 11) debe hacer `JSON.parse(notification)` antes de leer sus campos.
+
 **Files:**
-- Create: `plugins/withNotificationListener.js`
 - Create: `src/services/notificationListenerBridge.js`
-- Modify: `app.json`
 - Modify: `package.json`
 
 **Interfaces:**
 - Produces:
   - `notificationListenerBridge.tienePermiso() => Promise<boolean>`
   - `notificationListenerBridge.abrirAjustesDePermiso() => void`
-  - `notificationListenerBridge.registrarListener(onNotificacion) => () => void` (devuelve función de limpieza)
+  - `notificationListenerBridge.leerYVaciarCola() => Promise<Array>` / `encolarNotificacion(entrada) => Promise<void>`
   - Cola persistida en `AsyncStorage` bajo la key `@mybolu:colaNotificaciones` con forma `Array<{ packageName, titulo, texto, timestamp }>`, consumida por Task 10.
 
 - [ ] **Step 1: Instalar la librería y confirmar su API**
@@ -1511,7 +1514,7 @@ git commit -m "feat: procesar la cola de notificaciones al volver a foreground"
 - Modify: `src/screens/ConfiguracionScreen.jsx`
 
 **Interfaces:**
-- Consumes: `notificationListenerBridge.tienePermiso`/`abrirAjustesDePermiso`/`registrarListener` (Task 9).
+- Consumes: `notificationListenerBridge.tienePermiso`/`abrirAjustesDePermiso` (Task 9).
 
 - [ ] **Step 1: Agregar estado y efecto de permiso**
 
