@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, Switch,
+  ScrollView, ActivityIndicator, Switch, Platform, AppState,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useModal } from '../hooks/useModal';
@@ -16,6 +16,7 @@ import { navigate } from '../navigation/navigationRef';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { formatARS, toISODate } from '../utils/formatters';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
+import { notificationListenerBridge } from '../services/notificationListenerBridge';
 
 function AccordionSection({ title, children, dark, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -96,6 +97,44 @@ export default function ConfiguracionScreen({ navigation }) {
   };
 
   const nombre = user?.user_metadata?.nombre || user?.email?.split('@')[0] || 'Usuario';
+
+  const [deteccionAutomaticaActiva, setDeteccionAutomaticaActiva] = useState(false);
+
+  const revisarPermisoNotificaciones = useCallback(async () => {
+    if (Platform.OS !== 'android') return;
+    try {
+      const tiene = await notificationListenerBridge.tienePermiso();
+      setDeteccionAutomaticaActiva(tiene);
+    } catch {
+      setDeteccionAutomaticaActiva(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    revisarPermisoNotificaciones();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') revisarPermisoNotificaciones();
+    });
+    return () => subscription.remove();
+  }, [revisarPermisoNotificaciones]);
+
+  const handleToggleDeteccionAutomatica = () => {
+    if (deteccionAutomaticaActiva) {
+      showModal({
+        type: 'info',
+        title: 'Desactivar detección automática',
+        message: 'Para desactivarla, quitá el permiso desde Ajustes del sistema → Notificaciones → Acceso a notificaciones → Budget Buddy.',
+      });
+      return;
+    }
+    showModal({
+      type: 'info',
+      title: 'Detectar compras automáticamente',
+      message: 'Budget Buddy va a leer las notificaciones de tu app de banco para sugerirte cargar la compra. No lee WhatsApp ni mensajes personales, y nunca carga un gasto sin que lo confirmes vos.',
+      confirmText: 'Ir a Ajustes',
+      onConfirm: () => notificationListenerBridge.abrirAjustesDePermiso(),
+    });
+  };
 
   const [fondos, setFondos] = useState(String(mydata.fondos || ''));
   
@@ -550,6 +589,35 @@ export default function ConfiguracionScreen({ navigation }) {
             </View>
           </View>
         </AccordionSection>
+
+        {/* Detección automática */}
+        {Platform.OS === 'android' && (
+          <AccordionSection title="Detección automática" dark={dark}>
+            <View style={s.card}>
+              <View style={s.bioRow}>
+                <View style={s.bioInfo}>
+                  <Ionicons
+                    name="notifications-outline"
+                    size={22}
+                    color={deteccionAutomaticaActiva ? colors.primary : (dark ? '#475569' : '#94A3B8')}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.bioTitle}>Detectar compras automáticamente</Text>
+                    <Text style={s.bioSub}>
+                      Lee las notificaciones de tu app de banco y te sugiere cargar la compra.
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={deteccionAutomaticaActiva}
+                  onValueChange={handleToggleDeteccionAutomatica}
+                  trackColor={{ false: dark ? '#334155' : '#CBD5E1', true: colors.primary }}
+                  thumbColor="#fff"
+                />
+              </View>
+            </View>
+          </AccordionSection>
+        )}
 
         {/* Viajes */}
         <AccordionSection title="Viajes" dark={dark}>

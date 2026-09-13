@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import {
-  Animated, Easing, View, Platform, useColorScheme,
+  Animated, Easing, View, Platform, useColorScheme, AppState,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -21,6 +21,8 @@ import {
 import SpInAppUpdates, { IAUUpdateKind } from 'sp-react-native-in-app-updates';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './src/lib/queryClient';
+import { procesarColaDeNotificaciones } from './src/services/notificacionesQueueProcessor';
+import { OPENROUTER_API_KEY } from './src/config/keys';
 import { useRealtimeInvalidation } from './src/hooks/useRealtimeInvalidation';
 import { navigationRef } from './src/navigation/navigationRef';
 
@@ -44,6 +46,7 @@ import ViajesScreen from './src/screens/ViajesScreen';
 import ViajeDetailScreen from './src/screens/ViajeDetailScreen';
 import DeudoresScreen from './src/screens/DeudoresScreen';
 import AgregarDeudaModal from './src/screens/AgregarDeudaModal';
+import PendientesComprasScreen from './src/screens/PendientesComprasScreen';
 import CierreChecker from './src/components/CierreChecker';
 import ModoViajeChecker from './src/components/ModoViajeChecker';
 import ModoPreviaTabBar from './src/components/nav/ModoPreviaTabBar';
@@ -175,6 +178,11 @@ function RootNavigator() {
                       }}
                     />
                     <AuthStack.Screen
+                      name="PendientesCompras"
+                      component={PendientesComprasScreen}
+                      options={{ animation: 'slide_from_right' }}
+                    />
+                    <AuthStack.Screen
                       name="EditarDeuda"
                       component={AgregarDeudaModal}
                       options={{
@@ -263,6 +271,22 @@ function AppWithTheme() {
     return () => {
       responseListener.current?.remove();
     };
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    const procesar = () => {
+      procesarColaDeNotificaciones({ apiKey: OPENROUTER_API_KEY }).catch((err) => {
+        console.warn('[Notificaciones] error al procesar la cola:', err?.message ?? err);
+      });
+    };
+
+    procesar(); // por si hay pendientes de cuando la app estaba cerrada
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') procesar();
+    });
+    return () => subscription.remove();
   }, []);
 
   return (

@@ -819,6 +819,11 @@ Usados por Task 8 (hooks) y Task 10 (queue processor).
 
 `src/services/__tests__/notificacionesPendientesService.test.js`:
 ```js
+// El service real importa ../lib/supabase, que a su vez importa 'react-native'
+// y 'expo-constants' — no cargan bajo Jest plano (sin jest-expo). Se mockea
+// el módulo antes de requerir el service para poder testear solo el mapeo.
+jest.mock('../lib/supabase', () => ({ supabase: {} }));
+
 const { mapFromDB, mapToDB } = require('../notificacionesPendientesService');
 
 describe('notificacionesPendientesService mapping', () => {
@@ -1110,17 +1115,20 @@ git commit -m "feat: hooks de datos para notificaciones pendientes"
 
 Este task depende de una librería externa. **Antes de escribir el wrapper, confirmá su API real** — los nombres de método de abajo son los conocidos públicamente para `react-native-android-notification-listener`, pero pueden haber cambiado de versión.
 
+> **Addendum post-ejecución (Task 9 ya implementado):** se confirmó contra la librería real (`v5.0.1`) que `getPermissionStatus()`/`requestPermission()` matchean, pero **no existe ningún `NativeEventEmitter`/evento en vivo** — la única vía de entrega es la headless task, disparada igual en foreground o background, con payload `{ notification }` donde `notification` es un **string JSON** (no un objeto). Por lo tanto:
+> - `registrarListener` (Step 4 más abajo) **no se implementó como suscripción nativa** — esa API no existe — y **no tiene ningún consumidor real en este plan** (ver corrección en Task 12 más abajo). Tratalo como parte histórica del diseño original, no como la interfaz final.
+> - El config plugin del Step 2 **no se creó**: la librería trae su propio `AndroidManifest.xml` que Expo/RN autolinking + el manifest merger de Gradle integran solos (proyecto es CNG, `android/` gitignored). `app.json` no se modificó.
+> - Cualquier código que lea el payload de la headless task (Task 11) debe hacer `JSON.parse(notification)` antes de leer sus campos.
+
 **Files:**
-- Create: `plugins/withNotificationListener.js`
 - Create: `src/services/notificationListenerBridge.js`
-- Modify: `app.json`
 - Modify: `package.json`
 
 **Interfaces:**
 - Produces:
   - `notificationListenerBridge.tienePermiso() => Promise<boolean>`
   - `notificationListenerBridge.abrirAjustesDePermiso() => void`
-  - `notificationListenerBridge.registrarListener(onNotificacion) => () => void` (devuelve función de limpieza)
+  - `notificationListenerBridge.leerYVaciarCola() => Promise<Array>` / `encolarNotificacion(entrada) => Promise<void>`
   - Cola persistida en `AsyncStorage` bajo la key `@mybolu:colaNotificaciones` con forma `Array<{ packageName, titulo, texto, timestamp }>`, consumida por Task 10.
 
 - [ ] **Step 1: Instalar la librería y confirmar su API**
@@ -1358,38 +1366,54 @@ export async function procesarColaDeNotificaciones({ apiKey }) {
   const cola = await notificationListenerBridge.leerYVaciarCola();
   if (cola.length === 0) return 0;
 
+  // Copia local: además de lo ya guardado en Supabase, se le van agregando
+  // los candidatos creados en esta misma pasada — sin esto, dos
+  // notificaciones duplicadas que llegan en el mismo drenado (ej. el banco
+  // reenvía la misma notificación dos veces) no se detectarían entre sí,
+  // porque `recientes` solo reflejaría el estado ANTES de este batch.
   const recientes = await notificacionesPendientesService.getRecientes();
 
   let creadas = 0;
   for (const entrada of cola) {
-    const resultado = await parsearNotificacion({
-      titulo: entrada.titulo,
-      texto: entrada.texto,
-      apiKey,
-    });
-    if (!resultado) continue;
+    try {
+      const resultado = await parsearNotificacion({
+        titulo: entrada.titulo,
+        texto: entrada.texto,
+        apiKey,
+      });
+      if (!resultado) continue;
 
-    const candidata = {
-      monto: resultado.monto,
-      ultimos4: resultado.ultimos4,
-      fecha_detectada: entrada.timestamp,
-    };
-    if (esDuplicado(candidata, recientes)) continue;
+      const candidata = {
+        monto: resultado.monto,
+        ultimos4: resultado.ultimos4,
+        fecha_detectada: entrada.timestamp,
+        estado: 'pendiente',
+      };
+      if (esDuplicado(candidata, recientes)) continue;
 
-    await notificacionesPendientesService.crear({
-      banco: resultado.banco,
-      bancoPackage: entrada.packageName,
-      textoRaw: `${entrada.titulo}\n${entrada.texto}`,
-      monto: resultado.monto,
-      moneda: resultado.moneda,
-      comercioRaw: resultado.comercio_raw,
-      ultimos4: resultado.ultimos4,
-      medio: resultado.medio,
-      tipo: resultado.tipo,
-      fuente: resultado.fuente,
-      fechaDetectada: entrada.timestamp,
-    });
-    creadas += 1;
+      await notificacionesPendientesService.crear({
+        banco: resultado.banco,
+        bancoPackage: entrada.packageName,
+        textoRaw: `${entrada.titulo}\n${entrada.texto}`,
+        monto: resultado.monto,
+        moneda: resultado.moneda,
+        comercioRaw: resultado.comercio_raw,
+        ultimos4: resultado.ultimos4,
+        medio: resultado.medio,
+        tipo: resultado.tipo,
+        fuente: resultado.fuente,
+        fechaDetectada: entrada.timestamp,
+      });
+      recientes.push(candidata);
+      creadas += 1;
+    } catch (err) {
+      // Una notificación individual nunca debe tirar abajo el resto del
+      // batch: la cola ya se vació al leerla (leerYVaciarCola es
+      // destructivo), así que un throw sin capturar acá perdería en
+      // silencio todas las entradas restantes de esta pasada, no solo la
+      // que falló.
+      console.warn('[notificacionesQueueProcessor] error al procesar una notificación:', err?.message ?? err);
+    }
   }
   return creadas;
 }
@@ -1420,21 +1444,30 @@ git commit -m "feat: procesador de la cola de notificaciones"
 
 - [ ] **Step 1: Registrar la headless task en `index.js`**
 
-Leer primero el `index.js` actual del repo para no pisar el `registerRootComponent` existente, y agregar antes de él (confirmando contra el Step 1 del Task 9 el nombre real exportado por la librería):
+> **Addendum post-ejecución de Task 9:** ya se confirmó contra la librería real (`react-native-android-notification-listener@5.0.1`) que el nombre exportado es `RNAndroidNotificationListenerHeadlessJsName` (export nombrado, no una propiedad del default import), y que el payload que recibe el handler es `{ notification }` donde `notification` es un **string JSON** — hay que hacer `JSON.parse` antes de leer `app`/`title`/`text`/`time`. El código de abajo ya refleja esto (no uses la forma `RNAndroidNotificationListener.headlessJsTaskName` ni asumas un objeto ya parseado).
+
+Leer primero el `index.js` actual del repo para no pisar el `registerRootComponent` existente, y agregar antes de él:
 
 ```js
 import { AppRegistry } from 'react-native';
-import RNAndroidNotificationListener from 'react-native-android-notification-listener';
+import { RNAndroidNotificationListenerHeadlessJsName } from 'react-native-android-notification-listener';
 
-// Notificaciones recibidas con la app en background/cerrada: la librería
-// invoca esta tarea headless, que solo encola (no puede tocar AsyncStorage
-// desde JS puro sin RN inicializado del todo en algunas versiones — si el
-// Step 1 del Task 9 confirma que la librería expone un helper propio de cola,
-// usá ese en vez de este cuerpo).
+// Notificaciones recibidas con la app en background/cerrada (y también en
+// foreground: la librería dispara esta misma tarea en ambos casos, no hay un
+// canal separado — ver notificationListenerBridge.js). El payload trae
+// `notification` como STRING JSON, no como objeto — hay que parsearlo antes
+// de encolar. Si el parseo falla (payload corrupto/inesperado), se descarta
+// esa notificación en vez de romper la tarea headless.
 AppRegistry.registerHeadlessTask(
-  RNAndroidNotificationListener.headlessJsTaskName ?? 'RNAndroidNotificationListenerHeadlessJs',
-  () => async (notificacion) => {
+  RNAndroidNotificationListenerHeadlessJsName,
+  () => async (data) => {
     const { notificationListenerBridge } = require('./src/services/notificationListenerBridge');
+    let notificacion;
+    try {
+      notificacion = JSON.parse(data.notification);
+    } catch {
+      return;
+    }
     await notificationListenerBridge.encolarDesdeHeadless(notificacion);
   },
 );
@@ -1506,7 +1539,7 @@ git commit -m "feat: procesar la cola de notificaciones al volver a foreground"
 - Modify: `src/screens/ConfiguracionScreen.jsx`
 
 **Interfaces:**
-- Consumes: `notificationListenerBridge.tienePermiso`/`abrirAjustesDePermiso`/`registrarListener` (Task 9).
+- Consumes: `notificationListenerBridge.tienePermiso`/`abrirAjustesDePermiso` (Task 9).
 
 - [ ] **Step 1: Agregar estado y efecto de permiso**
 
@@ -1725,7 +1758,7 @@ const styles = (dark) => StyleSheet.create({
 ```jsx
 // src/screens/PendientesComprasScreen.jsx
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -1753,7 +1786,9 @@ export default function PendientesComprasScreen() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <View style={s.header}>
-        <TouchableOpacityBack navigation={navigation} dark={dark} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: spacing.sm }}>
+          <Ionicons name="arrow-back" size={24} color={dark ? colors.text.dark : colors.text.light} />
+        </TouchableOpacity>
         <Text style={s.title}>Compras detectadas</Text>
       </View>
 
@@ -1782,15 +1817,6 @@ export default function PendientesComprasScreen() {
   );
 }
 
-function TouchableOpacityBack({ navigation, dark }) {
-  const { TouchableOpacity } = require('react-native');
-  return (
-    <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: spacing.sm }}>
-      <Ionicons name="arrow-back" size={24} color={dark ? colors.text.dark : colors.text.light} />
-    </TouchableOpacity>
-  );
-}
-
 const styles = (dark) => StyleSheet.create({
   root: { flex: 1, backgroundColor: dark ? colors.background.dark : colors.background.light },
   header: {
@@ -1802,8 +1828,6 @@ const styles = (dark) => StyleSheet.create({
   emptyText: { ...typography.body, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textAlign: 'center' },
 });
 ```
-
-(El helper `TouchableOpacityBack` con `require` inline evita un segundo import de `TouchableOpacity` en el mismo archivo donde ya se usa `View`/`Text`/`FlatList`; si se prefiere prolijidad, mover `TouchableOpacity` al import de arriba junto a `View, Text, FlatList, StyleSheet` y borrar el `require`.)
 
 - [ ] **Step 3: Registrar la pantalla en `App.js`**
 
