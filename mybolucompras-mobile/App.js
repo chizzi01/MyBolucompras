@@ -46,6 +46,7 @@ import ViajesScreen from './src/screens/ViajesScreen';
 import ViajeDetailScreen from './src/screens/ViajeDetailScreen';
 import DeudoresScreen from './src/screens/DeudoresScreen';
 import AgregarDeudaModal from './src/screens/AgregarDeudaModal';
+import PendientesComprasScreen from './src/screens/PendientesComprasScreen';
 import CierreChecker from './src/components/CierreChecker';
 import ModoViajeChecker from './src/components/ModoViajeChecker';
 import ModoPreviaTabBar from './src/components/nav/ModoPreviaTabBar';
@@ -175,6 +176,11 @@ function RootNavigator() {
                         gestureEnabled: true,
                         gestureDirection: 'vertical',
                       }}
+                    />
+                    <AuthStack.Screen
+                      name="PendientesCompras"
+                      component={PendientesComprasScreen}
+                      options={{ animation: 'slide_from_right' }}
                     />
                     <AuthStack.Screen
                       name="EditarDeuda"

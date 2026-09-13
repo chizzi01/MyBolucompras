@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useGastos } from '../hooks/queries/useGastos';
+import { useNotificacionesPendientes } from '../hooks/queries/useNotificacionesPendientes';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useGastoMutations } from '../hooks/mutations/useGastoMutations';
 import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
@@ -26,6 +27,7 @@ const MESES = [
 
 export default function GastosScreen({ navigation }) {
   const { gastos, loading, refetch } = useGastos();
+  const { pendientes } = useNotificacionesPendientes();
   const { mydata } = useConfiguracion();
   const { eliminar: eliminarMutation, marcarPagado: marcarPagadoMutation } = useGastoMutations();
   const { user } = useAuth();
@@ -154,6 +156,16 @@ export default function GastosScreen({ navigation }) {
               {soloEsteMes ? mesNombre : 'Todos'}
             </Text>
           </TouchableOpacity>
+          {pendientes.length > 0 && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('PendientesCompras')}
+              style={s.pendientesBadge}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="notifications" size={16} color="#fff" />
+              <Text style={s.pendientesBadgeText}>{pendientes.length}</Text>
+            </TouchableOpacity>
+          )}
           <ProfileAvatarButton size={30} />
         </View>
       </View>
@@ -287,4 +299,10 @@ const styles = (dark) => StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: spacing.md },
   emptyText: { ...typography.body, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textAlign: 'center' },
   emptyContainer: { flexGrow: 1 },
+  pendientesBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: colors.primary, borderRadius: radius.full,
+    paddingHorizontal: 10, paddingVertical: 6,
+  },
+  pendientesBadgeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 });
