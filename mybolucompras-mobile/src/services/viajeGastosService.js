@@ -55,7 +55,7 @@ export const viajeGastosService = {
       ? gastoData.fecha.split('/').reverse().join('-')
       : (gastoData.fecha || new Date().toISOString().split('T')[0]);
 
-    const { error } = await supabase.from('viaje_gastos').insert([{
+    const { data, error } = await supabase.from('viaje_gastos').insert([{
       viaje_id: viajeId,
       gasto_id: null,
       objeto: gastoData.objeto,
@@ -65,7 +65,7 @@ export const viajeGastosService = {
       pagado_por: user.id,
       modo_split: modoSplit,
       participantes: participantesIds,
-    }]);
+    }]).select('id').single();
     if (error) throw error;
 
     // Notificaciones push para otros participantes (sin cambios)
@@ -88,6 +88,8 @@ export const viajeGastosService = {
         })
         .catch(err => console.warn('[Push] Error sending expense notification:', err.message));
     }
+
+    return { id: data.id };
   },
 
   async eliminarGasto(gastoId) {

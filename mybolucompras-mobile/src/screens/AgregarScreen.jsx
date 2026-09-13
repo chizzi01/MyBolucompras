@@ -27,6 +27,8 @@ import { useGastoMutations } from '../hooks/mutations/useGastoMutations';
 import { useViajeGastoMutations } from '../hooks/mutations/useViajeGastoMutations';
 import { useViajes } from '../hooks/queries/useViajes';
 import { useConfiguracionMutations } from '../hooks/mutations/useConfiguracionMutations';
+import { useNotificacionesPendientesMutations } from '../hooks/mutations/useNotificacionesPendientesMutations';
+import { comerciosAprendidosService } from '../services/comerciosAprendidosService';
 
 const INITIAL = {
   objeto: '', fecha: formatFecha(new Date()),
@@ -56,6 +58,8 @@ export default function AgregarScreen() {
   const { user } = useAuth();
   const { viajesActivos } = useViajes();
   const routeViajeId = route.params?.viajeId;
+  const pendiente = route.params?.pendiente || null;
+  const { confirmar: confirmarPendienteMutation } = useNotificacionesPendientesMutations();
   const [selectedViajeId, setSelectedViajeId] = useState(routeViajeId || null);
   const [viajeToggleOn, setViajeToggleOn] = useState(!!routeViajeId);
   const [splitConfig, setSplitConfig] = useState({ modoSplit: 'todos', participanteIds: [] });
@@ -69,6 +73,30 @@ export default function AgregarScreen() {
     moneda: mydata.monedaPreferida || 'ARS',
     banco: bancosDisponibles.length === 1 ? bancosDisponibles[0] : '',
   });
+
+  // Precarga del form cuando venimos de una compra detectada automáticamente
+  // (bandeja de pendientes). Si ya aprendimos el comercio (etiqueta/medio de
+  // pago elegidos en una confirmación anterior), esos datos tienen prioridad.
+  useEffect(() => {
+    if (!pendiente) return;
+    comerciosAprendidosService.buscar(pendiente.comercioRaw).then((aprendido) => {
+      setForm((prev) => ({
+        ...prev,
+        objeto: pendiente.comercioRaw || prev.objeto,
+        precio: pendiente.monto != null ? String(pendiente.monto) : prev.precio,
+        moneda: pendiente.moneda || prev.moneda,
+        medio: aprendido?.medioPago || pendiente.medio || prev.medio,
+        tipo: pendiente.tipo || prev.tipo,
+        etiqueta: aprendido?.etiqueta || prev.etiqueta,
+        fecha: pendiente.fechaDetectada ? formatFecha(new Date(pendiente.fechaDetectada)) : prev.fecha,
+      }));
+      if (pendiente.monto != null) {
+        setPrecioDisplay(formatPrecioInputDisplay(pendiente.monto, pendiente.moneda || form.moneda));
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendiente?.id]);
+
   const loading = agregarMutation.isPending || agregarViajeGastoMutation.isPending;
   // Colapsado por defecto: fecha, medio, banco, tipo de gasto y cuotas ya
   // vienen con un valor por defecto razonable — la mayoría de los gastos no
@@ -181,8 +209,9 @@ export default function AgregarScreen() {
         precio: Number(form.precio),
       };
 
+      let gastoCreado;
       if (selectedViaje && viajeToggleOn) {
-        await agregarViajeGastoMutation.mutateAsync({
+        gastoCreado = await agregarViajeGastoMutation.mutateAsync({
           gastoData,
           splitConfig,
           viajeParticipantes: selectedViaje.participantes,
@@ -191,7 +220,27 @@ export default function AgregarScreen() {
         const sharedWith = sharedUser
           ? { userId: sharedUser.id, mode: shareMode, nombre: sharedUser.nombre || sharedUser.email }
           : null;
-        await agregarMutation.mutateAsync({ gasto: gastoData, sharedWith });
+        gastoCreado = await agregarMutation.mutateAsync({ gasto: gastoData, sharedWith });
+      }
+
+      // Si el gasto se originó en una compra detectada automáticamente,
+      // confirmamos el pendiente (lo saca de la bandeja) y aprendemos el
+      // comercio para prellenar mejor la próxima vez. Aplica tanto a un
+      // gasto personal como a uno de viaje: en ambos casos la compra
+      // detectada quedó registrada y el pendiente debe dejar de figurar
+      // como "por confirmar".
+      if (pendiente && gastoCreado?.id) {
+        try {
+          await confirmarPendienteMutation.mutateAsync({ id: pendiente.id, gastoId: gastoCreado.id });
+        } catch (err) {
+          console.warn('[AgregarScreen] Error confirmando pendiente:', err?.message);
+        }
+        if (pendiente.comercioRaw) {
+          comerciosAprendidosService.guardar(pendiente.comercioRaw, {
+            etiqueta: gastoData.etiqueta || null,
+            medioPago: gastoData.medio || null,
+          }).catch(() => {}); // best-effort, no bloquea el alta si falla
+        }
       }
 
       setForm({
