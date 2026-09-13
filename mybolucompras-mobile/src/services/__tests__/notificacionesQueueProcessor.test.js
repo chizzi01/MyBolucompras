@@ -64,4 +64,29 @@ describe('procesarColaDeNotificaciones', () => {
     expect(creadas).toBe(0);
     expect(notificacionesPendientesService.crear).not.toHaveBeenCalled();
   });
+
+  test('si una entrada falla al procesarse, sigue procesando el resto del batch', async () => {
+    notificationListenerBridge.leerYVaciarCola.mockResolvedValue([
+      { packageName: 'com.bancogalicia.appandroid', titulo: 'rota', texto: 'rota', timestamp: '2026-09-12T14:36:00Z' },
+      { packageName: 'com.bancogalicia.appandroid', titulo: 'Pagaste: $12.000', texto: 'A COTO con tu Visa Débito 1234', timestamp: '2026-09-12T14:37:00Z' },
+    ]);
+    notificacionesPendientesService.getRecientes.mockResolvedValue([]);
+    parsearNotificacion
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValueOnce({
+        monto: 12000, moneda: 'ARS', comercio_raw: 'COTO', medio: 'Visa', tipo: 'debito', ultimos4: '1234', banco: 'Galicia', fuente: 'regla',
+      });
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const creadas = await procesarColaDeNotificaciones({ apiKey: 'fake' });
+
+    expect(creadas).toBe(1);
+    expect(notificacionesPendientesService.crear).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      '[notificacionesQueueProcessor] error al procesar una notificación:',
+      'boom'
+    );
+
+    console.warn.mockRestore();
+  });
 });
