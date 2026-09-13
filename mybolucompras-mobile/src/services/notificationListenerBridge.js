@@ -55,10 +55,20 @@ async function leerYVaciarCola() {
 // payload como un string JSON (no un objeto ya parseado): no hay dos
 // mecanismos distintos como asumía el plan original, hay uno solo.
 
+async function encolarDesdeHeadless(notificacion) {
+  await encolarNotificacion({
+    packageName: notificacion.app,
+    titulo: notificacion.title || '',
+    texto: notificacion.text || notificacion.bigText || '',
+    timestamp: notificacion.time || new Date().toISOString(),
+  });
+}
+
 export const notificationListenerBridge = {
   tienePermiso,
   abrirAjustesDePermiso,
   leerYVaciarCola,
   encolarNotificacion,
+  encolarDesdeHeadless,
   QUEUE_KEY,
 };
