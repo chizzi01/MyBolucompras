@@ -102,8 +102,12 @@ export default function ConfiguracionScreen({ navigation }) {
 
   const revisarPermisoNotificaciones = useCallback(async () => {
     if (Platform.OS !== 'android') return;
-    const tiene = await notificationListenerBridge.tienePermiso();
-    setDeteccionAutomaticaActiva(tiene);
+    try {
+      const tiene = await notificationListenerBridge.tienePermiso();
+      setDeteccionAutomaticaActiva(tiene);
+    } catch {
+      setDeteccionAutomaticaActiva(false);
+    }
   }, []);
 
   useEffect(() => {
