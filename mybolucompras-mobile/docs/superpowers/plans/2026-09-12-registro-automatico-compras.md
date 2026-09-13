@@ -1444,21 +1444,30 @@ git commit -m "feat: procesador de la cola de notificaciones"
 
 - [ ] **Step 1: Registrar la headless task en `index.js`**
 
-Leer primero el `index.js` actual del repo para no pisar el `registerRootComponent` existente, y agregar antes de él (confirmando contra el Step 1 del Task 9 el nombre real exportado por la librería):
+> **Addendum post-ejecución de Task 9:** ya se confirmó contra la librería real (`react-native-android-notification-listener@5.0.1`) que el nombre exportado es `RNAndroidNotificationListenerHeadlessJsName` (export nombrado, no una propiedad del default import), y que el payload que recibe el handler es `{ notification }` donde `notification` es un **string JSON** — hay que hacer `JSON.parse` antes de leer `app`/`title`/`text`/`time`. El código de abajo ya refleja esto (no uses la forma `RNAndroidNotificationListener.headlessJsTaskName` ni asumas un objeto ya parseado).
+
+Leer primero el `index.js` actual del repo para no pisar el `registerRootComponent` existente, y agregar antes de él:
 
 ```js
 import { AppRegistry } from 'react-native';
-import RNAndroidNotificationListener from 'react-native-android-notification-listener';
+import { RNAndroidNotificationListenerHeadlessJsName } from 'react-native-android-notification-listener';
 
-// Notificaciones recibidas con la app en background/cerrada: la librería
-// invoca esta tarea headless, que solo encola (no puede tocar AsyncStorage
-// desde JS puro sin RN inicializado del todo en algunas versiones — si el
-// Step 1 del Task 9 confirma que la librería expone un helper propio de cola,
-// usá ese en vez de este cuerpo).
+// Notificaciones recibidas con la app en background/cerrada (y también en
+// foreground: la librería dispara esta misma tarea en ambos casos, no hay un
+// canal separado — ver notificationListenerBridge.js). El payload trae
+// `notification` como STRING JSON, no como objeto — hay que parsearlo antes
+// de encolar. Si el parseo falla (payload corrupto/inesperado), se descarta
+// esa notificación en vez de romper la tarea headless.
 AppRegistry.registerHeadlessTask(
-  RNAndroidNotificationListener.headlessJsTaskName ?? 'RNAndroidNotificationListenerHeadlessJs',
-  () => async (notificacion) => {
+  RNAndroidNotificationListenerHeadlessJsName,
+  () => async (data) => {
     const { notificationListenerBridge } = require('./src/services/notificationListenerBridge');
+    let notificacion;
+    try {
+      notificacion = JSON.parse(data.notification);
+    } catch {
+      return;
+    }
     await notificationListenerBridge.encolarDesdeHeadless(notificacion);
   },
 );
