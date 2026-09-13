@@ -12,7 +12,7 @@ import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import DeudaCard from '../components/DeudaCard';
-import { colors, spacing, radius, typography, fonts } from '../constants/theme';
+import { colors, spacing, radius, typography, fonts, TAB_BAR_CLEARANCE } from '../constants/theme';
 import ProfileAvatarButton from '../components/nav/ProfileAvatarButton';
 import { montoMensualDeuda, gastoEntraEsteMes } from '../utils/cuotas';
 
@@ -469,6 +469,12 @@ export default function DeudoresScreen({ navigation }) {
           onPress={() => { setTabActivo('deudores'); setSearch(''); }}
           activeOpacity={0.7}
         >
+          <Ionicons
+            name="arrow-down-circle-outline"
+            size={14}
+            color={tabActivo === 'deudores' ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+            style={s.tabBtnIcon}
+          />
           <Text style={[s.tabBtnText, tabActivo === 'deudores' && s.tabBtnTextActive]}>Deudores</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -476,6 +482,12 @@ export default function DeudoresScreen({ navigation }) {
           onPress={() => { setTabActivo('misdeudas'); setSearch(''); }}
           activeOpacity={0.7}
         >
+          <Ionicons
+            name="arrow-up-circle-outline"
+            size={14}
+            color={tabActivo === 'misdeudas' ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+            style={s.tabBtnIcon}
+          />
           <Text style={[s.tabBtnText, tabActivo === 'misdeudas' && s.tabBtnTextActive]}>Mis deudas</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -483,6 +495,12 @@ export default function DeudoresScreen({ navigation }) {
           onPress={() => { setTabActivo('pagadas'); setSearch(''); }}
           activeOpacity={0.7}
         >
+          <Ionicons
+            name="checkmark-circle-outline"
+            size={14}
+            color={tabActivo === 'pagadas' ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+            style={s.tabBtnIcon}
+          />
           <Text style={[s.tabBtnText, tabActivo === 'pagadas' && s.tabBtnTextActive]}>Pagadas</Text>
         </TouchableOpacity>
       </View>
@@ -528,7 +546,7 @@ export default function DeudoresScreen({ navigation }) {
             )}
           </View>
         }
-        contentContainerStyle={gruposPorPersona.length === 0 ? s.emptyContainer : { paddingBottom: spacing.lg }}
+        contentContainerStyle={gruposPorPersona.length === 0 ? s.emptyContainer : { paddingBottom: spacing.lg + TAB_BAR_CLEARANCE }}
         showsVerticalScrollIndicator={false}
       />
 
@@ -572,7 +590,8 @@ const styles = (dark) => StyleSheet.create({
     backgroundColor: dark ? '#1e293b' : '#F1F5F9',
     borderRadius: radius.md, padding: 3,
   },
-  tabBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: radius.md - 1 },
+  tabBtn: { flex: 1, flexDirection: 'row', paddingVertical: 8, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md - 1 },
+  tabBtnIcon: { marginRight: 5 },
   tabBtnActiveDeudores: {
     backgroundColor: colors.warning,
     shadowColor: colors.warning, shadowOffset: { width: 0, height: 2 },

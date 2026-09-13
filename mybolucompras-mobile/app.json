@@ -4,7 +4,7 @@
     "slug": "BudgetBuddy-mobile",
     "version": "1.0.2",
     "orientation": "portrait",
-    "icon": "./assets/BudgetBuddy.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "splash": {
@@ -18,14 +18,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/BudgetBuddy.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0E0B2E"
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "pan",
       "package": "com.chizzi.mybolucomprasmobile",
       "compileSdkVersion": 36,
-      "versionCode": 38,
+      "versionCode": 39,
       "googleServicesFile": "./google-services.json"
     },
     "web": {

@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import { useViajes } from '../hooks/queries/useViajes';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { colors, spacing, radius, typography, TAB_BAR_CLEARANCE } from '../constants/theme';
 import ViajeCard from '../components/viajes/ViajeCard';
 import CrearViajeModal from '../components/viajes/CrearViajeModal';
 import ViajeResumenModal from '../components/viajes/ViajeResumenModal';
@@ -82,7 +82,7 @@ export default function ViajesScreen() {
         keyExtractor={() => 'empty'}
         renderItem={null}
         ListHeaderComponent={
-          <View style={{ padding: spacing.md }}>
+          <View style={{ padding: spacing.md, paddingBottom: spacing.md + TAB_BAR_CLEARANCE }}>
             {renderSection('ACTIVOS', activos)}
             {renderSection('ARCHIVADOS', archivados, true)}
             {!viajes.length && !loading && (

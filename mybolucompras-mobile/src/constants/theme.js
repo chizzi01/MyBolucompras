@@ -63,6 +63,11 @@ export const spacing = {
   xl: 32,
 };
 
+// Alto aproximado de la píldora flotante de ModoPreviaTabBar (sin contar el
+// inset del home indicator, que cada pantalla suma aparte vía useSafeAreaInsets).
+// Se usa como paddingBottom en scrolls/listas para que el último item no quede tapado.
+export const TAB_BAR_CLEARANCE = 90;
+
 export const radius = {
   sm: 6,
   md: 12,

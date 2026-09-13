@@ -16,7 +16,7 @@ import { useTheme } from '../context/ThemeContext';
 import GastoCard from '../components/GastoCard';
 import FilterBar from '../components/FilterBar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { colors, spacing, radius, typography, TAB_BAR_CLEARANCE } from '../constants/theme';
 import ProfileAvatarButton from '../components/nav/ProfileAvatarButton';
 
 const MESES = [
@@ -164,6 +164,12 @@ export default function GastosScreen({ navigation }) {
           onPress={() => handleTabChange('variables')}
           activeOpacity={0.7}
         >
+          <Ionicons
+            name="flash-outline"
+            size={14}
+            color={tabActivo === 'variables' ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+            style={s.tabBtnIcon}
+          />
           <Text style={[s.tabBtnText, tabActivo === 'variables' && s.tabBtnTextActive]}>Variables</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -171,6 +177,12 @@ export default function GastosScreen({ navigation }) {
           onPress={() => handleTabChange('fijos')}
           activeOpacity={0.7}
         >
+          <Ionicons
+            name="repeat-outline"
+            size={14}
+            color={tabActivo === 'fijos' ? '#fff' : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+            style={s.tabBtnIcon}
+          />
           <Text style={[s.tabBtnText, tabActivo === 'fijos' && s.tabBtnTextActive]}>Fijos</Text>
         </TouchableOpacity>
       </View>
@@ -203,7 +215,7 @@ export default function GastosScreen({ navigation }) {
               </Text>
             </View>
           }
-          contentContainerStyle={gastosFiltrados.length === 0 ? s.emptyContainer : { paddingBottom: spacing.lg }}
+          contentContainerStyle={gastosFiltrados.length === 0 ? s.emptyContainer : { paddingBottom: spacing.lg + TAB_BAR_CLEARANCE }}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -261,10 +273,13 @@ const styles = (dark) => StyleSheet.create({
   },
   tabBtn: {
     flex: 1,
+    flexDirection: 'row',
     paddingVertical: 8,
     alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: radius.md - 1,
   },
+  tabBtnIcon: { marginRight: 5 },
   tabBtnActiveVariables: {
     backgroundColor: colors.primary,
     shadowColor: colors.primary,

@@ -9,7 +9,7 @@ import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes, montoMensualDeuda } from '../utils/cuotas';
 import { getGastosMes, getCostoMes, calcularTotalesPorMoneda, formatAmountShort } from '../utils/proyeccion';
 import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '../utils/formatters';
-import { colors, spacing, radius, typography, fonts } from '../constants/theme';
+import { colors, spacing, radius, typography, fonts, TAB_BAR_CLEARANCE } from '../constants/theme';
 import ProfileAvatarButton from '../components/nav/ProfileAvatarButton';
 
 const MESES = [
@@ -464,7 +464,7 @@ const styles = (dark) => StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
   },
-  scroll: { padding: spacing.md },
+  scroll: { padding: spacing.md, paddingBottom: spacing.md + TAB_BAR_CLEARANCE },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
