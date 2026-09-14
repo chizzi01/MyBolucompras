@@ -55,12 +55,22 @@ async function leerYVaciarCola() {
 // payload como un string JSON (no un objeto ya parseado): no hay dos
 // mecanismos distintos como asumía el plan original, hay uno solo.
 
+// `notificacion.time` viene de `sbn.getPostTime()` del lado nativo: un
+// epoch en milisegundos, pero serializado como STRING (no number). Postgres
+// rechaza ese string tal cual como timestamptz ("date/time field value out
+// of range"), así que se normaliza a ISO 8601 acá antes de encolarlo.
+function timestampAISO(time) {
+  const ms = Number(time);
+  if (!time || !Number.isFinite(ms) || ms <= 0) return new Date().toISOString();
+  return new Date(ms).toISOString();
+}
+
 async function encolarDesdeHeadless(notificacion) {
   await encolarNotificacion({
     packageName: notificacion.app,
     titulo: notificacion.title || '',
     texto: notificacion.text || notificacion.bigText || '',
-    timestamp: notificacion.time || new Date().toISOString(),
+    timestamp: timestampAISO(notificacion.time),
   });
 }
 

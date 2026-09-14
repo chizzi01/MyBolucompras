@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Budget Buddy",
-    "slug": "BudgetBuddy-mobile",
+    "slug": "mybolucompras-mobile",
     "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,7 +25,7 @@
       "softwareKeyboardLayoutMode": "pan",
       "package": "com.chizzi.mybolucomprasmobile",
       "compileSdkVersion": 36,
-      "versionCode": 43,
+      "versionCode": 44,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -65,7 +65,8 @@
           "code": "DJ5VFS0TGLKCEAAAAAAAAAAAAAAAA"
         }
       ],
-      "./plugins/withNotificationListenerManifestFix"
+      "./plugins/withNotificationListenerManifestFix",
+      "./plugins/withReleaseSigning"
     ],
     "extra": {
       "eas": {

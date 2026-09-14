@@ -6,6 +6,7 @@ import { notificacionesPendientesService } from './notificacionesPendientesServi
 
 export async function procesarColaDeNotificaciones({ apiKey }) {
   const cola = await notificationListenerBridge.leerYVaciarCola();
+  console.log(`[notificacionesQueueProcessor] drenando cola: ${cola.length} notificación(es)`);
   if (cola.length === 0) return 0;
 
   // Copia local: además de lo ya guardado en Supabase, se le van agregando

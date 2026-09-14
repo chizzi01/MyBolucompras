@@ -35,10 +35,15 @@ async function parseConIA(titulo, texto, apiKey) {
       }),
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      console.log('[parseIA] respuesta HTTP no-ok:', response.status, body);
+      return null;
+    }
 
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content?.trim() || '';
+    console.log('[parseIA] respuesta del modelo:', text);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
 
@@ -59,7 +64,8 @@ async function parseConIA(titulo, texto, apiKey) {
       tipo: parsed.tipo || null,
       ultimos4: parsed.ultimos4 || null,
     };
-  } catch {
+  } catch (err) {
+    console.log('[parseIA] excepción durante el fetch:', err?.message ?? err);
     return null;
   }
 }
