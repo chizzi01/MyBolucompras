@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNAndroidNotificationListener from 'react-native-android-notification-listener';
+import { esNotificacionDeCompra } from './notificaciones/filtro';
 
 // Key de AsyncStorage donde se persiste la cola de notificaciones bancarias
 // capturadas. La escribe la headless task (Task 11, vía `encolarDesdeHeadless`
@@ -65,11 +66,23 @@ function timestampAISO(time) {
   return new Date(ms).toISOString();
 }
 
+// El listener nativo recibe TODAS las notificaciones del teléfono (WhatsApp,
+// redes, sistema, etc.), no solo las de bancos — la librería no filtra por
+// package. Sin este filtro acá, cada notificación del dispositivo dispara
+// una escritura completa a AsyncStorage (read-modify-write) compitiendo por
+// el mismo hilo JS que usa la app en foreground, lo que en dispositivos con
+// notificaciones frecuentes produce ANRs periódicos ("la app no responde")
+// aunque la app siga usable. Descartar acá, antes de tocar disco, es lo que
+// evita eso.
 async function encolarDesdeHeadless(notificacion) {
+  const titulo = notificacion.title || '';
+  const texto = notificacion.text || notificacion.bigText || '';
+  if (!esNotificacionDeCompra({ titulo, texto })) return;
+
   await encolarNotificacion({
     packageName: notificacion.app,
-    titulo: notificacion.title || '',
-    texto: notificacion.text || notificacion.bigText || '',
+    titulo,
+    texto,
     timestamp: timestampAISO(notificacion.time),
   });
 }

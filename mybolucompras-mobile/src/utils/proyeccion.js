@@ -68,6 +68,18 @@ export function calcularTotalesPorMoneda(gastos) {
   return totales;
 }
 
+// Últimos `cantidad` meses terminando en mesSel (incluido), en orden cronológico ascendente.
+export function getRangoMeses(mesSel, cantidad) {
+  const out = [];
+  for (let i = cantidad - 1; i >= 0; i--) {
+    let mes = mesSel.mes - i;
+    let anio = mesSel.anio;
+    while (mes < 0) { mes += 12; anio -= 1; }
+    out.push({ mes, anio });
+  }
+  return out;
+}
+
 // Formato compacto para KPI chips: "$284k", "US$1,2M", etc.
 export function formatAmountShort(amount, moneda = 'ARS') {
   const sym = getCurrencySymbol(moneda);

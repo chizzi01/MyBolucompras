@@ -5,28 +5,32 @@ import { Ionicons } from '@expo/vector-icons';
 import { useGastos } from '../hooks/queries/useGastos';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useDeudas } from '../hooks/queries/useDeudas';
+import { useNotificacionesPendientes } from '../hooks/queries/useNotificacionesPendientes';
 import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes, montoMensualDeuda } from '../utils/cuotas';
-import { getGastosMes, getCostoMes, calcularTotalesPorMoneda, formatAmountShort } from '../utils/proyeccion';
+import { getGastosMes, getCostoMes, calcularTotalesPorMoneda, formatAmountShort, getRangoMeses } from '../utils/proyeccion';
 import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '../utils/formatters';
 import { colors, spacing, radius, typography, fonts, TAB_BAR_CLEARANCE } from '../constants/theme';
 import ProfileAvatarButton from '../components/nav/ProfileAvatarButton';
+import GastoCreditCard from '../components/GastoCreditCard';
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
+const MESES_ABR = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
 import { notificationService } from '../services/notificationService';
 import NotificationsModal from './NotificationsModal';
 import ProyeccionModal from '../components/ProyeccionModal';
 
-export default function DashboardScreen() {
+export default function DashboardScreen({ navigation }) {
   const { gastos } = useGastos();
   const { mydata } = useConfiguracion();
   const { deudas } = useDeudas();
   const { dark } = useTheme();
   const s = styles(dark);
+  const { pendientes } = useNotificacionesPendientes();
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -35,6 +39,8 @@ export default function DashboardScreen() {
       .then(setUnreadCount)
       .catch(() => {});
   }, []);
+
+  const notifBadgeCount = unreadCount + pendientes.length;
 
   const hoy = new Date();
   const [mesSel, setMesSel] = useState({ mes: hoy.getMonth(), anio: hoy.getFullYear() });
@@ -87,6 +93,69 @@ export default function DashboardScreen() {
     return { totalesPorMoneda, cuotasActivas, masCaro, porEtiqueta, maxEtiqueta, gastosMes, cuotasPendientes, fijosMes };
   }, [gastos, mydata, mesSel]);
 
+  // Datos de la tarjeta de crédito del hero: total del mes, comparación contra
+  // el mes anterior y tendencia de los últimos 6 meses con proyección de cierre.
+  const cardData = useMemo(() => {
+    if (esMesFuturo) return null;
+    const monedaPrincipal = stats.totalesPorMoneda.ARS != null
+      ? 'ARS'
+      : Object.keys(stats.totalesPorMoneda)[0];
+    if (!monedaPrincipal) return null;
+
+    const totalActual = stats.totalesPorMoneda[monedaPrincipal] || 0;
+
+    const mesAnteriorSel = mesSel.mes === 0
+      ? { mes: 11, anio: mesSel.anio - 1 }
+      : { mes: mesSel.mes - 1, anio: mesSel.anio };
+    const gastosMesAnterior = getGastosMes(gastos, mesAnteriorSel, mydata)
+      .filter(g => (g.moneda || 'ARS') === monedaPrincipal);
+
+    const dia = hoy.getDate();
+    const diasEnMes = new Date(mesSel.anio, mesSel.mes + 1, 0).getDate();
+
+    const totalComparable = isHoy
+      ? gastosMesAnterior
+        .filter(g => {
+          const d = parseInt((g.fecha || '').split('/')[0], 10);
+          return isNaN(d) || d <= dia;
+        })
+        .reduce((sum, g) => sum + getCostoMes(g), 0)
+      : gastosMesAnterior.reduce((sum, g) => sum + getCostoMes(g), 0);
+
+    const deltaPct = totalComparable > 0 ? ((totalActual - totalComparable) / totalComparable) * 100 : null;
+
+    const rango6 = getRangoMeses(mesSel, 6);
+    const historial = rango6.map((m, idx) => {
+      const esActual = idx === rango6.length - 1;
+      const total = esActual
+        ? totalActual
+        : calcularTotalesPorMoneda(getGastosMes(gastos, m, mydata))[monedaPrincipal] || 0;
+      return { label: MESES_ABR[m.mes], total, esActual };
+    });
+
+    const promedio = historial.reduce((sum, h) => sum + h.total, 0) / historial.length;
+    const proyeccion = isHoy && dia > 0 ? (totalActual / dia) * diasEnMes : null;
+
+    // Gastos de este mes en otras monedas — no entran en la comparativa/proyección
+    // (que son sobre la moneda principal), pero deben sumar al total mostrado.
+    const otrasMonedas = Object.entries(stats.totalesPorMoneda)
+      .filter(([m]) => m !== monedaPrincipal);
+
+    return {
+      moneda: monedaPrincipal,
+      totalActual,
+      totalComparable,
+      deltaPct,
+      dia,
+      diasEnMes,
+      historial,
+      promedio,
+      proyeccion,
+      otrasMonedas,
+      mesAnteriorLabel: MESES[mesAnteriorSel.mes],
+    };
+  }, [esMesFuturo, stats.totalesPorMoneda, mesSel, gastos, mydata, isHoy, hoy]);
+
   const statsProxMes = useMemo(() => {
     const proxMesSel = mesSel.mes === 11
       ? { mes: 0, anio: mesSel.anio + 1 }
@@ -116,16 +185,7 @@ export default function DashboardScreen() {
   const deudaNetaEntries = Object.entries(deudaNeta).filter(([, v]) => v.count > 0);
   const hayDeudaNeta = deudaNetaEntries.length > 0;
 
-  const heroTotales = useMemo(() => {
-    if (esMesFuturo) return stats.totalesPorMoneda;
-    const combined = { ...stats.totalesPorMoneda };
-    Object.entries(deudaNeta).forEach(([moneda, { neto }]) => {
-      if (neto > 0) combined[moneda] = (combined[moneda] || 0) + neto;
-    });
-    return combined;
-  }, [esMesFuturo, stats.totalesPorMoneda, deudaNeta]);
-
-  const hayTotal = Object.keys(heroTotales).length > 0;
+  const hayTotal = Object.keys(stats.totalesPorMoneda).length > 0;
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
@@ -141,13 +201,13 @@ export default function DashboardScreen() {
               activeOpacity={0.7}
             >
               <Ionicons
-                name={unreadCount > 0 ? "notifications" : "notifications-outline"}
+                name={notifBadgeCount > 0 ? "notifications" : "notifications-outline"}
                 size={20}
-                color={unreadCount > 0 ? colors.primary : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
+                color={notifBadgeCount > 0 ? colors.primary : (dark ? colors.textSecondary.dark : colors.textSecondary.light)}
               />
-              {unreadCount > 0 && (
+              {notifBadgeCount > 0 && (
                 <View style={s.badge}>
-                  <Text style={s.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                  <Text style={s.badgeText}>{notifBadgeCount > 9 ? '9+' : notifBadgeCount}</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -186,69 +246,81 @@ export default function DashboardScreen() {
         </View>
 
         {/* Total del mes — H1 hero */}
-        <TouchableOpacity
-          style={[s.totalHero, esMesFuturo && s.totalHeroFuturo]}
-          onPress={esMesFuturo ? () => setShowProyeccionModal(true) : undefined}
-          activeOpacity={esMesFuturo ? 0.85 : 1}
-        >
-          {esMesFuturo && (
+        {esMesFuturo ? (
+          <TouchableOpacity
+            style={[s.totalHero, s.totalHeroFuturo]}
+            onPress={() => setShowProyeccionModal(true)}
+            activeOpacity={0.85}
+          >
             <View style={s.proyectadoBadge}>
               <Text style={s.proyectadoBadgeText}>Proyectado</Text>
             </View>
-          )}
-          {hayTotal ? (
-            <>
-              {Object.entries(heroTotales).map(([moneda, total]) => (
-                <View key={moneda} style={s.totalHeroRow}>
-                  <Text style={[s.totalHeroAmount, esMesFuturo && { color: '#F97316' }]}>
-                    {formatPrecioEuropeo(total, moneda)}
-                  </Text>
-                  {Object.keys(heroTotales).length > 1 && (
-                    <Text style={s.totalHeroMoneda}>{moneda}</Text>
-                  )}
-                </View>
-              ))}
-              <Text style={s.totalHeroLabel}>
-                {esMesFuturo
-                  ? 'proyectado · tocá para ver el desglose'
-                  : deudaNetaEntries.some(([, v]) => v.neto > 0)
-                    ? `gastado + pendiente de cobro · ${MESES[mesSel.mes].toLowerCase()}`
-                    : `gastado en ${MESES[mesSel.mes].toLowerCase()}`}
-              </Text>
-            </>
-          ) : (
-            <>
-              <Text style={s.totalHeroEmpty}>$ 0,00</Text>
-              <Text style={s.totalHeroLabel}>sin gastos este mes</Text>
-            </>
-          )}
-
-          {!esMesFuturo && hayDeudaNeta && (
-            <>
-              <View style={s.totalHeroDivider} />
-              <View style={s.totalHeroBreakdownRow}>
-                <Text style={s.totalHeroBreakdownItem}>
-                  <Text style={s.totalHeroBreakdownLabel}>gastado  </Text>
-                  {Object.entries(stats.totalesPorMoneda).map(([moneda, total]) => formatPrecioEuropeo(total, moneda)).join('  ')}
-                </Text>
-              </View>
-              {deudaNetaEntries.map(([moneda, { neto, count }]) => {
-                const color = neto > 0 ? colors.warning : neto < 0 ? colors.error : colors.accent;
-                const label = neto > 0 ? 'te deben' : neto < 0 ? 'debés' : 'saldado';
-                return (
-                  <View key={moneda}>
-                    <Text style={[s.totalHeroMiDeuda, { color }]}>
-                      {formatPrecioEuropeo(Math.abs(neto), moneda)}
+            {hayTotal ? (
+              <>
+                {Object.entries(stats.totalesPorMoneda).map(([moneda, total]) => (
+                  <View key={moneda} style={s.totalHeroRow}>
+                    <Text style={[s.totalHeroAmount, { color: '#F97316' }]}>
+                      {formatPrecioEuropeo(total, moneda)}
                     </Text>
-                    <Text style={[s.totalHeroMiDeudaLabel, { color }]}>
-                      {label} · {count} deuda{count !== 1 ? 's' : ''}
-                    </Text>
+                    {Object.keys(stats.totalesPorMoneda).length > 1 && (
+                      <Text style={s.totalHeroMoneda}>{moneda}</Text>
+                    )}
                   </View>
-                );
-              })}
-            </>
-          )}
-        </TouchableOpacity>
+                ))}
+                <Text style={s.totalHeroLabel}>proyectado · tocá para ver el desglose</Text>
+              </>
+            ) : (
+              <>
+                <Text style={s.totalHeroEmpty}>$ 0,00</Text>
+                <Text style={s.totalHeroLabel}>sin gastos este mes</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        ) : (
+          <>
+            {cardData ? (
+              <GastoCreditCard
+                dark={dark}
+                moneda={cardData.moneda}
+                mesAnteriorLabel={cardData.mesAnteriorLabel}
+                totalActual={cardData.totalActual}
+                totalComparable={cardData.totalComparable}
+                deltaPct={cardData.deltaPct}
+                isHoy={isHoy}
+                dia={cardData.dia}
+                diasEnMes={cardData.diasEnMes}
+                historial={cardData.historial}
+                promedio={cardData.promedio}
+                proyeccion={cardData.proyeccion}
+                otrasMonedas={cardData.otrasMonedas}
+              />
+            ) : (
+              <View style={s.totalHero}>
+                <Text style={s.totalHeroEmpty}>$ 0,00</Text>
+                <Text style={s.totalHeroLabel}>sin gastos este mes</Text>
+              </View>
+            )}
+
+            {hayDeudaNeta && (
+              <View style={s.deudaNetaStrip}>
+                {deudaNetaEntries.map(([moneda, { neto, count }]) => {
+                  const color = neto > 0 ? colors.warning : neto < 0 ? colors.error : colors.accent;
+                  const label = neto > 0 ? 'te deben' : neto < 0 ? 'debés' : 'saldado';
+                  return (
+                    <View key={moneda}>
+                      <Text style={[s.totalHeroMiDeuda, { color }]}>
+                        {formatPrecioEuropeo(Math.abs(neto), moneda)}
+                      </Text>
+                      <Text style={[s.totalHeroMiDeudaLabel, { color }]}>
+                        {label} · {count} deuda{count !== 1 ? 's' : ''}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </>
+        )}
 
         {/* KPI cards */}
         <View style={s.kpiRow}>
@@ -268,20 +340,12 @@ export default function DashboardScreen() {
               />
             </>
           ) : (
-            <>
-              <KPICard
-                label="Gastos del mes"
-                value={stats.gastosMes.length}
-                dark={dark}
-                accent={colors.primary}
-              />
-              <KPICard
-                label="Cuotas activas"
-                value={stats.cuotasActivas}
-                dark={dark}
-                accent={colors.accent}
-              />
-            </>
+            <KPICard
+              label="Gastos del mes"
+              value={stats.gastosMes.length}
+              dark={dark}
+              accent={colors.primary}
+            />
           )}
           {!esMesLimite && (
             <ProxMesKPI
@@ -373,6 +437,7 @@ export default function DashboardScreen() {
       <NotificationsModal
         visible={showNotifications}
         onClose={() => setShowNotifications(false)}
+        navigation={navigation}
         onRefresh={() => {
           notificationService.getUnreadCount().then(setUnreadCount);
         }}
@@ -509,41 +574,11 @@ const styles = (dark) => StyleSheet.create({
     fontFamily: fonts.display,
     color: dark ? '#332F47' : '#DCD3BF',
   },
-  totalHeroDivider: {
-    height: 1,
-    backgroundColor: dark ? '#334155' : '#E2E8F0',
-    width: '80%',
-    marginVertical: spacing.sm,
-  },
-  totalHeroBreakdownRow: {
+  deudaNetaStrip: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    flexWrap: 'wrap',
-  },
-  totalHeroBreakdownItem: {
-    ...typography.caption,
-    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
-  },
-  totalHeroBreakdownLabel: {
-    ...typography.caption,
-    color: dark ? '#475569' : '#94A3B8',
-  },
-  totalHeroBreakdownSep: {
-    ...typography.caption,
-    color: dark ? '#334155' : '#CBD5E1',
-  },
-  totalHeroDeuda: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.warning,
-    letterSpacing: -0.5,
-  },
-  totalHeroDeudaLabel: {
-    ...typography.caption,
-    color: colors.warning,
-    marginTop: 2,
-    opacity: 0.8,
+    gap: spacing.lg,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
   },
   totalHeroMiDeuda: {
     fontSize: 28,

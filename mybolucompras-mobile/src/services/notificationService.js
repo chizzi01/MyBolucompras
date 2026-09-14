@@ -24,6 +24,14 @@ export const notificationService = {
     if (error) throw error;
   },
 
+  async delete(id) {
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
   async getUnreadCount() {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user ?? null;

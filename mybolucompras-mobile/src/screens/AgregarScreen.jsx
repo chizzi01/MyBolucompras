@@ -59,7 +59,21 @@ export default function AgregarScreen() {
   const { viajesActivos } = useViajes();
   const routeViajeId = route.params?.viajeId;
   const pendiente = route.params?.pendiente || null;
-  const { confirmar: confirmarPendienteMutation } = useNotificacionesPendientesMutations();
+  const { confirmar: confirmarPendienteMutation, descartar: descartarPendienteMutation } = useNotificacionesPendientesMutations();
+
+  const handleEliminarRegistroDetectado = () => {
+    if (!pendiente) return;
+    showModal({
+      type: 'danger',
+      title: 'Eliminar registro detectado',
+      message: 'Esta compra detectada va a desaparecer sin crear ningún gasto. ¿Confirmás?',
+      confirmText: 'Eliminar',
+      onConfirm: () => {
+        descartarPendienteMutation.mutate(pendiente.id);
+        navigation.goBack();
+      },
+    });
+  };
   const [selectedViajeId, setSelectedViajeId] = useState(routeViajeId || null);
   const [viajeToggleOn, setViajeToggleOn] = useState(!!routeViajeId);
   const [splitConfig, setSplitConfig] = useState({ modoSplit: 'todos', participanteIds: [] });
@@ -456,6 +470,13 @@ export default function AgregarScreen() {
             <Text style={s.scanBtnText}>Escanear</Text>
           </TouchableOpacity>
         </View>
+
+        {pendiente && (
+          <TouchableOpacity style={s.eliminarPendienteBtn} onPress={handleEliminarRegistroDetectado} activeOpacity={0.7}>
+            <Ionicons name="trash-outline" size={16} color={colors.error} />
+            <Text style={s.eliminarPendienteBtnText}>Eliminar registro detectado</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Viaje Banner — Case 0: loading state */}
         {routeViajeId && !routeViaje && (
@@ -1205,6 +1226,14 @@ const styles = (dark) => StyleSheet.create({
     backgroundColor: colors.primary + '14',
   },
   scanBtnText: { ...typography.captionMed, color: colors.primary, fontWeight: '600' },
+  eliminarPendienteBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    marginHorizontal: spacing.md, marginBottom: spacing.sm,
+    paddingVertical: 8, borderRadius: radius.md,
+    borderWidth: 1, borderColor: colors.error,
+    backgroundColor: colors.error + '14',
+  },
+  eliminarPendienteBtnText: { ...typography.captionMed, color: colors.error, fontWeight: '600' },
   scanOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.55)',

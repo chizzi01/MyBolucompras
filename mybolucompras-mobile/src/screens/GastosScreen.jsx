@@ -10,11 +10,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useGastos } from '../hooks/queries/useGastos';
 import { useNotificacionesPendientes } from '../hooks/queries/useNotificacionesPendientes';
+import { useNotificacionesPendientesMutations } from '../hooks/mutations/useNotificacionesPendientesMutations';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useGastoMutations } from '../hooks/mutations/useGastoMutations';
 import { getCuotasRestantes, gastoEntraEsteMes } from '../utils/cuotas';
 import { useTheme } from '../context/ThemeContext';
 import GastoCard from '../components/GastoCard';
+import PendienteGastoCard from '../components/PendienteGastoCard';
 import FilterBar from '../components/FilterBar';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { colors, spacing, radius, typography, TAB_BAR_CLEARANCE } from '../constants/theme';
@@ -28,6 +30,7 @@ const MESES = [
 export default function GastosScreen({ navigation }) {
   const { gastos, loading, refetch } = useGastos();
   const { pendientes } = useNotificacionesPendientes();
+  const { descartar: descartarPendienteMutation } = useNotificacionesPendientesMutations();
   const { mydata } = useConfiguracion();
   const { eliminar: eliminarMutation, marcarPagado: marcarPagadoMutation } = useGastoMutations();
   const { user } = useAuth();
@@ -85,6 +88,16 @@ export default function GastosScreen({ navigation }) {
     return lista;
   }, [gastos, search, soloEsteMes, mydata, tabActivo]);
 
+  // Las compras detectadas se muestran como si fueran gastos ya cargados,
+  // arriba de todo, solo en la pestaña de variables (una compra recién
+  // detectada nunca es un gasto fijo). No se filtran por mes/búsqueda: son
+  // pocas y necesitan acción del usuario sin importar el filtro activo.
+  const listaCombinada = useMemo(() => {
+    if (tabActivo !== 'variables' || search.trim()) return gastosFiltrados;
+    const pendientesTag = pendientes.map(p => ({ ...p, __type: 'pendiente' }));
+    return [...pendientesTag, ...gastosFiltrados];
+  }, [gastosFiltrados, pendientes, tabActivo, search]);
+
   const handleDelete = (gasto) => {
     showModal({
       type: 'danger',
@@ -118,19 +131,30 @@ export default function GastosScreen({ navigation }) {
     setSearch('');
   };
 
-  const renderItem = ({ item }) => (
-    <GastoCard
-      gasto={item}
-      mydata={mydata}
-      onPress={() => navigation.navigate('EditarGasto', { gasto: item })}
-      onDelete={() => handleDelete(item)}
-      onMarkPaid={
-        esCompartido(item) && !item.pagado && gastoEntraEsteMes(item, mydata)
-          ? () => handleMarkPaid(item)
-          : undefined
-      }
-    />
-  );
+  const renderItem = ({ item }) => {
+    if (item.__type === 'pendiente') {
+      return (
+        <PendienteGastoCard
+          pendiente={item}
+          onPress={() => navigation.navigate('Agregar', { pendiente: item })}
+          onDelete={() => descartarPendienteMutation.mutate(item.id)}
+        />
+      );
+    }
+    return (
+      <GastoCard
+        gasto={item}
+        mydata={mydata}
+        onPress={() => navigation.navigate('EditarGasto', { gasto: item })}
+        onDelete={() => handleDelete(item)}
+        onMarkPaid={
+          esCompartido(item) && !item.pagado && gastoEntraEsteMes(item, mydata)
+            ? () => handleMarkPaid(item)
+            : undefined
+        }
+      />
+    );
+  };
 
   const mesNombre = MESES[new Date().getMonth()];
 
@@ -156,16 +180,6 @@ export default function GastosScreen({ navigation }) {
               {soloEsteMes ? mesNombre : 'Todos'}
             </Text>
           </TouchableOpacity>
-          {pendientes.length > 0 && (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('PendientesCompras')}
-              style={s.pendientesBadge}
-              activeOpacity={0.75}
-            >
-              <Ionicons name="notifications" size={16} color="#fff" />
-              <Text style={s.pendientesBadgeText}>{pendientes.length}</Text>
-            </TouchableOpacity>
-          )}
           <ProfileAvatarButton size={30} />
         </View>
       </View>
@@ -208,8 +222,8 @@ export default function GastosScreen({ navigation }) {
         <LoadingSkeleton />
       ) : (
         <FlatList
-          data={gastosFiltrados}
-          keyExtractor={item => item.id}
+          data={listaCombinada}
+          keyExtractor={item => item.__type === 'pendiente' ? `pendiente:${item.id}` : item.id}
           renderItem={renderItem}
           refreshControl={
             <RefreshControl
@@ -227,7 +241,7 @@ export default function GastosScreen({ navigation }) {
               </Text>
             </View>
           }
-          contentContainerStyle={gastosFiltrados.length === 0 ? s.emptyContainer : { paddingBottom: spacing.lg + TAB_BAR_CLEARANCE }}
+          contentContainerStyle={listaCombinada.length === 0 ? s.emptyContainer : { paddingBottom: spacing.lg + TAB_BAR_CLEARANCE }}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -314,10 +328,4 @@ const styles = (dark) => StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: spacing.md },
   emptyText: { ...typography.body, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textAlign: 'center' },
   emptyContainer: { flexGrow: 1 },
-  pendientesBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: colors.primary, borderRadius: radius.full,
-    paddingHorizontal: 10, paddingVertical: 6,
-  },
-  pendientesBadgeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 });
