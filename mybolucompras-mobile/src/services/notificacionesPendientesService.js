@@ -48,19 +48,23 @@ export const notificacionesPendientesService = {
   },
 
   async confirmar(id, gastoId) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('notificaciones_pendientes')
       .update({ estado: 'confirmado', gasto_id: gastoId })
-      .eq('id', id);
+      .eq('id', id)
+      .select();
     if (error) throw error;
+    if (!data || data.length === 0) throw new Error('confirmar no afectó ninguna fila (RLS o id inexistente)');
   },
 
   async descartar(id) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('notificaciones_pendientes')
       .update({ estado: 'descartado' })
-      .eq('id', id);
+      .eq('id', id)
+      .select();
     if (error) throw error;
+    if (!data || data.length === 0) throw new Error('descartar no afectó ninguna fila (RLS o id inexistente)');
   },
 };
 
