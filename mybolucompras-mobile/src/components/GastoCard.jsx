@@ -29,12 +29,16 @@ function MedioIcon({ medio, dark }) {
 }
 
 // Badge circular de color por categoría — mismo lenguaje que "Modo Previa":
-// ícono blanco chico sobre un fondo del color de la etiqueta.
-function CategoryBadge({ medio, color }) {
+// ícono blanco chico sobre un fondo del color de la etiqueta. Si el gasto
+// tiene etiqueta, se muestra el ícono elegido para esa etiqueta; si no,
+// se mantiene el ícono del medio de pago como antes.
+function CategoryBadge({ medio, color, icono }) {
   const def = MEDIO_ICON_MAP[medio];
   return (
     <View style={[cbStyles.badge, { backgroundColor: color }]}>
-      {def?.lib === 'fa5' ? (
+      {icono ? (
+        <Ionicons name={icono} size={16} color="#fff" />
+      ) : def?.lib === 'fa5' ? (
         <FontAwesome5 name={def.name} size={14} color="#fff" brand />
       ) : def?.lib === 'mci' ? (
         <MaterialCommunityIcons name={def.name} size={16} color="#fff" />
@@ -55,8 +59,9 @@ const cbStyles = StyleSheet.create({
 
 const resolveEtiqueta = (nombre, etiquetas = []) => {
   const found = etiquetas.find(e => (typeof e === 'string' ? e : e.nombre) === nombre);
-  if (!found) return { nombre, color: colors.primary };
-  return typeof found === 'string' ? { nombre: found, color: colors.primary } : found;
+  if (!found) return { nombre, color: colors.primary, icono: null };
+  if (typeof found === 'string') return { nombre: found, color: colors.primary, icono: null };
+  return { icono: null, ...found };
 };
 
 function BoardingPassContent({ gasto, precioDisplay, dark }) {
@@ -227,7 +232,7 @@ export default function GastoCard({ gasto, mydata, onPress, onDelete, onMarkPaid
             />
           ) : (
             <View style={[s.rowContent, !entraEsteMes && s.contentDimmed]}>
-              <CategoryBadge medio={gasto.medio} color={etiquetaObj?.color || (dark ? '#3A3652' : '#D8CBAE')} />
+              <CategoryBadge medio={gasto.medio} color={etiquetaObj?.color || (dark ? '#3A3652' : '#D8CBAE')} icono={etiquetaObj?.icono} />
               <View style={s.left}>
                 <Text style={s.objeto} numberOfLines={1}>{gasto.objeto}</Text>
                 <View style={s.meta}>

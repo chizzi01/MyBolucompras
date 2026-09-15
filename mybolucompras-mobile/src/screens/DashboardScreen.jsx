@@ -13,6 +13,7 @@ import { parsePrecio, getCurrencySymbol, formatARS, formatPrecioEuropeo } from '
 import { colors, spacing, radius, typography, fonts, TAB_BAR_CLEARANCE } from '../constants/theme';
 import ProfileAvatarButton from '../components/nav/ProfileAvatarButton';
 import GastoCreditCard from '../components/GastoCreditCard';
+import GastoProyectadoCard from '../components/GastoProyectadoCard';
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -134,7 +135,22 @@ export default function DashboardScreen({ navigation }) {
     });
 
     const promedio = historial.reduce((sum, h) => sum + h.total, 0) / historial.length;
-    const proyeccion = isHoy && dia > 0 ? (totalActual / dia) * diasEnMes : null;
+
+    // Proyección: sólo el gasto variable (débito/efectivo/crédito de un pago)
+    // se extrapola por ritmo diario. Los fijos y las cuotas ya representan el
+    // mes completo apenas se cargan, así que se suman a valor real — si no,
+    // un alquiler cargado el día 3 hace parecer que "el ritmo" es carísimo y
+    // la proyección se dispara muy por encima de lo que realmente vas a gastar.
+    const esFijoOCuota = (g) => g.isFijo || (g.tipo === 'credito' && Number(g.cuotas) > 1);
+    const gastosMesPrincipal = stats.gastosMes.filter(g => (g.moneda || 'ARS') === monedaPrincipal);
+    const fijoYCuotas = gastosMesPrincipal
+      .filter(esFijoOCuota)
+      .reduce((sum, g) => sum + getCostoMes(g), 0);
+    const variableHastaHoy = totalActual - fijoYCuotas;
+
+    const proyeccion = isHoy && dia > 0
+      ? fijoYCuotas + (variableHastaHoy / dia) * diasEnMes
+      : null;
 
     // Gastos de este mes en otras monedas — no entran en la comparativa/proyección
     // (que son sobre la moneda principal), pero deben sumar al total mostrado.
@@ -184,8 +200,6 @@ export default function DashboardScreen({ navigation }) {
 
   const deudaNetaEntries = Object.entries(deudaNeta).filter(([, v]) => v.count > 0);
   const hayDeudaNeta = deudaNetaEntries.length > 0;
-
-  const hayTotal = Object.keys(stats.totalesPorMoneda).length > 0;
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
@@ -247,35 +261,11 @@ export default function DashboardScreen({ navigation }) {
 
         {/* Total del mes — H1 hero */}
         {esMesFuturo ? (
-          <TouchableOpacity
-            style={[s.totalHero, s.totalHeroFuturo]}
+          <GastoProyectadoCard
+            dark={dark}
+            totales={stats.totalesPorMoneda}
             onPress={() => setShowProyeccionModal(true)}
-            activeOpacity={0.85}
-          >
-            <View style={s.proyectadoBadge}>
-              <Text style={s.proyectadoBadgeText}>Proyectado</Text>
-            </View>
-            {hayTotal ? (
-              <>
-                {Object.entries(stats.totalesPorMoneda).map(([moneda, total]) => (
-                  <View key={moneda} style={s.totalHeroRow}>
-                    <Text style={[s.totalHeroAmount, { color: '#F97316' }]}>
-                      {formatPrecioEuropeo(total, moneda)}
-                    </Text>
-                    {Object.keys(stats.totalesPorMoneda).length > 1 && (
-                      <Text style={s.totalHeroMoneda}>{moneda}</Text>
-                    )}
-                  </View>
-                ))}
-                <Text style={s.totalHeroLabel}>proyectado · tocá para ver el desglose</Text>
-              </>
-            ) : (
-              <>
-                <Text style={s.totalHeroEmpty}>$ 0,00</Text>
-                <Text style={s.totalHeroLabel}>sin gastos este mes</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          />
         ) : (
           <>
             {cardData ? (
@@ -458,10 +448,13 @@ function KPICard({ label, value, dark, accent }) {
   const s = StyleSheet.create({
     card: {
       flex: 1,
+      height: 92,
       backgroundColor: dark ? colors.surfaceSecondary.dark : colors.surfaceSecondary.light,
       borderRadius: radius.lg,
       padding: spacing.md,
       alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
     },
     val: { fontSize: 26, fontFamily: fonts.display, color: accent, marginBottom: 4 },
     lbl: { ...typography.caption, color: dark ? colors.textSecondary.dark : colors.textSecondary.light, textAlign: 'center' },
@@ -469,7 +462,7 @@ function KPICard({ label, value, dark, accent }) {
   return (
     <View style={s.card}>
       <Text style={s.val}>{value}</Text>
-      <Text style={s.lbl}>{label}</Text>
+      <Text style={s.lbl} numberOfLines={1} adjustsFontSizeToFit>{label}</Text>
     </View>
   );
 }
@@ -486,11 +479,13 @@ function ProxMesKPI({ totales, mesNombre, onPress, dark }) {
   const s = StyleSheet.create({
     card: {
       flex: 1,
+      height: 92,
       backgroundColor: dark ? 'rgba(249,115,22,0.14)' : '#FFF1E6',
       borderRadius: radius.lg,
       padding: spacing.md,
       alignItems: 'center',
       justifyContent: 'center',
+      overflow: 'hidden',
     },
     val: { fontSize: 13, fontWeight: '700', color: '#F97316', marginBottom: 2, textAlign: 'center' },
     lbl: { fontSize: 10, fontWeight: '500', color: '#F97316', textAlign: 'center', opacity: 0.8 },
@@ -498,8 +493,8 @@ function ProxMesKPI({ totales, mesNombre, onPress, dark }) {
 
   return (
     <TouchableOpacity style={s.card} onPress={onPress} activeOpacity={0.7}>
-      <Text style={s.val}>{displayText}</Text>
-      <Text style={s.lbl}>{mesNombre} →</Text>
+      <Text style={s.val} numberOfLines={1} adjustsFontSizeToFit>{displayText}</Text>
+      <Text style={s.lbl} numberOfLines={1}>{mesNombre} →</Text>
     </TouchableOpacity>
   );
 }
@@ -554,16 +549,6 @@ const styles = (dark) => StyleSheet.create({
     paddingBottom: spacing.md,
     marginBottom: spacing.sm,
   },
-  totalHeroRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs },
-  totalHeroAmount: {
-    fontSize: 36,
-    fontFamily: fonts.display,
-    color: colors.primary,
-  },
-  totalHeroMoneda: {
-    ...typography.captionMed,
-    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
-  },
   totalHeroLabel: {
     ...typography.caption,
     color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
@@ -600,7 +585,7 @@ const styles = (dark) => StyleSheet.create({
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
-  kpiRow: { flexDirection: 'row', gap: spacing.sm },
+  kpiRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
   destacado: {
     backgroundColor: dark ? colors.surfaceSecondary.dark : colors.surfaceSecondary.light,
     borderRadius: radius.lg,
@@ -668,23 +653,4 @@ const styles = (dark) => StyleSheet.create({
   deudaAmounts: { alignItems: 'flex-end', justifyContent: 'center' },
   deudaAmount: { fontSize: 18, fontWeight: '800', color: colors.warning, letterSpacing: -0.5 },
   miDeudaAmount: { fontSize: 18, fontWeight: '800', color: colors.error, letterSpacing: -0.5 },
-  proyectadoBadge: {
-    backgroundColor: '#F9731620',
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderWidth: 1,
-    borderColor: '#F9731650',
-  },
-  proyectadoBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#F97316',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  totalHeroFuturo: {
-    borderColor: '#F9731650',
-    shadowColor: '#F97316',
-  },
 });

@@ -13,7 +13,7 @@ const TEXTURE_STRIPES = Array.from({ length: 9 });
 // Fondo de la tarjeta: degradé base + textura de líneas diagonales finas +
 // brillo de esquina + viñeta + el ícono de la app en grande como marca de
 // agua — para que no sea un degradé plano.
-function CardBackdrop({ colors: gradientColors, start, end }) {
+export function CardBackdrop({ colors: gradientColors, start, end }) {
   return (
     <>
       <LinearGradient colors={gradientColors} start={start} end={end} style={StyleSheet.absoluteFill} />
@@ -127,7 +127,7 @@ export default function GastoCreditCard({
           </View>
 
           <View style={s.topRow}>
-            <Text style={s.brand}>MYBOLU · GASTO DEL MES</Text>
+            <Text style={s.brand}>GASTO DEL MES</Text>
           </View>
 
           <View>
@@ -254,7 +254,7 @@ const styles = (dark) => StyleSheet.create({
   },
   flipTagText: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: 0.4 },
   topRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingRight: 74 },
-  brand: { fontFamily: fonts.display, fontSize: 11, letterSpacing: 0.5, color: 'rgba(255,255,255,0.92)' },
+  brand: { fontFamily: fonts.display, fontSize: 15, letterSpacing: 0.5, color: 'rgba(255,255,255,0.92)' },
   avgRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 4 },
   chipCenter: {
     position: 'absolute', top: '50%', right: 22, marginTop: -11, zIndex: 1,
@@ -265,7 +265,7 @@ const styles = (dark) => StyleSheet.create({
   },
   lbl: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.8, color: 'rgba(255,255,255,0.78)', fontWeight: '700', marginBottom: 4 },
   amount: { fontFamily: fonts.display, fontSize: 30, color: '#fff', letterSpacing: -0.5 },
-  otrasMonedas: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.75)', marginTop: 3 },
+  otrasMonedas: { fontFamily: fonts.display, fontSize: 18, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
   bottomRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
   metricLbl: { fontSize: 9.5, textTransform: 'uppercase', letterSpacing: 0.5, color: 'rgba(255,255,255,0.72)', fontWeight: '700', marginBottom: 2 },
   metricVal: { fontSize: 14, fontWeight: '800', color: '#fff' },

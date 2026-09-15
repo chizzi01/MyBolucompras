@@ -14,7 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography, fonts } from '../constants/theme';
-import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
+import { BANCOS, MEDIOS_DE_PAGO, MONEDAS } from '../constants/catalogos';
+import EtiquetaSelector from '../components/EtiquetaSelector';
 import { formatFecha, parseFecha, formatPrecioInputDisplay, formatPrecioLive, getCurrencySymbol } from '../utils/formatters';
 import { useModal } from '../hooks/useModal';
 import { userService } from '../services/userService';
@@ -607,7 +608,6 @@ export default function AgregarScreen() {
             etiquetas={mydata.etiquetas || []}
             onCrearEtiqueta={handleCrearEtiqueta}
             dark={dark}
-            s={s}
           />
         </Field>
 
@@ -1089,80 +1089,6 @@ function FijoSelector({ value, onChange, dark, s }) {
   );
 }
 
-function EtiquetaSelector({ value, onChange, etiquetas, onCrearEtiqueta, dark, s }) {
-  const [creando, setCreando] = useState(false);
-  const [nueva, setNueva] = useState('');
-  const [colorSel, setColorSel] = useState(ETIQUETA_COLORS[0]);
-  const [savingTag, setSavingTag] = useState(false);
-
-  const handleCrear = async () => {
-    const trimmed = nueva.trim();
-    if (!trimmed) return;
-    setSavingTag(true);
-    try {
-      await onCrearEtiqueta({ nombre: trimmed, color: colorSel });
-      onChange(trimmed);
-      setNueva('');
-      setCreando(false);
-    } catch {
-    } finally {
-      setSavingTag(false);
-    }
-  };
-
-  return (
-    <View>
-      <View style={s.tagsWrap}>
-        {etiquetas.map(tag => {
-          const nombre = typeof tag === 'string' ? tag : tag.nombre;
-          const color = typeof tag === 'string' ? colors.primary : tag.color;
-          const activo = value === nombre;
-          return (
-            <TouchableOpacity
-              key={nombre}
-              style={[s.tag, { borderColor: color, backgroundColor: activo ? color : color + '20' }]}
-              onPress={() => onChange(activo ? '' : nombre)}
-            >
-              <Text style={[s.tagText, { color: activo ? '#fff' : color }]}>{nombre}</Text>
-            </TouchableOpacity>
-          );
-        })}
-        <TouchableOpacity style={s.tagAdd} onPress={() => setCreando(v => !v)}>
-          <Ionicons name={creando ? 'close' : 'add'} size={14} color={colors.primary} />
-          <Text style={s.tagAddText}>Nueva</Text>
-        </TouchableOpacity>
-      </View>
-      {creando && (
-        <>
-          <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
-            <TextInput
-              style={[s.input, { flex: 1 }]}
-              value={nueva}
-              onChangeText={setNueva}
-              placeholder="Nombre de etiqueta"
-              placeholderTextColor={dark ? '#475569' : '#94A3B8'}
-              autoFocus
-              onSubmitEditing={handleCrear}
-            />
-            <TouchableOpacity style={[s.tagSaveBtn, { backgroundColor: colorSel }]} onPress={handleCrear} disabled={savingTag}>
-              {savingTag ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.tagSaveBtnText}>Agregar</Text>}
-            </TouchableOpacity>
-          </View>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.sm }}>
-            {ETIQUETA_COLORS.map(c => (
-              <TouchableOpacity
-                key={c}
-                style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: c, borderWidth: colorSel === c ? 3 : 1, borderColor: colorSel === c ? (dark ? '#fff' : '#1E293B') : c }}
-                onPress={() => setColorSel(c)}
-              />
-            ))}
-          </View>
-        </>
-      )}
-    </View>
-  );
-}
-
 function Field({ label, children, dark, flex }) {
   return (
     <View style={[{ marginBottom: spacing.md }, flex && { flex: 1 }]}>
@@ -1317,59 +1243,6 @@ const styles = (dark) => StyleSheet.create({
   },
   tipoBtnTextActive: {
     color: '#fff',
-  },
-  tagsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  tag: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: dark ? colors.border.dark : colors.border.light,
-    backgroundColor: dark ? '#0F172A' : '#F8FAFC',
-  },
-  tagActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  tagText: {
-    ...typography.captionMed,
-    color: dark ? colors.textSecondary.dark : colors.textSecondary.light,
-  },
-  tagTextActive: {
-    color: '#fff',
-  },
-  tagAdd: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderStyle: 'dashed',
-  },
-  tagAddText: {
-    ...typography.captionMed,
-    color: colors.primary,
-  },
-  tagSaveBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 80,
-  },
-  tagSaveBtnText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
   },
   btn: {
     backgroundColor: colors.primary,

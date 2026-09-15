@@ -15,8 +15,11 @@ import { useTheme } from '../context/ThemeContext';
 import { navigate } from '../navigation/navigationRef';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { formatARS, toISODate } from '../utils/formatters';
-import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_COLORS } from '../constants/catalogos';
+import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_ICON_DEFAULT } from '../constants/catalogos';
 import { notificationListenerBridge } from '../services/notificationListenerBridge';
+import { gastosService } from '../services/gastosService';
+import CrearEtiquetaModal from '../components/CrearEtiquetaModal';
+import { useQueryClient } from '@tanstack/react-query';
 
 function AccordionSection({ title, children, dark, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -159,9 +162,9 @@ export default function ConfiguracionScreen({ navigation }) {
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   const [etiquetas, setEtiquetas] = useState(mydata.etiquetas || []);
-  const [nuevaEtiqueta, setNuevaEtiqueta] = useState('');
-  const [colorEtiqueta, setColorEtiqueta] = useState(ETIQUETA_COLORS[0]);
-  const [savingEtiq, setSavingEtiq] = useState(false);
+  const [modalEtiquetaVisible, setModalEtiquetaVisible] = useState(false);
+  const [etiquetaEditando, setEtiquetaEditando] = useState(null);
+  const queryClient = useQueryClient();
 
   // Helper to parse YYYY-MM-DD to Date
   const parseDBDate = (str) => {
@@ -242,24 +245,23 @@ export default function ConfiguracionScreen({ navigation }) {
     await actualizar.mutateAsync({ ...mydata, monedaPreferida: moneda });
   };
 
-  const handleAgregarEtiqueta = async () => {
-    const trimmed = nuevaEtiqueta.trim();
-    if (!trimmed) return;
-    const nombres = etiquetas.map(e => typeof e === 'string' ? e : e.nombre);
-    if (nombres.includes(trimmed)) {
-      showModal({ type: 'warning', title: 'Ya existe', message: 'Esa etiqueta ya está en la lista.' });
-      return;
-    }
-    setSavingEtiq(true);
-    try {
-      const next = [...etiquetas, { nombre: trimmed, color: colorEtiqueta }];
+  const handleGuardarEtiqueta = async (data) => {
+    if (etiquetaEditando) {
+      const nombreAnterior = etiquetaEditando.nombre;
+      const next = etiquetas.map(e => {
+        const nombre = typeof e === 'string' ? e : e.nombre;
+        return nombre === nombreAnterior ? data : e;
+      });
+      if (data.nombre !== nombreAnterior) {
+        await gastosService.renombrarEtiqueta(nombreAnterior, data.nombre);
+        queryClient.invalidateQueries({ queryKey: ['gastos', user.id] });
+      }
       await actualizar.mutateAsync({ ...mydata, etiquetas: next });
       setEtiquetas(next);
-      setNuevaEtiqueta('');
-    } catch (err) {
-      showModal({ type: 'error', title: 'Error', message: err.message });
-    } finally {
-      setSavingEtiq(false);
+    } else {
+      const next = [...etiquetas, data];
+      await actualizar.mutateAsync({ ...mydata, etiquetas: next });
+      setEtiquetas(next);
     }
   };
 
@@ -414,8 +416,16 @@ export default function ConfiguracionScreen({ navigation }) {
               {etiquetas.map(tag => {
                 const nombre = typeof tag === 'string' ? tag : tag.nombre;
                 const color = typeof tag === 'string' ? colors.primary : tag.color;
+                const icono = (typeof tag === 'string' ? null : tag.icono) || ETIQUETA_ICON_DEFAULT;
+                const tagObj = typeof tag === 'string' ? { nombre: tag, color: colors.primary, icono } : tag;
                 return (
-                  <View key={nombre} style={[s.tagChip, { backgroundColor: color + '25', borderColor: color }]}>
+                  <TouchableOpacity
+                    key={nombre}
+                    style={[s.tagChip, { backgroundColor: color + '25', borderColor: color }]}
+                    onPress={() => { setEtiquetaEditando(tagObj); setModalEtiquetaVisible(true); }}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name={icono} size={13} color={color} />
                     <Text style={[s.tagChipText, { color }]}>{nombre}</Text>
                     <TouchableOpacity
                       onPress={() => handleEliminarEtiqueta(nombre)}
@@ -423,45 +433,27 @@ export default function ConfiguracionScreen({ navigation }) {
                     >
                       <Ionicons name="close-circle" size={16} color={color} />
                     </TouchableOpacity>
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
             </View>
-            <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
-              <TextInput
-                style={[s.input, { flex: 1, marginBottom: 0 }]}
-                value={nuevaEtiqueta}
-                onChangeText={setNuevaEtiqueta}
-                placeholder="Nueva etiqueta..."
-                placeholderTextColor={dark ? '#475569' : '#94A3B8'}
-                onSubmitEditing={handleAgregarEtiqueta}
-              />
-              <TouchableOpacity
-                style={[s.saveBtn, { paddingHorizontal: spacing.md, backgroundColor: colorEtiqueta, marginTop: 0 }]}
-                onPress={handleAgregarEtiqueta}
-                disabled={savingEtiq}
-              >
-                {savingEtiq
-                  ? <ActivityIndicator color="#fff" size="small" />
-                  : <Ionicons name="add" size={20} color="#fff" />
-                }
-              </TouchableOpacity>
-            </View>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.sm }}>
-              {ETIQUETA_COLORS.map(c => (
-                <TouchableOpacity
-                  key={c}
-                  style={{
-                    width: 26, height: 26, borderRadius: 13, backgroundColor: c,
-                    borderWidth: colorEtiqueta === c ? 3 : 1,
-                    borderColor: colorEtiqueta === c ? (dark ? '#fff' : '#1E293B') : c,
-                  }}
-                  onPress={() => setColorEtiqueta(c)}
-                />
-              ))}
-            </View>
+            <TouchableOpacity
+              style={[s.saveBtn, { marginTop: spacing.md, flexDirection: 'row', gap: 6 }]}
+              onPress={() => { setEtiquetaEditando(null); setModalEtiquetaVisible(true); }}
+            >
+              <Ionicons name="add" size={18} color="#fff" />
+              <Text style={s.saveBtnText}>Nueva etiqueta</Text>
+            </TouchableOpacity>
           </View>
         </AccordionSection>
+
+        <CrearEtiquetaModal
+          visible={modalEtiquetaVisible}
+          onClose={() => { setModalEtiquetaVisible(false); setEtiquetaEditando(null); }}
+          onGuardar={handleGuardarEtiqueta}
+          etiqueta={etiquetaEditando}
+          existentes={etiquetas}
+        />
 
         {/* Fondos */}
         <AccordionSection title="Fondos disponibles" dark={dark} defaultOpen>

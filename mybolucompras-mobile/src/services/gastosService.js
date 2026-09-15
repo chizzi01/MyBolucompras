@@ -179,6 +179,21 @@ export const gastosService = {
     if (error) throw error;
   },
 
+  // Al renombrar una etiqueta hay que migrar los gastos que ya la tenían
+  // asignada, porque el vínculo es por nombre (no por id de etiqueta).
+  async renombrarEtiqueta(nombreAnterior, nombreNuevo) {
+    if (nombreAnterior === nombreNuevo) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
+    if (!user) throw new Error('No autenticado');
+    const { error } = await supabase
+      .from('gastos')
+      .update({ etiqueta: nombreNuevo })
+      .eq('user_id', user.id)
+      .eq('etiqueta', nombreAnterior);
+    if (error) throw error;
+  },
+
   async marcarPagadoConNotificacion(id, gastoActual, currentUserName) {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user ?? null;
