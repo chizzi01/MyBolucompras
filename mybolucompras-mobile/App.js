@@ -24,6 +24,9 @@ import { queryClient } from './src/lib/queryClient';
 import { procesarColaDeNotificaciones } from './src/services/notificacionesQueueProcessor';
 import { OPENROUTER_API_KEY } from './src/config/keys';
 import { useRealtimeInvalidation } from './src/hooks/useRealtimeInvalidation';
+import { useGastos } from './src/hooks/queries/useGastos';
+import { useConfiguracion } from './src/hooks/queries/useConfiguracion';
+import { useDeudas } from './src/hooks/queries/useDeudas';
 import { navigationRef } from './src/navigation/navigationRef';
 
 const inAppUpdates = new SpInAppUpdates(false);
@@ -58,6 +61,21 @@ const AuthStack = createNativeStackNavigator();
 function RealtimeProvider({ children }) {
   useRealtimeInvalidation();
   return <>{children}</>;
+}
+
+// Evita el "flash de ceros": los datos de gastos/configuración/deudas se
+// piden con react-query por pantalla, así que sin este gate el Dashboard
+// llega a renderizar un frame con placeholders (fondos: 0, gastos: [])
+// antes de que responda la primera carga.
+function DataGate({ dark, children }) {
+  const { loading: loadingGastos } = useGastos();
+  const { loading: loadingConfig } = useConfiguracion();
+  const { loading: loadingDeudas } = useDeudas();
+
+  if (loadingGastos || loadingConfig || loadingDeudas) {
+    return <AnimatedSplash dark={dark} />;
+  }
+  return children;
 }
 
 
@@ -133,6 +151,7 @@ function RootNavigator() {
         <Stack.Screen name="Main">
           {() => (
             <DataProvider>
+              <DataGate dark={dark}>
               <CierreChecker />
               <ModoViajeChecker />
               <ViajesProvider>
@@ -195,6 +214,7 @@ function RootNavigator() {
                 </RealtimeProvider>
               </DeudoresProvider>
               </ViajesProvider>
+              </DataGate>
             </DataProvider>
           )}
         </Stack.Screen>

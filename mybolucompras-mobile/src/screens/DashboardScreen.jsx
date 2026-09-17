@@ -6,6 +6,7 @@ import { useGastos } from '../hooks/queries/useGastos';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useDeudas } from '../hooks/queries/useDeudas';
 import { useNotificacionesPendientes } from '../hooks/queries/useNotificacionesPendientes';
+import { useCotizacionDolar } from '../hooks/queries/useCotizacionDolar';
 import { useTheme } from '../context/ThemeContext';
 import { getCuotasRestantes, montoMensualDeuda } from '../utils/cuotas';
 import { getGastosMes, getCostoMes, calcularTotalesPorMoneda, formatAmountShort, getRangoMeses } from '../utils/proyeccion';
@@ -32,6 +33,7 @@ export default function DashboardScreen({ navigation }) {
   const { dark } = useTheme();
   const s = styles(dark);
   const { pendientes } = useNotificacionesPendientes();
+  const { cotizacion: cotizacionDolar } = useCotizacionDolar();
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -157,6 +159,16 @@ export default function DashboardScreen({ navigation }) {
     const otrasMonedas = Object.entries(stats.totalesPorMoneda)
       .filter(([m]) => m !== monedaPrincipal);
 
+    // Dinero disponible: fondos cargados en Configuración menos lo gastado
+    // este mes. Los fondos se guardan como un único monto en ARS, así que
+    // sólo tiene sentido cuando la moneda principal del mes es ARS. Los
+    // gastos en USD se convierten a ARS con la cotización del dólar blue
+    // para que también descuenten del disponible.
+    const gastoUSD = stats.totalesPorMoneda.USD || 0;
+    const disponible = monedaPrincipal === 'ARS' && mydata.fondos != null
+      ? mydata.fondos - totalActual - (gastoUSD * (cotizacionDolar || 0))
+      : null;
+
     return {
       moneda: monedaPrincipal,
       totalActual,
@@ -168,9 +180,10 @@ export default function DashboardScreen({ navigation }) {
       promedio,
       proyeccion,
       otrasMonedas,
+      disponible,
       mesAnteriorLabel: MESES[mesAnteriorSel.mes],
     };
-  }, [esMesFuturo, stats.totalesPorMoneda, mesSel, gastos, mydata, isHoy, hoy]);
+  }, [esMesFuturo, stats.totalesPorMoneda, mesSel, gastos, mydata, isHoy, hoy, cotizacionDolar]);
 
   const statsProxMes = useMemo(() => {
     const proxMesSel = mesSel.mes === 11
@@ -283,6 +296,7 @@ export default function DashboardScreen({ navigation }) {
                 promedio={cardData.promedio}
                 proyeccion={cardData.proyeccion}
                 otrasMonedas={cardData.otrasMonedas}
+                disponible={cardData.disponible}
               />
             ) : (
               <View style={s.totalHero}>
@@ -371,7 +385,6 @@ export default function DashboardScreen({ navigation }) {
             <Text style={s.section}>Por etiqueta — ARS</Text>
             {Object.entries(stats.porEtiqueta)
               .sort((a, b) => b[1] - a[1])
-              .slice(0, 8)
               .map(([etiq, total]) => (
                 <View key={etiq} style={s.barRow}>
                   <Text style={s.barLabel} numberOfLines={1}>{etiq}</Text>

@@ -83,6 +83,7 @@ export default function GastoCreditCard({
   promedio,
   proyeccion,
   otrasMonedas,
+  disponible,
 }) {
   const s = styles(dark);
   const [flipped, setFlipped] = useState(false);
@@ -154,10 +155,19 @@ export default function GastoCreditCard({
                 )}
               </Text>
             </View>
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={s.metricLbl}>{isHoy ? `Mismo día, ${mesAnteriorLabel}` : `Total ${mesAnteriorLabel}`}</Text>
-              <Text style={s.metricVal}>{formatAmountShort(totalComparable, moneda)}</Text>
-            </View>
+            {disponible != null ? (
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={s.metricLbl}>Dinero disponible</Text>
+                <Text style={[s.metricVal, { color: disponible < 0 ? '#FEE2E2' : '#BBF7D0' }]}>
+                  {formatAmountShort(disponible, moneda)}
+                </Text>
+              </View>
+            ) : (
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={s.metricLbl}>{isHoy ? `Mismo día, ${mesAnteriorLabel}` : `Total ${mesAnteriorLabel}`}</Text>
+                <Text style={s.metricVal}>{formatAmountShort(totalComparable, moneda)}</Text>
+              </View>
+            )}
           </View>
         </Animated.View>
 

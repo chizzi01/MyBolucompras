@@ -24,5 +24,10 @@ export function useConfiguracion() {
   return {
     ...query,
     mydata: query.data ?? defaultMydata,
+    // placeholderData hace que isLoading sea false apenas se monta, aunque
+    // todavía no llegó el dato real — dataUpdatedAt sigue en 0 hasta el
+    // primer fetch exitoso, así que es el indicador confiable de "todavía
+    // estoy mostrando el placeholder, no el dato real".
+    loading: !!user && query.dataUpdatedAt === 0,
   };
 }
