@@ -8,6 +8,29 @@ const BIOMETRIC_KEY = 'biometric_enabled';
 
 const AuthContext = createContext(null);
 
+// Decide si mostrar el onboarding. Ante cualquier duda (error de red, sesión
+// todavía no aplicada) devuelve false: mostrarlo a un usuario existente hace
+// que sus guardados pisen la configuración real.
+async function necesitaOnboarding(userId) {
+  const { data, error } = await supabase
+    .from('configuracion_usuario')
+    .select('onboarding_completed, fondos, etiquetas, cierre, vencimiento, moneda_preferida')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) {
+    console.warn('[Onboarding] No se pudo verificar la configuración:', error.message);
+    return false;
+  }
+  if (!data) return true;
+  const yaTieneDatos = data.onboarding_completed ||
+    Number(data.fondos) > 0 ||
+    (Array.isArray(data.etiquetas) && data.etiquetas.length > 0) ||
+    data.cierre ||
+    data.vencimiento ||
+    (data.moneda_preferida && data.moneda_preferida !== 'ARS');
+  return !yaTieneDatos;
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
@@ -37,27 +60,7 @@ export function AuthProvider({ children }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Check if user already has data in DB
-          const { data: config, error } = await supabase
-            .from('configuracion_usuario')
-            .select('fondos, etiquetas, cierre, vencimiento, moneda_preferida')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-          
-          console.log('DEBUG: Onboarding check for', session.user.email, config);
-          if (error) console.error('DEBUG: Onboarding error', error);
-
-          const alreadyHasData = config && (
-            Number(config.fondos) > 0 || 
-            (Array.isArray(config.etiquetas) && config.etiquetas.length > 0) ||
-            config.cierre ||
-            config.vencimiento ||
-            (config.moneda_preferida && config.moneda_preferida !== 'ARS')
-          );
-          
-          console.log('DEBUG: alreadyHasData?', alreadyHasData);
-
-          if (!alreadyHasData) {
+          if (await necesitaOnboarding(session.user.id)) {
             setOnboardingNeeded(true);
           }
 
@@ -86,21 +89,13 @@ export function AuthProvider({ children }) {
       setUser(prev => {
         const next = session?.user ?? null;
         if (next && prev?.id !== next.id) {
-          // Check onboarding for new user session
-          supabase.from('configuracion_usuario')
-            .select('fondos, etiquetas, cierre, vencimiento, moneda_preferida')
-            .eq('user_id', next.id)
-            .maybeSingle()
-            .then(({ data }) => {
-              const alreadyHasData = data && (
-                Number(data.fondos) > 0 || 
-                (Array.isArray(data.etiquetas) && data.etiquetas.length > 0) ||
-                data.cierre ||
-                data.vencimiento ||
-                (data.moneda_preferida && data.moneda_preferida !== 'ARS')
-              );
-              if (!alreadyHasData) setOnboardingNeeded(true);
-            });
+          // Diferido: llamar a supabase dentro del callback de onAuthStateChange
+          // puede correr antes de que la sesión nueva quede aplicada.
+          setTimeout(() => {
+            necesitaOnboarding(next.id)
+              .then(needed => { if (needed) setOnboardingNeeded(true); })
+              .catch(e => console.warn('[Onboarding] Check falló:', e?.message));
+          }, 0);
 
           // Registro de token push para nuevo login (fire-and-forget)
           pushNotificationService.registerAndSaveToken().catch(e =>

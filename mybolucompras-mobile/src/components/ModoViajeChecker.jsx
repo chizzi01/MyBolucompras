@@ -30,7 +30,7 @@ export default function ModoViajeChecker() {
       }
 
       if (!viaje || vencido) {
-        actualizar.mutateAsync({ ...mydata, modoViajeActivo: false, modoViajeViajeId: null });
+        actualizar.mutateAsync({ modoViajeActivo: false, modoViajeViajeId: null });
         return;
       }
 

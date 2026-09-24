@@ -85,14 +85,13 @@ export default function ConfiguracionScreen({ navigation }) {
         if (!viajeParaActivar) return;
         const promptedIds = [...new Set([...(mydata.modoViajePromptedIds || []), viajeParaActivar.id])];
         await actualizar.mutateAsync({
-          ...mydata,
           modoViajeActivo: true,
           modoViajeViajeId: viajeParaActivar.id,
           modoViajePromptedIds: promptedIds,
         });
         navigate('ViajeDetail', { viajeId: viajeParaActivar.id });
       } else {
-        await actualizar.mutateAsync({ ...mydata, modoViajeActivo: false, modoViajeViajeId: null });
+        await actualizar.mutateAsync({ modoViajeActivo: false, modoViajeViajeId: null });
       }
     } catch (err) {
       console.warn('[ModoViaje] Error al cambiar estado:', err?.message ?? err);
@@ -196,7 +195,7 @@ export default function ConfiguracionScreen({ navigation }) {
   const handleGuardarFondos = async () => {
     setLoadingFondos(true);
     try {
-      await actualizar.mutateAsync({ ...mydata, fondos: Number(fondos) });
+      await actualizar.mutateAsync({ fondos: Number(fondos) });
       showModal({ type: 'success', title: 'Fondos actualizados', message: 'Los fondos disponibles fueron guardados.' });
     } catch (err) {
       showModal({ type: 'error', title: 'Error', message: err.message });
@@ -209,7 +208,6 @@ export default function ConfiguracionScreen({ navigation }) {
     setLoadingFechas(true);
     try {
       await actualizar.mutateAsync({
-        ...mydata,
         cierre: formatDateToDB(cierreDate),
         vencimiento: formatDateToDB(vencimientoDate),
         cierreAnterior: formatDateToDB(cierreAnteriorDate),
@@ -228,7 +226,7 @@ export default function ConfiguracionScreen({ navigation }) {
       ? mediosHabilitados.filter(m => m !== medio)
       : [...mediosHabilitados, medio];
     setMediosHabilitados(next);
-    await actualizar.mutateAsync({ ...mydata, mediosHabilitados: next });
+    await actualizar.mutateAsync({ mediosHabilitados: next });
   };
 
   const toggleBanco = async (banco) => {
@@ -236,13 +234,13 @@ export default function ConfiguracionScreen({ navigation }) {
       ? bancosHabilitados.filter(b => b !== banco)
       : [...bancosHabilitados, banco];
     setBancosHabilitados(next);
-    await actualizar.mutateAsync({ ...mydata, bancosHabilitados: next });
+    await actualizar.mutateAsync({ bancosHabilitados: next });
   };
 
   const handleMoneda = async (moneda) => {
     setMonedaPreferida(moneda);
     setMonedaOpen(false);
-    await actualizar.mutateAsync({ ...mydata, monedaPreferida: moneda });
+    await actualizar.mutateAsync({ monedaPreferida: moneda });
   };
 
   const handleGuardarEtiqueta = async (data) => {
@@ -256,18 +254,18 @@ export default function ConfiguracionScreen({ navigation }) {
         await gastosService.renombrarEtiqueta(nombreAnterior, data.nombre);
         queryClient.invalidateQueries({ queryKey: ['gastos', user.id] });
       }
-      await actualizar.mutateAsync({ ...mydata, etiquetas: next });
+      await actualizar.mutateAsync({ etiquetas: next });
       setEtiquetas(next);
     } else {
       const next = [...etiquetas, data];
-      await actualizar.mutateAsync({ ...mydata, etiquetas: next });
+      await actualizar.mutateAsync({ etiquetas: next });
       setEtiquetas(next);
     }
   };
 
   const handleEliminarEtiqueta = async (nombre) => {
     const next = etiquetas.filter(e => (typeof e === 'string' ? e : e.nombre) !== nombre);
-    await actualizar.mutateAsync({ ...mydata, etiquetas: next });
+    await actualizar.mutateAsync({ etiquetas: next });
     setEtiquetas(next);
   };
 

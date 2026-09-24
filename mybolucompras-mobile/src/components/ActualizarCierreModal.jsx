@@ -52,7 +52,6 @@ export default function ActualizarCierreModal({ visible, onClose }) {
     try {
       const nuevoVencimiento = sumarDiasHabiles(nuevoCierre, 10);
       await actualizar.mutateAsync({
-        ...mydata,
         cierreAnterior: mydata.cierre,
         vencimientoAnterior: mydata.vencimiento,
         cierre: formatToDB(nuevoCierre),

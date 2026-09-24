@@ -137,7 +137,6 @@ export default function ModoViajeModal({ visible, viaje, onClose }) {
     try {
       const promptedIds = [...new Set([...(mydata.modoViajePromptedIds || []), viaje.id])];
       await actualizar.mutateAsync({
-        ...mydata,
         modoViajePromptedIds: promptedIds,
         ...(activarFlag ? { modoViajeActivo: true, modoViajeViajeId: viaje.id } : {}),
       });

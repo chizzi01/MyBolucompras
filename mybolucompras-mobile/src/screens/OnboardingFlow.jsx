@@ -55,7 +55,7 @@ export default function OnboardingFlow() {
   const saveFondos = async () => {
     if (fondos) {
       setLoading(true);
-      await actualizar.mutateAsync({ ...mydata, fondos: Number(fondos) });
+      await actualizar.mutateAsync({ fondos: Number(fondos) });
       setLoading(false);
     }
     next();
@@ -76,7 +76,6 @@ export default function OnboardingFlow() {
     setLoading(true);
     const vencimientoCalculada = sumarDiasHabiles(cierreDate, 10);
     await actualizar.mutateAsync({
-      ...mydata,
       cierre: formatDateToDB(cierreDate),
       vencimiento: formatDateToDB(vencimientoCalculada),
       cierreAnterior: '',
@@ -88,14 +87,14 @@ export default function OnboardingFlow() {
 
   const saveMoneda = async () => {
     setLoading(true);
-    await actualizar.mutateAsync({ ...mydata, monedaPreferida: moneda });
+    await actualizar.mutateAsync({ monedaPreferida: moneda });
     setLoading(false);
     next();
   };
 
   const savePagos = async () => {
     setLoading(true);
-    await actualizar.mutateAsync({ ...mydata, bancosHabilitados: selectedBancos, mediosHabilitados: selectedMedios });
+    await actualizar.mutateAsync({ bancosHabilitados: selectedBancos, mediosHabilitados: selectedMedios });
     setLoading(false);
     next();
   };

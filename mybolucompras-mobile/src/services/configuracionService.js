@@ -14,13 +14,13 @@ export const configuracionService = {
     return data ? mapFromDB(data) : getDefaults();
   },
 
-  async actualizar(config) {
+  async actualizar(patch) {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user ?? null;
     if (!user) throw new Error('No autenticado');
     const { error } = await supabase
       .from('configuracion_usuario')
-      .upsert({ user_id: user.id, ...mapToDB(config), updated_at: new Date().toISOString() });
+      .upsert({ user_id: user.id, ...mapToDB(patch), updated_at: new Date().toISOString() });
     if (error) throw error;
   },
 };
@@ -55,21 +55,29 @@ function mapFromDB(row) {
   };
 }
 
-function mapToDB(config) {
-  return {
-    cierre: config.cierre || null,
-    vencimiento: config.vencimiento || null,
-    cierre_anterior: config.cierreAnterior || null,
-    vencimiento_anterior: config.vencimientoAnterior || null,
-    fondos: Number(config.fondos) || 0,
-    etiquetas: config.etiquetas || [],
-    presupuestos: config.presupuestos || {},
-    presupuesto_mensual_max: Number(config.presupuestoMensualMax) || 0,
-    bancos_habilitados: config.bancosHabilitados || [],
-    medios_habilitados: config.mediosHabilitados || [],
-    moneda_preferida: config.monedaPreferida || 'ARS',
-    modo_viaje_activo: !!config.modoViajeActivo,
-    modo_viaje_viaje_id: config.modoViajeViajeId ?? null,
-    modo_viaje_prompted_ids: config.modoViajePromptedIds ?? [],
-  };
+// Solo mapea los campos presentes en el patch: el upsert únicamente pisa
+// esas columnas, así un guardado parcial nunca borra el resto de la config.
+const DB_FIELDS = {
+  cierre: ['cierre', v => v || null],
+  vencimiento: ['vencimiento', v => v || null],
+  cierreAnterior: ['cierre_anterior', v => v || null],
+  vencimientoAnterior: ['vencimiento_anterior', v => v || null],
+  fondos: ['fondos', v => Number(v) || 0],
+  etiquetas: ['etiquetas', v => v || []],
+  presupuestos: ['presupuestos', v => v || {}],
+  presupuestoMensualMax: ['presupuesto_mensual_max', v => Number(v) || 0],
+  bancosHabilitados: ['bancos_habilitados', v => v || []],
+  mediosHabilitados: ['medios_habilitados', v => v || []],
+  monedaPreferida: ['moneda_preferida', v => v || 'ARS'],
+  modoViajeActivo: ['modo_viaje_activo', v => !!v],
+  modoViajeViajeId: ['modo_viaje_viaje_id', v => v ?? null],
+  modoViajePromptedIds: ['modo_viaje_prompted_ids', v => v ?? []],
+};
+
+function mapToDB(patch) {
+  const row = {};
+  for (const [key, [column, convert]] of Object.entries(DB_FIELDS)) {
+    if (key in patch) row[column] = convert(patch[key]);
+  }
+  return row;
 }

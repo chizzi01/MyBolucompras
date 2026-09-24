@@ -437,7 +437,7 @@ export default function AgregarScreen() {
 
   const handleCrearEtiqueta = async (nuevaEtiqueta) => {
     const etiquetas = [...(mydata.etiquetas || []), nuevaEtiqueta];
-    await actualizarConfigMutation.mutateAsync({ ...mydata, etiquetas });
+    await actualizarConfigMutation.mutateAsync({ etiquetas });
   };
 
   const esCuotasHabilitado = form.tipo === 'credito' && !form.isFijo;
