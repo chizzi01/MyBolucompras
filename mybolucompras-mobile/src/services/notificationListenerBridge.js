@@ -30,18 +30,33 @@ function leerColaCruda(raw) {
   }
 }
 
-async function encolarNotificacion(entrada) {
-  const raw = await AsyncStorage.getItem(QUEUE_KEY);
-  const cola = leerColaCruda(raw);
-  cola.push(entrada);
-  await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(cola));
+// La librería lanza una headless task por notificación y varias pueden correr
+// a la vez en el mismo runtime JS; sin serializar, los read-modify-write se
+// intercalan y se pierden entradas cuando llegan varias notificaciones juntas.
+let colaLock = Promise.resolve();
+
+function conLock(fn) {
+  const resultado = colaLock.then(fn);
+  colaLock = resultado.catch(() => {});
+  return resultado;
 }
 
-async function leerYVaciarCola() {
-  const raw = await AsyncStorage.getItem(QUEUE_KEY);
-  const cola = leerColaCruda(raw);
-  await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify([]));
-  return cola;
+function encolarNotificacion(entrada) {
+  return conLock(async () => {
+    const raw = await AsyncStorage.getItem(QUEUE_KEY);
+    const cola = leerColaCruda(raw);
+    cola.push(entrada);
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(cola));
+  });
+}
+
+function leerYVaciarCola() {
+  return conLock(async () => {
+    const raw = await AsyncStorage.getItem(QUEUE_KEY);
+    const cola = leerColaCruda(raw);
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify([]));
+    return cola;
+  });
 }
 
 // NOTA DE DISEÑO (Task 9):
