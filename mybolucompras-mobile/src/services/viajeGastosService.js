@@ -1,4 +1,5 @@
 // src/services/viajeGastosService.js
+import { toISODate } from '../utils/formatters';
 import { supabase } from '../lib/supabase';
 import { sendPushToUser } from './pushNotificationService';
 
@@ -53,7 +54,7 @@ export const viajeGastosService = {
 
     const fechaISO = gastoData.fecha?.includes('/')
       ? gastoData.fecha.split('/').reverse().join('-')
-      : (gastoData.fecha || new Date().toISOString().split('T')[0]);
+      : (gastoData.fecha || toISODate(new Date()));
 
     const { data, error } = await supabase.from('viaje_gastos').insert([{
       viaje_id: viajeId,

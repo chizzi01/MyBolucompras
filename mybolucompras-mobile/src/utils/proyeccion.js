@@ -33,6 +33,12 @@ export function getGastosMes(gastos, mesSel, mydata) {
           const inCurrentMonth = gastoEntraEsteMes(g, mydata);
           return d <= (inCurrentMonth ? restToday - 1 : restToday);
         }
+        // Mes actual: misma fuente que el badge X/N. Por mes de compra se perdía la
+        // última cuota de compras hechas después del cierre (se cobran un mes más tarde).
+        if (targetIndex === hoyIndex) {
+          const restToday = getCuotasRestantes(g, mydata);
+          return typeof restToday === 'number' && restToday > 0 && gastoEntraEsteMes(g, mydata);
+        }
         // Mes actual y pasados: rango original por fecha de compra
         if (targetIndex < compraIndex || targetIndex >= compraIndex + cuotas) return false;
       } else {

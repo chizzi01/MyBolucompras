@@ -6,16 +6,13 @@ import { useTheme } from '../context/ThemeContext';
 import { useConfiguracion } from '../hooks/queries/useConfiguracion';
 import { useConfiguracionMutations } from '../hooks/mutations/useConfiguracionMutations';
 import { sumarDiasHabiles } from '../utils/cuotas';
+import { toISODate } from '../utils/formatters';
 import { colors, spacing, radius, typography } from '../constants/theme';
 
 function formatDisplay(date) {
   const d = String(date.getDate()).padStart(2, '0');
   const m = String(date.getMonth() + 1).padStart(2, '0');
   return `${d}/${m}/${date.getFullYear()}`;
-}
-
-function formatToDB(date) {
-  return date.toISOString().split('T')[0];
 }
 
 function parseDBDate(str) {
@@ -40,26 +37,29 @@ export default function ActualizarCierreModal({ visible, onClose }) {
   const [nuevoCierre, setNuevoCierre] = useState(() => defaultNuevoCierre(mydata?.cierre));
   const [showPicker, setShowPicker] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (visible && mydata?.cierre) {
       setNuevoCierre(defaultNuevoCierre(mydata.cierre));
+      setError(null);
     }
   }, [visible, mydata?.cierre]);
 
   const handleGuardar = async () => {
     setLoading(true);
+    setError(null);
     try {
       const nuevoVencimiento = sumarDiasHabiles(nuevoCierre, 10);
       await actualizar.mutateAsync({
         cierreAnterior: mydata.cierre,
         vencimientoAnterior: mydata.vencimiento,
-        cierre: formatToDB(nuevoCierre),
-        vencimiento: formatToDB(nuevoVencimiento),
+        cierre: toISODate(nuevoCierre),
+        vencimiento: toISODate(nuevoVencimiento),
       });
       onClose();
-    } catch {
-      // silently ignore — mutation already handles optimistic rollback
+    } catch (err) {
+      setError(err?.message || 'No se pudo guardar el cierre.');
     } finally {
       setLoading(false);
     }
@@ -104,6 +104,8 @@ export default function ActualizarCierreModal({ visible, onClose }) {
               }}
             />
           )}
+
+          {error && <Text style={s.error}>{error}</Text>}
 
           <View style={s.actions}>
             <TouchableOpacity style={s.cancelBtn} onPress={onClose} activeOpacity={0.7} disabled={loading}>
@@ -181,6 +183,13 @@ const styles = (dark) => StyleSheet.create({
     gap: spacing.xs,
   },
   dateIcon: { marginRight: 2 },
+  error: {
+    ...typography.caption,
+    color: colors.error,
+    textAlign: 'center',
+    marginTop: -spacing.sm,
+    marginBottom: spacing.md,
+  },
   dateText: {
     flex: 1,
     ...typography.bodyMed,

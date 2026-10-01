@@ -14,6 +14,7 @@ import { useTheme } from '../context/ThemeContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { MONEDAS, BANCOS, MEDIOS_DE_PAGO } from '../constants/catalogos';
 import { sumarDiasHabiles } from '../utils/cuotas';
+import { toISODate } from '../utils/formatters';
 
 const { width } = Dimensions.get('window');
 
@@ -61,9 +62,7 @@ export default function OnboardingFlow() {
     next();
   };
 
-  const formatDateToDB = (date) => {
-    return date.toISOString().split('T')[0];
-  };
+  const formatDateToDB = toISODate;
 
   const formatDateToDisplay = (date) => {
     const d = date.getDate().toString().padStart(2, '0');

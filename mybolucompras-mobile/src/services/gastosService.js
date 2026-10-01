@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { parsePrecio } from '../utils/formatters';
+import { parsePrecio, toISODate } from '../utils/formatters';
 import { sendPushToUser } from './pushNotificationService';
 
 export const gastosService = {
@@ -52,7 +52,7 @@ export const gastosService = {
       const fechaBase = gasto.fecha;
       const fechaISO = (fechaBase?.includes('/')
         ? fechaBase.split('/').reverse().join('-')
-        : fechaBase) || new Date().toISOString().split('T')[0];
+        : fechaBase) || toISODate(new Date());
 
       const otherGasto = {
         ...finalGasto,
@@ -141,6 +141,17 @@ export const gastosService = {
       finalGasto.compartidoConUserId = sharedWith.userId;
     }
 
+    // Gasto ya compartido: se guardan los valores previos para encontrar las filas
+    // ligadas (copia del otro y deudas de ambos), que no tienen un id en común.
+    const otroUserId = !sharedWith?.userId ? finalGasto.compartidoConUserId : null;
+    let previo = null;
+    if (otroUserId) {
+      const { data: prev, error: prevError } = await supabase
+        .from('gastos').select('fecha, precio, objeto').eq('id', id).single();
+      if (prevError) throw prevError;
+      previo = prev;
+    }
+
     const { data, error } = await supabase
       .from('gastos')
       .update(mapToDB(finalGasto))
@@ -149,6 +160,31 @@ export const gastosService = {
       .single();
 
     if (error) throw error;
+
+    if (previo) {
+      // Sin esto, cambiar la fecha o las cuotas de un lado dejaba al otro viendo
+      // otra cuota. El monto de las deudas no se toca (puede ser la mitad si se dividió).
+      const nuevo = mapToDB(finalGasto);
+      const comunes = { cuotas: nuevo.cuotas, tipo: nuevo.tipo, medio: nuevo.medio, moneda: nuevo.moneda };
+      const objetoOriginal = (previo.objeto || '').replace(/ \(Compartido por .*\)$/, '');
+      const [{ error: copiaError }, { error: deudasError }] = await Promise.all([
+        supabase
+          .from('gastos')
+          .update({ ...comunes, fecha: nuevo.fecha, precio: nuevo.precio })
+          .eq('user_id', otroUserId)
+          .eq('compartido_con_user_id', user.id)
+          .eq('fecha', previo.fecha)
+          .eq('precio', previo.precio),
+        supabase
+          .from('deudores')
+          .update({ ...comunes, fecha_deuda: nuevo.fecha })
+          .or(`and(user_id.eq.${user.id},compartido_con_user_id.eq.${otroUserId}),and(user_id.eq.${otroUserId},compartido_con_user_id.eq.${user.id})`)
+          .eq('fecha_deuda', previo.fecha)
+          .eq('descripcion', objetoOriginal),
+      ]);
+      if (copiaError) throw copiaError;
+      if (deudasError) throw deudasError;
+    }
 
     if (sharedWith && sharedWith.userId) {
       const nombreCreador = user.user_metadata?.nombre || user.email;
@@ -198,7 +234,7 @@ export const gastosService = {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user ?? null;
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = toISODate(new Date());
 
     const { error } = await supabase
       .from('gastos')
@@ -275,6 +311,7 @@ function mapFromDB(row) {
     pagado,
     viajeId: row.viaje_id || null,
     viajeNombre: row.viaje_nombre || null,
+    primeraCuota: row.primera_cuota || null,
   };
 }
 

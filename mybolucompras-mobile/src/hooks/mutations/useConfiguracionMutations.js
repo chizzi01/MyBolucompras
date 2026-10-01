@@ -1,6 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { configuracionService } from '../../services/configuracionService';
 import { useAuth } from '../../context/AuthContext';
+import { validarFechasTarjeta } from '../../utils/cuotas';
+
+const FECHAS_TARJETA = ['cierre', 'vencimiento', 'cierreAnterior', 'vencimientoAnterior'];
 
 export function useConfiguracionMutations() {
   const queryClient = useQueryClient();
@@ -16,6 +19,12 @@ export function useConfiguracionMutations() {
       // derivadas de mydata.etiquetas) borraría datos del usuario.
       if (queryClient.getQueryData(queryKey) === undefined) {
         throw new Error('La configuración todavía no cargó. Probá de nuevo en un momento.');
+      }
+      // Fechas de tarjeta inconsistentes desfasan cuotas y "entra este mes"
+      // en toda la app: se valida el resultado final (cache + cambios).
+      if (FECHAS_TARJETA.some(k => k in nuevoConfig)) {
+        const error = validarFechasTarjeta({ ...queryClient.getQueryData(queryKey), ...nuevoConfig });
+        if (error) throw new Error(error);
       }
       await queryClient.cancelQueries({ queryKey });
       const prev = queryClient.getQueryData(queryKey);

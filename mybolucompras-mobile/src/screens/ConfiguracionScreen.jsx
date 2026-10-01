@@ -15,6 +15,7 @@ import { useTheme } from '../context/ThemeContext';
 import { navigate } from '../navigation/navigationRef';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { formatARS, toISODate } from '../utils/formatters';
+import { addMonths } from '../utils/cuotas';
 import { BANCOS, MEDIOS_DE_PAGO, MONEDAS, ETIQUETA_ICON_DEFAULT } from '../constants/catalogos';
 import { notificationListenerBridge } from '../services/notificationListenerBridge';
 import { gastosService } from '../services/gastosService';
@@ -172,7 +173,7 @@ export default function ConfiguracionScreen({ navigation }) {
     return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
   };
 
-  const formatDateToDB = (date) => date.toISOString().split('T')[0];
+  const formatDateToDB = toISODate;
   const formatDateToDisplay = (date) => {
     const d = date.getDate().toString().padStart(2, '0');
     const m = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -184,8 +185,13 @@ export default function ConfiguracionScreen({ navigation }) {
     setFondos(String(mydata.fondos || ''));
     setCierreDate(parseDBDate(mydata.cierre));
     setVencimientoDate(parseDBDate(mydata.vencimiento));
-    setCierreAnteriorDate(parseDBDate(mydata.cierreAnterior));
-    setVencimientoAnteriorDate(parseDBDate(mydata.vencimientoAnterior));
+    // Sin "anteriores" guardados se proponen un mes antes del actual, no la fecha de hoy.
+    setCierreAnteriorDate(mydata.cierreAnterior
+      ? parseDBDate(mydata.cierreAnterior)
+      : addMonths(parseDBDate(mydata.cierre), -1));
+    setVencimientoAnteriorDate(mydata.vencimientoAnterior
+      ? parseDBDate(mydata.vencimientoAnterior)
+      : addMonths(parseDBDate(mydata.vencimiento), -1));
     setEtiquetas(mydata.etiquetas || []);
     setMonedaPreferida(mydata.monedaPreferida || 'ARS');
     if (mydata.mediosHabilitados?.length > 0) setMediosHabilitados(mydata.mediosHabilitados);

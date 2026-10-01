@@ -6,8 +6,10 @@ export function formatMonto(amount) {
 
 export function parseFecha(fechaDDMMYYYY) {
   if (!fechaDDMMYYYY) return new Date(NaN);
-  const [d, m, y] = fechaDDMMYYYY.split('/');
-  return new Date(`${y}-${m}-${d}`);
+  const [d, m, y] = fechaDDMMYYYY.split('/').map(Number);
+  if (!d || !m || !y) return new Date(NaN);
+  // Fecha local: new Date('YYYY-MM-DD') es UTC y en Argentina cae el día anterior.
+  return new Date(y, m - 1, d);
 }
 
 export function formatFecha(date) {
@@ -25,7 +27,8 @@ export function toISODate(date) {
 
 export function parseISODate(iso) {
   if (!iso) return null;
-  const [y, m, d] = iso.split('-').map(Number);
+  const [y, m, d] = iso.split('T')[0].split('-').map(Number);
+  if (!y || !m || !d) return null;
   return new Date(y, m - 1, d);
 }
 

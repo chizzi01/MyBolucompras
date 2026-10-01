@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
-import { formatPrecio } from '../utils/formatters';
+import { formatPrecio, toISODate } from '../utils/formatters';
 import { sendPushToUser } from './pushNotificationService';
+import { gastoEntraEsteMes } from '../utils/cuotas';
 
 export const deudoresService = {
   async getAll() {
@@ -41,7 +42,7 @@ export const deudoresService = {
 
     let fechaISO = finalDeuda.fechaDeuda;
     if (fechaISO?.includes('/')) fechaISO = fechaISO.split('/').reverse().join('-');
-    fechaISO = fechaISO || new Date().toISOString().split('T')[0];
+    fechaISO = fechaISO || toISODate(new Date());
 
     const gastoParaOtro = {
       es_fijo: finalDeuda.isFijo ?? false,
@@ -113,10 +114,10 @@ export const deudoresService = {
     return mapFromDB(data);
   },
 
-  async marcarPagadaConNotificacion(id, deudaActual, currentUserName) {
+  async marcarPagadaConNotificacion(id, deudaActual, currentUserName, mydata) {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user ?? null;
-    const today = new Date().toISOString().split('T')[0];
+    const today = toISODate(new Date());
 
     const { error } = await supabase
       .from('deudores')
@@ -129,6 +130,25 @@ export const deudoresService = {
       const monto = deudaActual.monto;
       let fechaDeudaISO = deudaActual.fechaDeuda;
       if (fechaDeudaISO?.includes('/')) fechaDeudaISO = fechaDeudaISO.split('/').reverse().join('-');
+
+      // Mi gasto ligado puede tener otro tipo que la deuda (ej. deuda por transferencia,
+      // gasto en cuotas de crédito): solo se marca si su cuota ya entra este mes.
+      const { data: misGastos, error: misGastosError } = await supabase
+        .from('gastos')
+        .select('id, es_fijo, tipo, fecha, primera_cuota')
+        .eq('user_id', user.id)
+        .eq('compartido_con_user_id', otroUserId)
+        .eq('precio', monto)
+        .eq('fecha', fechaDeudaISO);
+      if (misGastosError) throw misGastosError;
+      const misGastosIds = (misGastos ?? [])
+        .filter(g => gastoEntraEsteMes({
+          isFijo: g.es_fijo,
+          tipo: g.tipo,
+          fecha: g.fecha.split('-').reverse().join('/'),
+          primeraCuota: g.primera_cuota,
+        }, mydata))
+        .map(g => g.id);
 
       await Promise.all([
         // Deuda del otro usuario — sin filtro pagado=false para que el re-marcado mensual funcione.
@@ -149,13 +169,10 @@ export const deudoresService = {
           .eq('precio', monto)
           .eq('fecha', fechaDeudaISO),
         // Mi gasto si existe
-        supabase
+        misGastosIds.length > 0 && supabase
           .from('gastos')
           .update({ pagado: true, fecha_pago: today })
-          .eq('user_id', user.id)
-          .eq('compartido_con_user_id', otroUserId)
-          .eq('precio', monto)
-          .eq('fecha', fechaDeudaISO),
+          .in('id', misGastosIds),
       ]);
 
       sendPushToUser(otroUserId, {
@@ -214,6 +231,7 @@ function mapFromDB(row) {
     compartidoConNombre: row.compartido_con_nombre || null,
     compartidoConUserId: row.compartido_con_user_id || null,
     ultimoRecordatorio: row.ultimo_recordatorio || null,
+    primeraCuota: row.primera_cuota || null,
     createdAt: row.created_at,
   };
 }
@@ -245,7 +263,7 @@ function mapToDB(deuda) {
     cuotas: parseInt(deuda.cuotas) || 1,
     cantidad: parseInt(deuda.cantidad) || 1,
     pagado: deuda.pagado ?? false,
-    fecha_deuda: fechaDeudaISO || new Date().toISOString().split('T')[0],
+    fecha_deuda: fechaDeudaISO || toISODate(new Date()),
     fecha_pago: fechaPagoISO,
     compartido_con_nombre: deuda.compartidoConNombre || null,
     compartido_con_user_id: deuda.compartidoConUserId || null,

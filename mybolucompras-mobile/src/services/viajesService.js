@@ -1,4 +1,5 @@
 // src/services/viajesService.js
+import { toISODate } from '../utils/formatters';
 import { supabase } from '../lib/supabase';
 import { sendPushToUser } from './pushNotificationService';
 import { viajeGastosService } from './viajeGastosService';
@@ -89,7 +90,7 @@ export const viajesService = {
     // Only delete after validation passes (idempotency for retry)
     await supabase.from('gastos').delete().eq('viaje_id', id);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = toISODate(new Date());
     const summaryRows = viaje.participantes
       .map(p => {
         const share = gastos

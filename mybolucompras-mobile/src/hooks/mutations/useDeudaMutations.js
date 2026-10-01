@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deudoresService } from '../../services/deudoresService';
 import { useAuth } from '../../context/AuthContext';
 import { gastoEntraEsteMes } from '../../utils/cuotas';
+import { toISODate } from '../../utils/formatters';
 
 const deudaEntraEsteMes = (deuda, mydata) =>
   gastoEntraEsteMes({ ...deuda, fecha: deuda.fechaDeuda }, mydata);
@@ -60,13 +61,13 @@ export function useDeudaMutations() {
       if (!deudaEntraEsteMes(deuda, mydata)) {
         return Promise.reject(new Error('No se puede marcar como pagada una deuda que todavía no entra este mes'));
       }
-      return deudoresService.marcarPagadaConNotificacion(id, deuda, nombre);
+      return deudoresService.marcarPagadaConNotificacion(id, deuda, nombre, mydata);
     },
     onMutate: async ({ id, deuda, mydata }) => {
       await queryClient.cancelQueries({ queryKey });
       const prev = queryClient.getQueryData(queryKey);
       if (!deudaEntraEsteMes(deuda, mydata)) return { prev };
-      const today = new Date().toISOString().split('T')[0].split('-').reverse().join('/');
+      const today = toISODate(new Date()).split('-').reverse().join('/');
       queryClient.setQueryData(queryKey, old =>
         (old ?? []).map(d => d.id === id ? { ...d, pagado: true, fechaPago: today } : d)
       );
