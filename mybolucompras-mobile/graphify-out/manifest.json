@@ -1,0 +1,1064 @@
+{
+  "App.js": {
+    "mtime": 1789662285.5878282,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b3acd79faee25944d4a4ccdb4eb6ae81",
+    "semantic_hash": "b3acd79faee25944d4a4ccdb4eb6ae81"
+  },
+  "app.config.js": {
+    "mtime": 1778622905.3015628,
+    "seen": 1790866870.7966335,
+    "ast_hash": "9e1474ef464826ad71c7bdd471cff742",
+    "semantic_hash": "9e1474ef464826ad71c7bdd471cff742"
+  },
+  "app.json": {
+    "mtime": 1790452317.145981,
+    "seen": 1790866870.7966335,
+    "ast_hash": "1534a3e0ff43cfa9f974a969d62e44c8",
+    "semantic_hash": "1534a3e0ff43cfa9f974a969d62e44c8"
+  },
+  "babel.config.test.js": {
+    "mtime": 1789313019.5559082,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b4511ce092a541abfb4e26e219b1649f",
+    "semantic_hash": "b4511ce092a541abfb4e26e219b1649f"
+  },
+  "eas.json": {
+    "mtime": 1778673434.6006093,
+    "seen": 1790866870.7966335,
+    "ast_hash": "0901b7275e041ddb3497f068785f21e1",
+    "semantic_hash": "0901b7275e041ddb3497f068785f21e1"
+  },
+  "google-services.json": {
+    "mtime": 1779977316.2880898,
+    "seen": 1790866870.7966335,
+    "ast_hash": "df1c9610a0a39ea142ca8c593df7d278",
+    "semantic_hash": "df1c9610a0a39ea142ca8c593df7d278"
+  },
+  "index.js": {
+    "mtime": 1789313019.581422,
+    "seen": 1790866870.7966335,
+    "ast_hash": "1abbafdc8532414ee738fbfbb0f5e47f",
+    "semantic_hash": "1abbafdc8532414ee738fbfbb0f5e47f"
+  },
+  "jest.config.js": {
+    "mtime": 1789313019.581422,
+    "seen": 1790866870.7966335,
+    "ast_hash": "040db6e701ce3b5bf093ebd6c59ee87d",
+    "semantic_hash": "040db6e701ce3b5bf093ebd6c59ee87d"
+  },
+  "metro.config.js": {
+    "mtime": 1778542927.5913322,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7d85073f3718e0b6fcc6faac2fc9791d",
+    "semantic_hash": "7d85073f3718e0b6fcc6faac2fc9791d"
+  },
+  "package.json": {
+    "mtime": 1789313019.6372116,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b639c97e0389b9d36e1720f5b7439c58",
+    "semantic_hash": "b639c97e0389b9d36e1720f5b7439c58"
+  },
+  "plugins/withGoogleVerification.js": {
+    "mtime": 1778615512.8506615,
+    "seen": 1790866870.7966335,
+    "ast_hash": "36173e5b4c3f8c2424ad3cad157f001b",
+    "semantic_hash": "36173e5b4c3f8c2424ad3cad157f001b"
+  },
+  "plugins/withNotificationListenerForegroundFix.js": {
+    "mtime": 1789424022.4698868,
+    "seen": 1790866870.7966335,
+    "ast_hash": "34e618007a64d4e7acb6ccbcf108622d",
+    "semantic_hash": "34e618007a64d4e7acb6ccbcf108622d"
+  },
+  "plugins/withNotificationListenerManifestFix.js": {
+    "mtime": 1789424348.8394256,
+    "seen": 1790866870.7966335,
+    "ast_hash": "761b61da2f9a3441cb274cd38dcd8d58",
+    "semantic_hash": "761b61da2f9a3441cb274cd38dcd8d58"
+  },
+  "plugins/withReleaseSigning.js": {
+    "mtime": 1789336054.4654045,
+    "seen": 1790866870.7966335,
+    "ast_hash": "444898ede6772a638f6c907f2d5cef55",
+    "semantic_hash": "444898ede6772a638f6c907f2d5cef55"
+  },
+  "scratch/check_db.js": {
+    "mtime": 1780084803.5699828,
+    "seen": 1790866870.7966335,
+    "ast_hash": "d697775164edaa72752c181355b09e31",
+    "semantic_hash": "d697775164edaa72752c181355b09e31"
+  },
+  "scratch/test_vision.js": {
+    "mtime": 1778806621.6752682,
+    "seen": 1790866870.7966335,
+    "ast_hash": "ac120bd41df0db7be8bdf93cf7d3fb91",
+    "semantic_hash": "ac120bd41df0db7be8bdf93cf7d3fb91"
+  },
+  "scripts/bump-version.js": {
+    "mtime": 1779977316.2920918,
+    "seen": 1790866870.7966335,
+    "ast_hash": "e8ff4f3cb61df73ac2d2f4c1993823cb",
+    "semantic_hash": "e8ff4f3cb61df73ac2d2f4c1993823cb"
+  },
+  "src/components/ActualizarCierreModal.jsx": {
+    "mtime": 1790249710.316028,
+    "seen": 1790866870.7966335,
+    "ast_hash": "53ce6fd14d10686e4bf36ee417ee2c0d",
+    "semantic_hash": "53ce6fd14d10686e4bf36ee417ee2c0d"
+  },
+  "src/components/AppModal.jsx": {
+    "mtime": 1779977316.2962828,
+    "seen": 1790866870.7966335,
+    "ast_hash": "2d9bbaf7719425725cd1ce6dee7e039b",
+    "semantic_hash": "2d9bbaf7719425725cd1ce6dee7e039b"
+  },
+  "src/components/CierreChecker.jsx": {
+    "mtime": 1780408804.465511,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b90c1087ef50b853cd7933459b9bb4dd",
+    "semantic_hash": "b90c1087ef50b853cd7933459b9bb4dd"
+  },
+  "src/components/CrearEtiquetaModal.jsx": {
+    "mtime": 1789479233.8317642,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7657b0a9e19b66088b5b3f36bf51a063",
+    "semantic_hash": "7657b0a9e19b66088b5b3f36bf51a063"
+  },
+  "src/components/DeudaCard.jsx": {
+    "mtime": 1789001861.3510125,
+    "seen": 1790866870.7966335,
+    "ast_hash": "fe4b7629e74abe34ff174ff4134ee720",
+    "semantic_hash": "fe4b7629e74abe34ff174ff4134ee720"
+  },
+  "src/components/EtiquetaSelector.jsx": {
+    "mtime": 1789479238.8588026,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7745004f2e4945afdfe91ecd94d18a3a",
+    "semantic_hash": "7745004f2e4945afdfe91ecd94d18a3a"
+  },
+  "src/components/FilterBar.jsx": {
+    "mtime": 1778517396.0534878,
+    "seen": 1790866870.7966335,
+    "ast_hash": "a77192ffb3f5d5cb00c1dda77d942a4f",
+    "semantic_hash": "a77192ffb3f5d5cb00c1dda77d942a4f"
+  },
+  "src/components/GastoCard.jsx": {
+    "mtime": 1789478925.342118,
+    "seen": 1790866870.7966335,
+    "ast_hash": "491bb1c16eea5dfc0605d913b3429ca8",
+    "semantic_hash": "491bb1c16eea5dfc0605d913b3429ca8"
+  },
+  "src/components/GastoCreditCard.jsx": {
+    "mtime": 1789661032.1007159,
+    "seen": 1790866870.7966335,
+    "ast_hash": "fd4f7c01a6e68a2c7e238fb76e07ac8c",
+    "semantic_hash": "fd4f7c01a6e68a2c7e238fb76e07ac8c"
+  },
+  "src/components/GastoProyectadoCard.jsx": {
+    "mtime": 1789477822.4691904,
+    "seen": 1790866870.7966335,
+    "ast_hash": "5754e91f41c7ab81c71022992cc5a469",
+    "semantic_hash": "5754e91f41c7ab81c71022992cc5a469"
+  },
+  "src/components/LoadingSkeleton.jsx": {
+    "mtime": 1778375934.9169726,
+    "seen": 1790866870.7966335,
+    "ast_hash": "145e2372d55ee399bbad41172e65e955",
+    "semantic_hash": "145e2372d55ee399bbad41172e65e955"
+  },
+  "src/components/ModoViajeChecker.jsx": {
+    "mtime": 1790249702.5561607,
+    "seen": 1790866870.7966335,
+    "ast_hash": "1b25a103b0a46a13b2dfe802c3555695",
+    "semantic_hash": "1b25a103b0a46a13b2dfe802c3555695"
+  },
+  "src/components/ModoViajeModal.jsx": {
+    "mtime": 1790249710.3170285,
+    "seen": 1790866870.7966335,
+    "ast_hash": "4cc3a4afecda4aa5b4f4042bc5922a09",
+    "semantic_hash": "4cc3a4afecda4aa5b4f4042bc5922a09"
+  },
+  "src/components/PendienteCompraCard.jsx": {
+    "mtime": 1789313019.6543396,
+    "seen": 1790866870.7966335,
+    "ast_hash": "525ffd156923fe14a04ede32fb019b2c",
+    "semantic_hash": "525ffd156923fe14a04ede32fb019b2c"
+  },
+  "src/components/PendienteGastoCard.jsx": {
+    "mtime": 1789424032.1115727,
+    "seen": 1790866870.7966335,
+    "ast_hash": "89ad1a3cb14654a2b7b00d018de18360",
+    "semantic_hash": "89ad1a3cb14654a2b7b00d018de18360"
+  },
+  "src/components/ProyeccionModal.jsx": {
+    "mtime": 1781101981.4593463,
+    "seen": 1790866870.7966335,
+    "ast_hash": "1660b8b2c33f1af4ccb6de339fc66a16",
+    "semantic_hash": "1660b8b2c33f1af4ccb6de339fc66a16"
+  },
+  "src/components/common/DateTimeField.jsx": {
+    "mtime": 1784748519.024127,
+    "seen": 1790866870.7966335,
+    "ast_hash": "77feb4213b72e3a5f65aa1313ad61178",
+    "semantic_hash": "77feb4213b72e3a5f65aa1313ad61178"
+  },
+  "src/components/nav/ModoPreviaTabBar.jsx": {
+    "mtime": 1789008948.9443715,
+    "seen": 1790866870.7966335,
+    "ast_hash": "5f1c6d061fd699c278b22f484d2a2e75",
+    "semantic_hash": "5f1c6d061fd699c278b22f484d2a2e75"
+  },
+  "src/components/nav/ProfileAvatarButton.jsx": {
+    "mtime": 1788998690.434859,
+    "seen": 1790866870.7966335,
+    "ast_hash": "6230f87833e7c6dc070e45667d1027d0",
+    "semantic_hash": "6230f87833e7c6dc070e45667d1027d0"
+  },
+  "src/components/viajes/AgregarActividadModal.jsx": {
+    "mtime": 1784749454.3872344,
+    "seen": 1790866870.7966335,
+    "ast_hash": "3054c3033906d1853a99ef80b94cb221",
+    "semantic_hash": "3054c3033906d1853a99ef80b94cb221"
+  },
+  "src/components/viajes/CerrarViajeModal.jsx": {
+    "mtime": 1780084803.5719812,
+    "seen": 1790866870.7966335,
+    "ast_hash": "6b3b76d753e2a668f47e1eabf1026c4c",
+    "semantic_hash": "6b3b76d753e2a668f47e1eabf1026c4c"
+  },
+  "src/components/viajes/CrearViajeModal.jsx": {
+    "mtime": 1784748547.551741,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7e8d6304fd426c26bacd283628263232",
+    "semantic_hash": "7e8d6304fd426c26bacd283628263232"
+  },
+  "src/components/viajes/EditarViajeModal.jsx": {
+    "mtime": 1784748802.4248154,
+    "seen": 1790866870.7966335,
+    "ast_hash": "631b07f779e6b38545ee9f138f2507e3",
+    "semantic_hash": "631b07f779e6b38545ee9f138f2507e3"
+  },
+  "src/components/viajes/EliminarViajeModal.jsx": {
+    "mtime": 1780022257.8638363,
+    "seen": 1790866870.7966335,
+    "ast_hash": "5d213b5dd3dbd1040fe6af1d54cfc4e2",
+    "semantic_hash": "5d213b5dd3dbd1040fe6af1d54cfc4e2"
+  },
+  "src/components/viajes/ImagenGaleriaModal.jsx": {
+    "mtime": 1780014018.5803382,
+    "seen": 1790866870.7966335,
+    "ast_hash": "2996bf76df53dba0cdace63b1740a689",
+    "semantic_hash": "2996bf76df53dba0cdace63b1740a689"
+  },
+  "src/components/viajes/ParticipantesPicker.jsx": {
+    "mtime": 1779972268.4109688,
+    "seen": 1790866870.7966335,
+    "ast_hash": "6d4529c826260023056ab32928e69be1",
+    "semantic_hash": "6d4529c826260023056ab32928e69be1"
+  },
+  "src/components/viajes/RegistrarPagoModal.jsx": {
+    "mtime": 1780084803.5729814,
+    "seen": 1790866870.7966335,
+    "ast_hash": "3c6c8a78ecfa6e5d89973ab2f5ea2432",
+    "semantic_hash": "3c6c8a78ecfa6e5d89973ab2f5ea2432"
+  },
+  "src/components/viajes/SplitPanel.jsx": {
+    "mtime": 1789009959.39493,
+    "seen": 1790866870.7966335,
+    "ast_hash": "cfd20061a475ab5f64328f2906503a20",
+    "semantic_hash": "cfd20061a475ab5f64328f2906503a20"
+  },
+  "src/components/viajes/ViajeBalanceTab.jsx": {
+    "mtime": 1789009974.0677829,
+    "seen": 1790866870.7966335,
+    "ast_hash": "2b70b7983948df68c506906241bbff6b",
+    "semantic_hash": "2b70b7983948df68c506906241bbff6b"
+  },
+  "src/components/viajes/ViajeCalendarioTab.jsx": {
+    "mtime": 1789009927.816893,
+    "seen": 1790866870.7966335,
+    "ast_hash": "4d7ddf0f9173328db6e22a5b1cd0e156",
+    "semantic_hash": "4d7ddf0f9173328db6e22a5b1cd0e156"
+  },
+  "src/components/viajes/ViajeCard.jsx": {
+    "mtime": 1784815254.0679712,
+    "seen": 1790866870.7966335,
+    "ast_hash": "540dd1f81a43074bb167c5c9abae26ca",
+    "semantic_hash": "540dd1f81a43074bb167c5c9abae26ca"
+  },
+  "src/components/viajes/ViajeGastosTab.jsx": {
+    "mtime": 1789009901.797779,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7cf65af63418bd2cebc5c13a990fbbe1",
+    "semantic_hash": "7cf65af63418bd2cebc5c13a990fbbe1"
+  },
+  "src/components/viajes/ViajeNotasTab.jsx": {
+    "mtime": 1784686546.457686,
+    "seen": 1790866870.7966335,
+    "ast_hash": "e9aaf024c3ad9e9bc6883f71b228d9bd",
+    "semantic_hash": "e9aaf024c3ad9e9bc6883f71b228d9bd"
+  },
+  "src/components/viajes/ViajeOpcionesSheet.jsx": {
+    "mtime": 1784748825.6957462,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b0aa2afd442cce7f860598ac370fca27",
+    "semantic_hash": "b0aa2afd442cce7f860598ac370fca27"
+  },
+  "src/components/viajes/ViajeResumenModal.jsx": {
+    "mtime": 1789009981.8263657,
+    "seen": 1790866870.7966335,
+    "ast_hash": "18527280338d5d5b1b28b97d45e5fead",
+    "semantic_hash": "18527280338d5d5b1b28b97d45e5fead"
+  },
+  "src/config/keys.js": {
+    "mtime": 1778594183.891536,
+    "seen": 1790866870.7966335,
+    "ast_hash": "bea1ee7ec0d11d8731ea0f94d65cb143",
+    "semantic_hash": "bea1ee7ec0d11d8731ea0f94d65cb143"
+  },
+  "src/constants/catalogos.js": {
+    "mtime": 1789479644.4406888,
+    "seen": 1790866870.7966335,
+    "ast_hash": "bad76b6d1c5f487615aebf542db0adc3",
+    "semantic_hash": "bad76b6d1c5f487615aebf542db0adc3"
+  },
+  "src/constants/imagenesViaje.js": {
+    "mtime": 1780019486.4366186,
+    "seen": 1790866870.7966335,
+    "ast_hash": "92edc35639bbb8809ae6071d892e4e6f",
+    "semantic_hash": "92edc35639bbb8809ae6071d892e4e6f"
+  },
+  "src/constants/theme.js": {
+    "mtime": 1789311215.0077748,
+    "seen": 1790866870.7966335,
+    "ast_hash": "c202c5eb97d6d621cbc75f5b5f91384d",
+    "semantic_hash": "c202c5eb97d6d621cbc75f5b5f91384d"
+  },
+  "src/context/AuthContext.jsx": {
+    "mtime": 1790249729.2579868,
+    "seen": 1790866870.7966335,
+    "ast_hash": "a5518824df1cacb09333db5569f74e44",
+    "semantic_hash": "a5518824df1cacb09333db5569f74e44"
+  },
+  "src/context/DataContext.jsx": {
+    "mtime": 1780014018.5848682,
+    "seen": 1790866870.7966335,
+    "ast_hash": "81767ec9f6a4109c7baeab9840625bc2",
+    "semantic_hash": "81767ec9f6a4109c7baeab9840625bc2"
+  },
+  "src/context/DeudoresContext.jsx": {
+    "mtime": 1780014018.5858684,
+    "seen": 1790866870.7966335,
+    "ast_hash": "8a994420ef408d10699d3aaf4dfef645",
+    "semantic_hash": "8a994420ef408d10699d3aaf4dfef645"
+  },
+  "src/context/ThemeContext.jsx": {
+    "mtime": 1778375651.497087,
+    "seen": 1790866870.7966335,
+    "ast_hash": "e06e7fbec4bc1506963d2d6c9d746acb",
+    "semantic_hash": "e06e7fbec4bc1506963d2d6c9d746acb"
+  },
+  "src/context/ViajesContext.jsx": {
+    "mtime": 1780014018.5858684,
+    "seen": 1790866870.7966335,
+    "ast_hash": "f3d939bf8da177995e3fec3c93ac3b24",
+    "semantic_hash": "f3d939bf8da177995e3fec3c93ac3b24"
+  },
+  "src/hooks/mutations/useConfiguracionMutations.js": {
+    "mtime": 1790249716.90438,
+    "seen": 1790866870.7966335,
+    "ast_hash": "09a90cff31b49c686acd960f2f47d23d",
+    "semantic_hash": "09a90cff31b49c686acd960f2f47d23d"
+  },
+  "src/hooks/mutations/useDeudaMutations.js": {
+    "mtime": 1784682896.5197122,
+    "seen": 1790866870.7966335,
+    "ast_hash": "50a8f4eefb14fae0bb421e9fbbd4c6e8",
+    "semantic_hash": "50a8f4eefb14fae0bb421e9fbbd4c6e8"
+  },
+  "src/hooks/mutations/useGastoMutations.js": {
+    "mtime": 1784682884.8047028,
+    "seen": 1790866870.7966335,
+    "ast_hash": "5acab08aeddf29b7d27eb26c52f5e574",
+    "semantic_hash": "5acab08aeddf29b7d27eb26c52f5e574"
+  },
+  "src/hooks/mutations/useNotificacionesPendientesMutations.js": {
+    "mtime": 1789313019.6553454,
+    "seen": 1790866870.7966335,
+    "ast_hash": "42a6902f45344271a16638ca42ff0263",
+    "semantic_hash": "42a6902f45344271a16638ca42ff0263"
+  },
+  "src/hooks/mutations/useViajeActividadMutations.js": {
+    "mtime": 1784749260.7077365,
+    "seen": 1790866870.7966335,
+    "ast_hash": "262865bd88c877d746558e32dd911979",
+    "semantic_hash": "262865bd88c877d746558e32dd911979"
+  },
+  "src/hooks/mutations/useViajeGastoMutations.js": {
+    "mtime": 1780495325.5414083,
+    "seen": 1790866870.7966335,
+    "ast_hash": "620770e35a206883726a54060fe75299",
+    "semantic_hash": "620770e35a206883726a54060fe75299"
+  },
+  "src/hooks/mutations/useViajeMutations.js": {
+    "mtime": 1784748278.0458562,
+    "seen": 1790866870.7966335,
+    "ast_hash": "6d06f8a2186ba22f7159e298564023b2",
+    "semantic_hash": "6d06f8a2186ba22f7159e298564023b2"
+  },
+  "src/hooks/mutations/useViajeNotasMutations.js": {
+    "mtime": 1784686026.135228,
+    "seen": 1790866870.7966335,
+    "ast_hash": "d0ec7509f28d84349a3c4dd0ded38d40",
+    "semantic_hash": "d0ec7509f28d84349a3c4dd0ded38d40"
+  },
+  "src/hooks/queries/useConfiguracion.js": {
+    "mtime": 1789662262.910311,
+    "seen": 1790866870.7966335,
+    "ast_hash": "2fd117a0d516473dfd479691a1d35790",
+    "semantic_hash": "2fd117a0d516473dfd479691a1d35790"
+  },
+  "src/hooks/queries/useCotizacionDolar.js": {
+    "mtime": 1789661185.7754467,
+    "seen": 1790866870.7966335,
+    "ast_hash": "0b37366c9e4e17cfedb696c98b852a25",
+    "semantic_hash": "0b37366c9e4e17cfedb696c98b852a25"
+  },
+  "src/hooks/queries/useDeudas.js": {
+    "mtime": 1780014018.6084924,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7a366c910eece545ee9e3a3179a3e7e2",
+    "semantic_hash": "7a366c910eece545ee9e3a3179a3e7e2"
+  },
+  "src/hooks/queries/useGastos.js": {
+    "mtime": 1780014018.6084924,
+    "seen": 1790866870.7966335,
+    "ast_hash": "52e85b6c7e8040c4109d9134d1369d46",
+    "semantic_hash": "52e85b6c7e8040c4109d9134d1369d46"
+  },
+  "src/hooks/queries/useNotificacionesPendientes.js": {
+    "mtime": 1789313019.6563454,
+    "seen": 1790866870.7966335,
+    "ast_hash": "1c142515e4e4e901a17341a915aee988",
+    "semantic_hash": "1c142515e4e4e901a17341a915aee988"
+  },
+  "src/hooks/queries/useViajeActividades.js": {
+    "mtime": 1784749256.6417582,
+    "seen": 1790866870.7966335,
+    "ast_hash": "970988a98d16c5c8d1d50d609d8e0538",
+    "semantic_hash": "970988a98d16c5c8d1d50d609d8e0538"
+  },
+  "src/hooks/queries/useViajeDetalle.js": {
+    "mtime": 1780084803.5769856,
+    "seen": 1790866870.7966335,
+    "ast_hash": "db87658a4b493bbd10ce6e8812761db0",
+    "semantic_hash": "db87658a4b493bbd10ce6e8812761db0"
+  },
+  "src/hooks/queries/useViajeNotas.js": {
+    "mtime": 1780014018.6104906,
+    "seen": 1790866870.7966335,
+    "ast_hash": "bab2fb2f0529468266e63b03bef370d0",
+    "semantic_hash": "bab2fb2f0529468266e63b03bef370d0"
+  },
+  "src/hooks/queries/useViajePagos.js": {
+    "mtime": 1780084803.5779855,
+    "seen": 1790866870.7966335,
+    "ast_hash": "ae46ff5413dd3d90ce0707e5f04edc2a",
+    "semantic_hash": "ae46ff5413dd3d90ce0707e5f04edc2a"
+  },
+  "src/hooks/queries/useViajes.js": {
+    "mtime": 1780014018.626601,
+    "seen": 1790866870.7966335,
+    "ast_hash": "edcd8be613a8db21e58f60fe844149c5",
+    "semantic_hash": "edcd8be613a8db21e58f60fe844149c5"
+  },
+  "src/hooks/useModal.js": {
+    "mtime": 1778530668.352971,
+    "seen": 1790866870.7966335,
+    "ast_hash": "cbbaca4806c6707ffe80232bac3eea76",
+    "semantic_hash": "cbbaca4806c6707ffe80232bac3eea76"
+  },
+  "src/hooks/useRealtimeInvalidation.js": {
+    "mtime": 1780014018.626601,
+    "seen": 1790866870.7966335,
+    "ast_hash": "a3d45c105e603628bcab48bc7ffe75e7",
+    "semantic_hash": "a3d45c105e603628bcab48bc7ffe75e7"
+  },
+  "src/lib/queryClient.js": {
+    "mtime": 1780014018.6276047,
+    "seen": 1790866870.7966335,
+    "ast_hash": "6425d04ef75bf3f6dfb3abe28fb81744",
+    "semantic_hash": "6425d04ef75bf3f6dfb3abe28fb81744"
+  },
+  "src/lib/supabase.js": {
+    "mtime": 1778622905.3025627,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7cd679eb09d1bad628206a7ec678f99e",
+    "semantic_hash": "7cd679eb09d1bad628206a7ec678f99e"
+  },
+  "src/navigation/navigationRef.js": {
+    "mtime": 1784768024.2503088,
+    "seen": 1790866870.7966335,
+    "ast_hash": "073720e5d901011f5783dd1d1e83a85c",
+    "semantic_hash": "073720e5d901011f5783dd1d1e83a85c"
+  },
+  "src/prepolyfill.js": {
+    "mtime": 1778452254.677903,
+    "seen": 1790866870.7966335,
+    "ast_hash": "9b912751603ccabe7fb581d7e3cf81f4",
+    "semantic_hash": "9b912751603ccabe7fb581d7e3cf81f4"
+  },
+  "src/screens/AgregarDeudaModal.jsx": {
+    "mtime": 1780014018.628602,
+    "seen": 1790866870.7966335,
+    "ast_hash": "ef83373336c805feb33aa772c27357e7",
+    "semantic_hash": "ef83373336c805feb33aa772c27357e7"
+  },
+  "src/screens/AgregarScreen.jsx": {
+    "mtime": 1790249702.555158,
+    "seen": 1790866870.7966335,
+    "ast_hash": "ca2824212e54db1a063f31b6702a4031",
+    "semantic_hash": "ca2824212e54db1a063f31b6702a4031"
+  },
+  "src/screens/BiometricLockScreen.jsx": {
+    "mtime": 1778806728.8529696,
+    "seen": 1790866870.7966335,
+    "ast_hash": "ea814034a612b839e288cff59dbf5656",
+    "semantic_hash": "ea814034a612b839e288cff59dbf5656"
+  },
+  "src/screens/ConfiguracionScreen.jsx": {
+    "mtime": 1790249702.553157,
+    "seen": 1790866870.7966335,
+    "ast_hash": "3f3f0216b443e7d82cb6985789945622",
+    "semantic_hash": "3f3f0216b443e7d82cb6985789945622"
+  },
+  "src/screens/DashboardScreen.jsx": {
+    "mtime": 1789661205.1462715,
+    "seen": 1790866870.7966335,
+    "ast_hash": "db0d30183e9394f7ada95bc62287523b",
+    "semantic_hash": "db0d30183e9394f7ada95bc62287523b"
+  },
+  "src/screens/DeudoresScreen.jsx": {
+    "mtime": 1789311215.0097742,
+    "seen": 1790866870.7966335,
+    "ast_hash": "e878dfb770e330dc0d286d880a112611",
+    "semantic_hash": "e878dfb770e330dc0d286d880a112611"
+  },
+  "src/screens/EditarGastoModal.jsx": {
+    "mtime": 1790249702.5561607,
+    "seen": 1790866870.7966335,
+    "ast_hash": "e428b243a04c073539722f699c1f1102",
+    "semantic_hash": "e428b243a04c073539722f699c1f1102"
+  },
+  "src/screens/GastosScreen.jsx": {
+    "mtime": 1789423823.882658,
+    "seen": 1790866870.7966335,
+    "ast_hash": "3e345aaa2d2ef07e62038a338e4a2226",
+    "semantic_hash": "3e345aaa2d2ef07e62038a338e4a2226"
+  },
+  "src/screens/LoginScreen.jsx": {
+    "mtime": 1778806764.990413,
+    "seen": 1790866870.7966335,
+    "ast_hash": "deb3e89742ece4c65526723a9ffd8f34",
+    "semantic_hash": "deb3e89742ece4c65526723a9ffd8f34"
+  },
+  "src/screens/NotificationsModal.jsx": {
+    "mtime": 1789422368.3215077,
+    "seen": 1790866870.7966335,
+    "ast_hash": "d7cfbefeed570c2dc9f6d339f7ad1f2f",
+    "semantic_hash": "d7cfbefeed570c2dc9f6d339f7ad1f2f"
+  },
+  "src/screens/OnboardingFlow.jsx": {
+    "mtime": 1790249702.5541584,
+    "seen": 1790866870.7966335,
+    "ast_hash": "577c3fabd0e45204c7cc833fc8917a8e",
+    "semantic_hash": "577c3fabd0e45204c7cc833fc8917a8e"
+  },
+  "src/screens/PendientesComprasScreen.jsx": {
+    "mtime": 1789313019.7914667,
+    "seen": 1790866870.7966335,
+    "ast_hash": "f4793baa039a4b910624563dc1b1fb02",
+    "semantic_hash": "f4793baa039a4b910624563dc1b1fb02"
+  },
+  "src/screens/ViajeDetailScreen.jsx": {
+    "mtime": 1789009891.2223904,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7d2f879902abdf5e5a38e29457105ddf",
+    "semantic_hash": "7d2f879902abdf5e5a38e29457105ddf"
+  },
+  "src/screens/ViajesScreen.jsx": {
+    "mtime": 1789311215.0117745,
+    "seen": 1790866870.7966335,
+    "ast_hash": "e02febcfb532f2136a0225a1ac3f442d",
+    "semantic_hash": "e02febcfb532f2136a0225a1ac3f442d"
+  },
+  "src/services/__tests__/notificacionesPendientesService.test.js": {
+    "mtime": 1789313019.7924745,
+    "seen": 1790866870.7966335,
+    "ast_hash": "ed5ff8b2a5f9b1fc174f053d73c57411",
+    "semantic_hash": "ed5ff8b2a5f9b1fc174f053d73c57411"
+  },
+  "src/services/__tests__/notificacionesQueueProcessor.test.js": {
+    "mtime": 1789313019.8044844,
+    "seen": 1790866870.7966335,
+    "ast_hash": "553834c17054bf672256aee31093e918",
+    "semantic_hash": "553834c17054bf672256aee31093e918"
+  },
+  "src/services/__tests__/notificationListenerBridge.test.js": {
+    "mtime": 1790346016.5661905,
+    "seen": 1790866870.7966335,
+    "ast_hash": "de2f78cdf87ea2ab491d12ec605529a3",
+    "semantic_hash": "de2f78cdf87ea2ab491d12ec605529a3"
+  },
+  "src/services/comerciosAprendidosService.js": {
+    "mtime": 1789313019.8054855,
+    "seen": 1790866870.7966335,
+    "ast_hash": "6aef05b5a4b0df865de4202a55f0c909",
+    "semantic_hash": "6aef05b5a4b0df865de4202a55f0c909"
+  },
+  "src/services/configuracionService.js": {
+    "mtime": 1790249702.553157,
+    "seen": 1790866870.7966335,
+    "ast_hash": "cc633468a65b02c6e3f6ff2d135cd06e",
+    "semantic_hash": "cc633468a65b02c6e3f6ff2d135cd06e"
+  },
+  "src/services/contactService.js": {
+    "mtime": 1778596902.8247943,
+    "seen": 1790866870.7966335,
+    "ast_hash": "6129b68591601200e621a3df08bc1263",
+    "semantic_hash": "6129b68591601200e621a3df08bc1263"
+  },
+  "src/services/cotizacionService.js": {
+    "mtime": 1789661181.7253315,
+    "seen": 1790866870.7966335,
+    "ast_hash": "5a29d70680c80e85465e96a1684a0976",
+    "semantic_hash": "5a29d70680c80e85465e96a1684a0976"
+  },
+  "src/services/deudoresService.js": {
+    "mtime": 1784939039.9804075,
+    "seen": 1790866870.7966335,
+    "ast_hash": "02892d53c00987fa2322f7412efafff6",
+    "semantic_hash": "02892d53c00987fa2322f7412efafff6"
+  },
+  "src/services/gastosService.js": {
+    "mtime": 1789479209.4533286,
+    "seen": 1790866870.7966335,
+    "ast_hash": "1d26de5f706f70646be10111aa1224ca",
+    "semantic_hash": "1d26de5f706f70646be10111aa1224ca"
+  },
+  "src/services/notificacionesPendientesService.js": {
+    "mtime": 1789426570.659702,
+    "seen": 1790866870.7966335,
+    "ast_hash": "eb1230218153cfd83df40f1e1fbd62ab",
+    "semantic_hash": "eb1230218153cfd83df40f1e1fbd62ab"
+  },
+  "src/services/notificacionesQueueProcessor.js": {
+    "mtime": 1789355742.0017302,
+    "seen": 1790866870.7966335,
+    "ast_hash": "8151ff05552e02b37442764a94390988",
+    "semantic_hash": "8151ff05552e02b37442764a94390988"
+  },
+  "src/services/notificaciones/__tests__/dedup.test.js": {
+    "mtime": 1789313019.8064847,
+    "seen": 1790866870.7966335,
+    "ast_hash": "0c45eef0ebd027ed7d8e9e92256311af",
+    "semantic_hash": "0c45eef0ebd027ed7d8e9e92256311af"
+  },
+  "src/services/notificaciones/__tests__/filtro.test.js": {
+    "mtime": 1789313019.8064847,
+    "seen": 1790866870.7966335,
+    "ast_hash": "193876773d55eefa25dfbbcff1c6948d",
+    "semantic_hash": "193876773d55eefa25dfbbcff1c6948d"
+  },
+  "src/services/notificaciones/__tests__/parseIA.test.js": {
+    "mtime": 1789313019.8295488,
+    "seen": 1790866870.7966335,
+    "ast_hash": "d9cef60688db321f73187a33e72f88c9",
+    "semantic_hash": "d9cef60688db321f73187a33e72f88c9"
+  },
+  "src/services/notificaciones/__tests__/parser.test.js": {
+    "mtime": 1789313019.883154,
+    "seen": 1790866870.7966335,
+    "ast_hash": "803aea340a9f44101d6b6fe76870f47c",
+    "semantic_hash": "803aea340a9f44101d6b6fe76870f47c"
+  },
+  "src/services/notificaciones/__tests__/plantillas.test.js": {
+    "mtime": 1789313019.8966045,
+    "seen": 1790866870.7966335,
+    "ast_hash": "a115969dba84605a79440067da63033f",
+    "semantic_hash": "a115969dba84605a79440067da63033f"
+  },
+  "src/services/notificaciones/dedup.js": {
+    "mtime": 1789313019.89761,
+    "seen": 1790866870.7966335,
+    "ast_hash": "a31c1e02f4cda53f9aeecbd3f8c45568",
+    "semantic_hash": "a31c1e02f4cda53f9aeecbd3f8c45568"
+  },
+  "src/services/notificaciones/filtro.js": {
+    "mtime": 1789313019.89761,
+    "seen": 1790866870.7966335,
+    "ast_hash": "c9ab4e35b8f5e07df46d52145e8398c3",
+    "semantic_hash": "c9ab4e35b8f5e07df46d52145e8398c3"
+  },
+  "src/services/notificaciones/parseIA.js": {
+    "mtime": 1789355734.400242,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7fd8976ba45ab9eadbe1dc69b6601f95",
+    "semantic_hash": "7fd8976ba45ab9eadbe1dc69b6601f95"
+  },
+  "src/services/notificaciones/parser.js": {
+    "mtime": 1789355716.389231,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b3abed72bb19754103613b30fe571097",
+    "semantic_hash": "b3abed72bb19754103613b30fe571097"
+  },
+  "src/services/notificaciones/plantillas.js": {
+    "mtime": 1789313019.9275353,
+    "seen": 1790866870.7966335,
+    "ast_hash": "da8baa8428913cc3d1369e0752c4edf3",
+    "semantic_hash": "da8baa8428913cc3d1369e0752c4edf3"
+  },
+  "src/services/notificationListenerBridge.js": {
+    "mtime": 1790346152.0514202,
+    "seen": 1790866870.7966335,
+    "ast_hash": "279678cdf9e137e01c69ade8d3073770",
+    "semantic_hash": "279678cdf9e137e01c69ade8d3073770"
+  },
+  "src/services/notificationService.js": {
+    "mtime": 1789421675.172829,
+    "seen": 1790866870.7966335,
+    "ast_hash": "9083494ad82224df25e13d9458212790",
+    "semantic_hash": "9083494ad82224df25e13d9458212790"
+  },
+  "src/services/ocrService.js": {
+    "mtime": 1778806652.0011053,
+    "seen": 1790866870.7966335,
+    "ast_hash": "f30bfbc270a17711c5342aa37829a248",
+    "semantic_hash": "f30bfbc270a17711c5342aa37829a248"
+  },
+  "src/services/pushNotificationService.js": {
+    "mtime": 1780084803.5809824,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b08e1a52b2a8579469ddcec39fe50182",
+    "semantic_hash": "b08e1a52b2a8579469ddcec39fe50182"
+  },
+  "src/services/userService.js": {
+    "mtime": 1778592368.1235218,
+    "seen": 1790866870.7966335,
+    "ast_hash": "831fac462ccc3e8c450fb41494872d2e",
+    "semantic_hash": "831fac462ccc3e8c450fb41494872d2e"
+  },
+  "src/services/viajeActividadesService.js": {
+    "mtime": 1784749059.8389823,
+    "seen": 1790866870.7966335,
+    "ast_hash": "4c688eaca80b012f7847a373e3b363c0",
+    "semantic_hash": "4c688eaca80b012f7847a373e3b363c0"
+  },
+  "src/services/viajeGastosService.js": {
+    "mtime": 1789313019.9709797,
+    "seen": 1790866870.7966335,
+    "ast_hash": "de45b30718d8723a56d103f1b938555b",
+    "semantic_hash": "de45b30718d8723a56d103f1b938555b"
+  },
+  "src/services/viajeNotasService.js": {
+    "mtime": 1784686543.8043525,
+    "seen": 1790866870.7966335,
+    "ast_hash": "c6e729f62c58e41dd5e08c5f25fbfa45",
+    "semantic_hash": "c6e729f62c58e41dd5e08c5f25fbfa45"
+  },
+  "src/services/viajePagosService.js": {
+    "mtime": 1780084803.5829825,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b6253c218a7050433da26f8b1898c12e",
+    "semantic_hash": "b6253c218a7050433da26f8b1898c12e"
+  },
+  "src/services/viajesService.js": {
+    "mtime": 1784748268.9272876,
+    "seen": 1790866870.7966335,
+    "ast_hash": "ec5c80a20f53a7cef75e4601738431b5",
+    "semantic_hash": "ec5c80a20f53a7cef75e4601738431b5"
+  },
+  "src/utils/cuotas.js": {
+    "mtime": 1783899000.7677174,
+    "seen": 1790866870.7966335,
+    "ast_hash": "0b42facbeafb3b4e0d68df7da4e14fd8",
+    "semantic_hash": "0b42facbeafb3b4e0d68df7da4e14fd8"
+  },
+  "src/utils/formatters.js": {
+    "mtime": 1784815053.869074,
+    "seen": 1790866870.7966335,
+    "ast_hash": "a636bfe0167221a7540ebf9a2b08140d",
+    "semantic_hash": "a636bfe0167221a7540ebf9a2b08140d"
+  },
+  "src/utils/proyeccion.js": {
+    "mtime": 1789425131.6271477,
+    "seen": 1790866870.7966335,
+    "ast_hash": "9d3811703a2428fc7dd2c2212c958b39",
+    "semantic_hash": "9d3811703a2428fc7dd2c2212c958b39"
+  },
+  "supabase/functions/send-daily-viaje-summary/index.ts": {
+    "mtime": 1784749761.2552495,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7e43ec431d365642697d8803f5cfb946",
+    "semantic_hash": "7e43ec431d365642697d8803f5cfb946"
+  },
+  "supabase/functions/send-push-notification/index.ts": {
+    "mtime": 1780084803.584991,
+    "seen": 1790866870.7966335,
+    "ast_hash": "75ccd450bd2fa209b49111f9480f4a8f",
+    "semantic_hash": "75ccd450bd2fa209b49111f9480f4a8f"
+  },
+  "supabase/migrations/20260528_modo_viaje.sql": {
+    "mtime": 1779977282.7358255,
+    "seen": 1790866870.7966335,
+    "ast_hash": "0a573813fd70e78d4a5400474d75d9c7",
+    "semantic_hash": "0a573813fd70e78d4a5400474d75d9c7"
+  },
+  "supabase/migrations/20260529_viaje_pagos.sql": {
+    "mtime": 1780084803.584991,
+    "seen": 1790866870.7966335,
+    "ast_hash": "f3f75665161b49be0fc84ba7f350bea4",
+    "semantic_hash": "f3f75665161b49be0fc84ba7f350bea4"
+  },
+  "supabase/migrations/20260721_viaje_checklist_personal.sql": {
+    "mtime": 1784685713.099154,
+    "seen": 1790866870.7966335,
+    "ast_hash": "49365c0501c0a63d21260f70b2a41e95",
+    "semantic_hash": "49365c0501c0a63d21260f70b2a41e95"
+  },
+  "supabase/migrations/20260722_viaje_calendario.sql": {
+    "mtime": 1784748018.81694,
+    "seen": 1790866870.7966335,
+    "ast_hash": "2d4a54e41f483d061750e30ba8fb6245",
+    "semantic_hash": "2d4a54e41f483d061750e30ba8fb6245"
+  },
+  "supabase/migrations/20260722_viaje_calendario_cron.sql": {
+    "mtime": 1784749769.2912734,
+    "seen": 1790866870.7966335,
+    "ast_hash": "574d5fcdf6ac8ced9d0e25692fb6d6a0",
+    "semantic_hash": "574d5fcdf6ac8ced9d0e25692fb6d6a0"
+  },
+  "supabase/migrations/20260723_modo_viaje_redirect.sql": {
+    "mtime": 1784771362.7714722,
+    "seen": 1790866870.7966335,
+    "ast_hash": "2705ca49b607da63a5fb5095e9c751c1",
+    "semantic_hash": "2705ca49b607da63a5fb5095e9c751c1"
+  },
+  "supabase/migrations/20260912_notificaciones_pendientes.sql": {
+    "mtime": 1789313019.977984,
+    "seen": 1790866870.7966335,
+    "ast_hash": "f7f1b1712ce1a3eee6d09fa33cd9218e",
+    "semantic_hash": "f7f1b1712ce1a3eee6d09fa33cd9218e"
+  },
+  "supabase/migrations/20260914_fix_gasto_id_on_delete.sql": {
+    "mtime": 1789426550.5457969,
+    "seen": 1790866870.7966335,
+    "ast_hash": "3e922a6655fc09c3908fed8150693b43",
+    "semantic_hash": "3e922a6655fc09c3908fed8150693b43"
+  },
+  "supabase/migrations/20260924_onboarding_completed.sql": {
+    "mtime": 1790292843.6616423,
+    "seen": 1790866870.7966335,
+    "ast_hash": "f916cc54e591d3b3ac10f86c9f0886eb",
+    "semantic_hash": "f916cc54e591d3b3ac10f86c9f0886eb"
+  },
+  "tsconfig.json": {
+    "mtime": 1779977316.3092916,
+    "seen": 1790866870.7966335,
+    "ast_hash": "4b9cbf6b7fc1842ea2df0b8000dea4d7",
+    "semantic_hash": "4b9cbf6b7fc1842ea2df0b8000dea4d7"
+  },
+  "BUILD_README.md": {
+    "mtime": 1778638140.8460193,
+    "seen": 1790866870.7966335,
+    "ast_hash": "14fca8740c632bcca18113c15053b08d",
+    "semantic_hash": "14fca8740c632bcca18113c15053b08d"
+  },
+  "docs/superpowers/plans/2026-05-28-modo-viaje.md": {
+    "mtime": 1779968810.9527614,
+    "seen": 1790866870.7966335,
+    "ast_hash": "9eda570ea5d9da3ee6476ab727d76f47",
+    "semantic_hash": "9eda570ea5d9da3ee6476ab727d76f47"
+  },
+  "docs/superpowers/plans/2026-05-28-performance-tanstack-query.md": {
+    "mtime": 1779999063.4473994,
+    "seen": 1790866870.7966335,
+    "ast_hash": "8c4991b46f1bd7f37efe6e6c89e14552",
+    "semantic_hash": "8c4991b46f1bd7f37efe6e6c89e14552"
+  },
+  "docs/superpowers/plans/2026-05-28-viaje-detail-ui-redesign.md": {
+    "mtime": 1780014018.5748246,
+    "seen": 1790866870.7966335,
+    "ast_hash": "4aecef1334207f803a4a6d26aae0f44d",
+    "semantic_hash": "4aecef1334207f803a4a6d26aae0f44d"
+  },
+  "docs/superpowers/plans/2026-05-28-viaje-deudas-pagos.md": {
+    "mtime": 1779997810.7542765,
+    "seen": 1790866870.7966335,
+    "ast_hash": "fb1d0aed4865c872cc0de77547e56427",
+    "semantic_hash": "fb1d0aed4865c872cc0de77547e56427"
+  },
+  "docs/superpowers/plans/2026-05-28-viajes-navigation-back.md": {
+    "mtime": 1779997810.7542765,
+    "seen": 1790866870.7966335,
+    "ast_hash": "fd7a934f3f6df8b1e490599447f69f9f",
+    "semantic_hash": "fd7a934f3f6df8b1e490599447f69f9f"
+  },
+  "docs/superpowers/plans/2026-05-29-viaje-gastos-resumen.md": {
+    "mtime": 1780084803.5689816,
+    "seen": 1790866870.7966335,
+    "ast_hash": "5168329666b37bd2e9c0b25fe42c3dd5",
+    "semantic_hash": "5168329666b37bd2e9c0b25fe42c3dd5"
+  },
+  "docs/superpowers/plans/2026-06-09-proyeccion-gastos-futuros.md": {
+    "mtime": 1781024324.219826,
+    "seen": 1790866870.7966335,
+    "ast_hash": "8161d6d9da3d55d735da93beb012d504",
+    "semantic_hash": "8161d6d9da3d55d735da93beb012d504"
+  },
+  "docs/superpowers/plans/2026-07-21-viaje-checklist-personal.md": {
+    "mtime": 1784684028.0473893,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b4311a81be6bb351360c72bd779bd4a4",
+    "semantic_hash": "b4311a81be6bb351360c72bd779bd4a4"
+  },
+  "docs/superpowers/plans/2026-07-22-viaje-calendario.md": {
+    "mtime": 1784747294.457628,
+    "seen": 1790866870.7966335,
+    "ast_hash": "4b2aee539f370cb3f8542338bd297da7",
+    "semantic_hash": "4b2aee539f370cb3f8542338bd297da7"
+  },
+  "docs/superpowers/plans/2026-07-23-calendario-carrusel-y-rango-fechas.md": {
+    "mtime": 1784814864.6923268,
+    "seen": 1790866870.7966335,
+    "ast_hash": "3d9f070dafb4230c7160f73cc1aee6a8",
+    "semantic_hash": "3d9f070dafb4230c7160f73cc1aee6a8"
+  },
+  "docs/superpowers/plans/2026-07-23-modo-viaje-redirect-implementation.md": {
+    "mtime": 1784767387.9498558,
+    "seen": 1790866870.7966335,
+    "ast_hash": "c1a608fdff30e54415bd5d26f4fbbc17",
+    "semantic_hash": "c1a608fdff30e54415bd5d26f4fbbc17"
+  },
+  "docs/superpowers/plans/2026-07-24-reporte-mensual-gastos-ia.md": {
+    "mtime": 1784929944.8500404,
+    "seen": 1790866870.7966335,
+    "ast_hash": "617d0dd2a9679b6a373794e77b0b9063",
+    "semantic_hash": "617d0dd2a9679b6a373794e77b0b9063"
+  },
+  "docs/superpowers/plans/2026-09-12-registro-automatico-compras.md": {
+    "mtime": 1789313041.6591437,
+    "seen": 1790866870.7966335,
+    "ast_hash": "4f2e127ae304abe0982c730eaf429db9",
+    "semantic_hash": "4f2e127ae304abe0982c730eaf429db9"
+  },
+  "docs/superpowers/specs/2026-05-27-modo-viaje-design.md": {
+    "mtime": 1779934966.0114822,
+    "seen": 1790866870.7966335,
+    "ast_hash": "cd0ad57cbf90b9a3c925e7442e1ea017",
+    "semantic_hash": "cd0ad57cbf90b9a3c925e7442e1ea017"
+  },
+  "docs/superpowers/specs/2026-05-28-performance-tanstack-query-design.md": {
+    "mtime": 1779998577.8322299,
+    "seen": 1790866870.7966335,
+    "ast_hash": "49f5653269be307a1c2c49bee0dfe82c",
+    "semantic_hash": "49f5653269be307a1c2c49bee0dfe82c"
+  },
+  "docs/superpowers/specs/2026-05-28-viaje-detail-ui-redesign-design.md": {
+    "mtime": 1780014018.5748246,
+    "seen": 1790866870.7966335,
+    "ast_hash": "0904028a60e43755dcdfd67d72c25896",
+    "semantic_hash": "0904028a60e43755dcdfd67d72c25896"
+  },
+  "docs/superpowers/specs/2026-05-28-viaje-deudas-pagos-design.md": {
+    "mtime": 1779987977.551807,
+    "seen": 1790866870.7966335,
+    "ast_hash": "e140e2f7bec20d7f024f3c58953061df",
+    "semantic_hash": "e140e2f7bec20d7f024f3c58953061df"
+  },
+  "docs/superpowers/specs/2026-05-28-viaje-toggle-case0-design.md": {
+    "mtime": 1779979245.8804407,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b16ef037b15af9e3968f707e77ec93b5",
+    "semantic_hash": "b16ef037b15af9e3968f707e77ec93b5"
+  },
+  "docs/superpowers/specs/2026-05-28-viajes-navigation-design.md": {
+    "mtime": 1779997810.7557845,
+    "seen": 1790866870.7966335,
+    "ast_hash": "b179a57001e28dfd848428bd7bbdaa90",
+    "semantic_hash": "b179a57001e28dfd848428bd7bbdaa90"
+  },
+  "docs/superpowers/specs/2026-05-29-viaje-gastos-resumen-design.md": {
+    "mtime": 1780084803.5699828,
+    "seen": 1790866870.7966335,
+    "ast_hash": "f283ffecf1fd8fbe658c88581c5d5d48",
+    "semantic_hash": "f283ffecf1fd8fbe658c88581c5d5d48"
+  },
+  "docs/superpowers/specs/2026-06-09-proyeccion-gastos-futuros-design.md": {
+    "mtime": 1781024324.2208254,
+    "seen": 1790866870.7966335,
+    "ast_hash": "294838f38c3d3889e9f6b05a6b8bc138",
+    "semantic_hash": "294838f38c3d3889e9f6b05a6b8bc138"
+  },
+  "docs/superpowers/specs/2026-07-21-viaje-checklist-personal-design.md": {
+    "mtime": 1784683848.715166,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7cae3dad574fe9b9dcf711c17d00c163",
+    "semantic_hash": "7cae3dad574fe9b9dcf711c17d00c163"
+  },
+  "docs/superpowers/specs/2026-07-22-viaje-calendario-design.md": {
+    "mtime": 1784746802.5348196,
+    "seen": 1790866870.7966335,
+    "ast_hash": "d84b0464f595dbeb3bd1a681e96db1f5",
+    "semantic_hash": "d84b0464f595dbeb3bd1a681e96db1f5"
+  },
+  "docs/superpowers/specs/2026-07-23-calendario-carrusel-y-rango-fechas-design.md": {
+    "mtime": 1784814371.278912,
+    "seen": 1790866870.7966335,
+    "ast_hash": "527a5e88e8e7815ab89da15a24b3a4b8",
+    "semantic_hash": "527a5e88e8e7815ab89da15a24b3a4b8"
+  },
+  "docs/superpowers/specs/2026-07-23-modo-viaje-redirect-design.md": {
+    "mtime": 1784765882.253318,
+    "seen": 1790866870.7966335,
+    "ast_hash": "6e12e916479c34734f0dc0991da52680",
+    "semantic_hash": "6e12e916479c34734f0dc0991da52680"
+  },
+  "docs/superpowers/specs/2026-07-24-reporte-mensual-gastos-ia-design.md": {
+    "mtime": 1784902776.5311208,
+    "seen": 1790866870.7966335,
+    "ast_hash": "2c22c322c605b2795025701e2007bc16",
+    "semantic_hash": "2c22c322c605b2795025701e2007bc16"
+  },
+  "docs/superpowers/specs/2026-09-12-registro-automatico-compras-design.md": {
+    "mtime": 1789246110.7327635,
+    "seen": 1790866870.7966335,
+    "ast_hash": "2108b5684201a149715d638adf2ddbe8",
+    "semantic_hash": "2108b5684201a149715d638adf2ddbe8"
+  },
+  "assets/BudgetBuddy.png": {
+    "mtime": 1789311215.005775,
+    "seen": 1790866870.7966335,
+    "ast_hash": "047903f6faf8338d85b6fd7b66875363",
+    "semantic_hash": "047903f6faf8338d85b6fd7b66875363"
+  },
+  "assets/favicon.png": {
+    "mtime": 1789311215.0067751,
+    "seen": 1790866870.7966335,
+    "ast_hash": "9de42a471fb6337208e59b3d2cd08c46",
+    "semantic_hash": "9de42a471fb6337208e59b3d2cd08c46"
+  },
+  "assets/icon.png": {
+    "mtime": 1789311215.0972896,
+    "seen": 1790866870.7966335,
+    "ast_hash": "7d041e9c185547c19b52ef4a5ca08547",
+    "semantic_hash": "7d041e9c185547c19b52ef4a5ca08547"
+  },
+  "assets/logo.png": {
+    "mtime": 1789311215.1012893,
+    "seen": 1790866870.7966335,
+    "ast_hash": "047903f6faf8338d85b6fd7b66875363",
+    "semantic_hash": "047903f6faf8338d85b6fd7b66875363"
+  }
+}
